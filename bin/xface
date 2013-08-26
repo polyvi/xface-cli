@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 var tokens = process.argv.slice(2, process.argv.length),
-    cordova= require('../cordova'),
+    xface= require('../xface'),
     plugman= require('plugman');
 
 var cmd, version = false, verbose = false, current;
@@ -24,10 +24,10 @@ process.on('uncaughtException', function(err){
     }
     process.exit(1);
 });
-cordova.on('results', console.log);
+xface.on('results', console.log);
 if (verbose) {
-    cordova.on('log', console.log);
-    cordova.on('warn', console.warn);
+    xface.on('log', console.log);
+    xface.on('warn', console.warn);
     plugman.on('log', console.log);
     plugman.on('warn', console.warn);
 }
@@ -35,21 +35,21 @@ if (verbose) {
 if (version) {
     console.log(require('../package').version);
 } else if (cmd === undefined) {
-    cordova.help();
-} else if (cordova.hasOwnProperty(cmd)) {
+    xface.help();
+} else if (xface.hasOwnProperty(cmd)) {
     var opts = Array.prototype.slice.call(tokens, 0);
     if (cmd == 'create' || cmd == 'docs' || cmd == 'serve') {
-        cordova[cmd].apply(this, opts);
+        xface[cmd].apply(this, opts);
     } else if (cmd == 'emulate' || cmd == 'build' || cmd == 'prepare' || cmd == 'compile' || cmd == 'run') {
-        cordova[cmd].call(this, opts);
+        xface[cmd].call(this, opts);
     } else {
         // platform or plugin cmds
         if (tokens.length > 2) {
             opts = [tokens.shift()];
             opts.push(tokens);
         }
-        cordova[cmd].apply(this, opts);
+        xface[cmd].apply(this, opts);
     }
 } else {
-    throw new Error('Cordova does not know ' + cmd + '; try help for a list of all the available commands.');
+    throw new Error('xFace does not know ' + cmd + '; try help for a list of all the available commands.');
 }
