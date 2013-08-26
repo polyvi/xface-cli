@@ -1,4 +1,4 @@
-var cordova = require('../cordova'),
+var xface = require('../xface'),
     path    = require('path'),
     shell   = require('shelljs'),
     fs      = require('fs'),
@@ -13,10 +13,10 @@ describe('create command', function () {
         shell.rm('-rf', tempDir);
         mkdir = spyOn(shell, 'mkdir');
         cp = spyOn(shell, 'cp');
-        config_spy = spyOn(cordova, 'config');
+        config_spy = spyOn(xface, 'config');
         config_read = spyOn(config, 'read').andReturn({});
         exists = spyOn(fs, 'existsSync').andReturn(true);
-        load_cordova = spyOn(lazy_load, 'cordova').andCallFake(function(platform, cb) {
+        load_cordova = spyOn(lazy_load, 'xface').andCallFake(function(platform, cb) {
             cb();
         });
         load_custom = spyOn(lazy_load, 'custom').andCallFake(function(url, id, platform, version, cb) {
@@ -33,43 +33,43 @@ describe('create command', function () {
     describe('failure', function() {
         it('should return a help message if incorrect number of parameters is used', function(done) {
             this.after(function() {
-                cordova.removeAllListeners('results');
+                xface.removeAllListeners('results');
             });
-            cordova.on('results', function(h) {
+            xface.on('results', function(h) {
                 expect(h).toMatch(/synopsis/gi);
                 done();
             });
-            cordova.create();
+            xface.create();
         });
     });
 
     describe('success', function() {
         it('should create a default project if only directory is specified', function(done) {
-            cordova.create(tempDir, function() {
-                expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, '.cordova'));
-                expect(package).toHaveBeenCalledWith('io.cordova.hellocordova');
-                expect(name).toHaveBeenCalledWith('HelloCordova');
+            xface.create(tempDir, function() {
+                expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, '.xface'));
+                expect(package).toHaveBeenCalledWith('io.xface.hello');
+                expect(name).toHaveBeenCalledWith('HelloxFace');
                 done();
             });
         });
         it('should create a default project if only directory and id is specified', function(done) {
-            cordova.create(tempDir, 'ca.filmaj.canucks', function() {
-                expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, '.cordova'));
+            xface.create(tempDir, 'ca.filmaj.canucks', function() {
+                expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, '.xface'));
                 expect(package).toHaveBeenCalledWith('ca.filmaj.canucks');
-                expect(name).toHaveBeenCalledWith('HelloCordova');
+                expect(name).toHaveBeenCalledWith('HelloxFace');
                 done();
             });
         });
         it('should create a project in specified directory with specified name and id', function(done) {
-            cordova.create(tempDir, 'ca.filmaj.canucks', 'IHateTheBruins', function() {
-                expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, '.cordova'));
+            xface.create(tempDir, 'ca.filmaj.canucks', 'IHateTheBruins', function() {
+                expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, '.xface'));
                 expect(package).toHaveBeenCalledWith('ca.filmaj.canucks');
                 expect(name).toHaveBeenCalledWith('IHateTheBruins');
                 done();
             });
         });
-        it('should create top-level directory structure appropriate for a cordova-cli project', function(done) {
-            cordova.create(tempDir, function() {
+        it('should create top-level directory structure appropriate for a xface-cli project', function(done) {
+            xface.create(tempDir, function() {
                 expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, 'platforms'));
                 expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, 'merges'));
                 expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, 'plugins'));
@@ -78,8 +78,8 @@ describe('create command', function () {
             });
         });
         it('should create appropriate directories for hooks', function(done) {
-            var hooks_dir = path.join(tempDir, '.cordova', 'hooks');
-            cordova.create(tempDir, function() {
+            var hooks_dir = path.join(tempDir, '.xface', 'hooks');
+            xface.create(tempDir, function() {
                 expect(mkdir).toHaveBeenCalledWith('-p', hooks_dir);
                 expect(mkdir).toHaveBeenCalledWith( (path.join(hooks_dir, 'after_build')));
                 expect(mkdir).toHaveBeenCalledWith( (path.join(hooks_dir, 'after_compile')));
@@ -108,8 +108,8 @@ describe('create command', function () {
                 done();
             });
         });
-        it('should by default use cordova-app-hello-world as www assets', function(done) {
-            cordova.create(tempDir, function() {
+        it('should by default use xface-app-hello-world as www assets', function(done) {
+            xface.create(tempDir, function() {
                 expect(load_cordova).toHaveBeenCalledWith('www', jasmine.any(Function));
                 done();
             });
@@ -125,7 +125,7 @@ describe('create command', function () {
                 }
             };
             config_read.andReturn(fake_config);
-            cordova.create(tempDir, function() {
+            xface.create(tempDir, function() {
                 expect(load_custom).toHaveBeenCalledWith(fake_config.lib.www.uri, fake_config.lib.www.id, 'www', fake_config.lib.www.version, jasmine.any(Function));
                 done();
             });
@@ -135,7 +135,7 @@ describe('create command', function () {
                 // return false for config.xml otherwise return true (default spy action)
                 return !path.match('config.xml');
             });
-            cordova.create(tempDir, function() {
+            xface.create(tempDir, function() {
                 expect(shell.cp).toHaveBeenCalledWith(
                     path.resolve(__dirname, '..', 'templates', 'config.xml'),
                     jasmine.any(String)
@@ -144,7 +144,7 @@ describe('create command', function () {
             });
         });
         it('should not replace an existing www/config.xml', function(done) {
-            cordova.create(tempDir, function() {
+            xface.create(tempDir, function() {
                 expect(shell.cp).not.toHaveBeenCalledWith(
                     path.resolve(__dirname, '..', 'templates', 'config.xml'),
                     jasmine.any(String)

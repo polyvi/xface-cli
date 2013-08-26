@@ -30,7 +30,7 @@ var config            = require('./config'),
     shell             = require('shelljs');
 
 module.exports = function platform(command, targets, callback) {
-    var projectRoot = cordova_util.isCordova(process.cwd());
+    var projectRoot = cordova_util.isxFace(process.cwd());
 
     if (!projectRoot) {
         var err = new Error('Current working directory is not a Cordova-based project.');
@@ -232,7 +232,7 @@ function call_into_create(target, projectRoot, cfg, id, version, callback, end) 
                         if (callback) callback(err);
                         else throw err;
                     } else {
-                        require('../cordova').prepare(target, function(err) {
+                        require('../xface').prepare(target, function(err) {
                             if (err) {
                                 if (callback) callback(err);
                                 else throw err;

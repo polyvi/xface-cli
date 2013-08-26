@@ -89,7 +89,7 @@ module.exports = function serve (platform, port) {
 };
 
 module.exports.config = function (platform, port, callback) {
-    var projectRoot = cordova_util.isCordova(process.cwd());
+    var projectRoot = cordova_util.isxFace(process.cwd());
 
     if (!projectRoot) {
         throw new Error('Current working directory is not a Cordova-based project.');

@@ -24,21 +24,21 @@ var hooker = require('../src/hooker'),
     os     = require('os'),
     tempDir= path.join(__dirname, '..', 'temp'),
     hooks  = path.join(__dirname, 'fixtures', 'hooks'),
-    cordova= require('../cordova');
+    xface= require('../xface');
 
 var platform = os.platform();
 var cwd = process.cwd();
 
 describe('hooker', function() {
-    it('should throw if provided directory is not a cordova project', function() {
-        spyOn(util, 'isCordova').andReturn(false);
+    it('should throw if provided directory is not a xface project', function() {
+        spyOn(util, 'isxFace').andReturn(false);
         expect(function() {
             new hooker(tempDir);
-        }).toThrow('Not a Cordova project, can\'t use hooks.');
+        }).toThrow('Not a xFace project, can\'t use hooks.');
     });
-    it('should not throw if provided directory is a cordova project', function() {
+    it('should not throw if provided directory is a xface project', function() {
         var root = '/some/root';
-        spyOn(util, 'isCordova').andReturn(root);
+        spyOn(util, 'isxFace').andReturn(root);
         expect(function() {
             var h = new hooker(tempDir);
             expect(h.root).toEqual(root);
@@ -59,8 +59,8 @@ describe('hooker', function() {
                 h2_fired = true;
             };
             runs(function() {
-                cordova.on(test_event, h1);
-                cordova.on(test_event, h2);
+                xface.on(test_event, h1);
+                xface.on(test_event, h2);
                 hooker.fire(test_event, function(err) {
                     done();
                 });
@@ -76,7 +76,7 @@ describe('hooker', function() {
     describe('project-level fire method', function() {
         var h;
         beforeEach(function() {
-            spyOn(util, 'isCordova').andReturn(tempDir);
+            spyOn(util, 'isxFace').andReturn(tempDir);
             h = new hooker(tempDir);
         });
 
@@ -88,7 +88,7 @@ describe('hooker', function() {
                 });
             });
             it('should error if any script exits with non-zero code', function(done) {
-                var script = path.join(tempDir, '.cordova', 'hooks', 'before_build');
+                var script = path.join(tempDir, '.xface', 'hooks', 'before_build');
                 shell.mkdir('-p', script);
                 this.after(function() { shell.rm('-rf', tempDir); });
                 if (platform.match(/(win32|win64)/)) {
@@ -108,7 +108,7 @@ describe('hooker', function() {
 
         describe('success', function() {
             describe('project-level hooks', function() {
-                var hook = path.join(tempDir, '.cordova', 'hooks', 'before_build'),
+                var hook = path.join(tempDir, '.xface', 'hooks', 'before_build'),
                     s;
                 beforeEach(function() {
                     shell.mkdir('-p', hook);
@@ -159,7 +159,7 @@ describe('hooker', function() {
                     shell.cp(path.join(hooks, 'test', '0.bat'), path.join(hook, '.swp.file'));
                     h.fire('before_build', function(err) {
                         expect(err).not.toBeDefined();
-                        expect(s).not.toHaveBeenCalledWith(path.join(tempDir, '.cordova', 'hooks', 'before_build', '.swp.file') + ' "' + tempDir + '"', jasmine.any(Object), jasmine.any(Function));
+                        expect(s).not.toHaveBeenCalledWith(path.join(tempDir, '.xface', 'hooks', 'before_build', '.swp.file') + ' "' + tempDir + '"', jasmine.any(Object), jasmine.any(Function));
                         done();
                     });
                 });
@@ -168,12 +168,12 @@ describe('hooker', function() {
                 var handler = jasmine.createSpy();
                 var test_event = 'before_build';
                 afterEach(function() {
-                    cordova.removeAllListeners(test_event);
+                    xface.removeAllListeners(test_event);
                     handler.reset();
                 });
 
-                it('should fire handlers using cordova.on', function(done) {
-                    cordova.on(test_event, handler);
+                it('should fire handlers using xface.on', function(done) {
+                    xface.on(test_event, handler);
                     h.fire(test_event, function(err) {
                         expect(handler).toHaveBeenCalled();
                         expect(err).not.toBeDefined();
@@ -181,16 +181,16 @@ describe('hooker', function() {
                     });
                 });
                 it('should pass the project root folder as parameter into the module-level handlers', function(done) {
-                    cordova.on(test_event, handler);
+                    xface.on(test_event, handler);
                     h.fire(test_event, function(err) {
                         expect(handler).toHaveBeenCalledWith({root:tempDir});
                         expect(err).not.toBeDefined();
                         done();
                     });
                 });
-                it('should be able to stop listening to events using cordova.off', function(done) {
-                    cordova.on(test_event, handler);
-                    cordova.off(test_event, handler);
+                it('should be able to stop listening to events using xface.off', function(done) {
+                    xface.on(test_event, handler);
+                    xface.off(test_event, handler);
                     h.fire(test_event, function(err) {
                         expect(handler).not.toHaveBeenCalled();
                         done();
@@ -208,8 +208,8 @@ describe('hooker', function() {
                         h2_fired = true;
                     };
                     runs(function() {
-                        cordova.on(test_event, h1);
-                        cordova.on(test_event, h2);
+                        xface.on(test_event, h1);
+                        xface.on(test_event, h2);
                         h.fire(test_event, function(err) {
                             done();
                         });
@@ -231,7 +231,7 @@ describe('hooker', function() {
                         expect(opts).toEqual(data);
                         cb();
                     };
-                    cordova.on(test_event, async);
+                    xface.on(test_event, async);
                     h.fire(test_event, data, function() {
                         done();
                     });
@@ -245,7 +245,7 @@ describe('hooker', function() {
                         data.root = tempDir;
                         expect(opts).toEqual(data);
                     };
-                    cordova.on(test_event, async);
+                    xface.on(test_event, async);
                     h.fire(test_event, data, function() {
                         done();
                     });

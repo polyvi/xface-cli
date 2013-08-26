@@ -48,12 +48,12 @@ var default_prefs = {
 module.exports = function ios_parser(project) {
     try {
         var xcodeproj_dir = fs.readdirSync(project).filter(function(e) { return e.match(/\.xcodeproj$/i); })[0];
-        if (!xcodeproj_dir) throw new Error('The provided path "' + project + '" is not a Cordova iOS project.');
+        if (!xcodeproj_dir) throw new Error('The provided path "' + project + '" is not a xFace iOS project.');
         this.xcodeproj = path.join(project, xcodeproj_dir);
         this.originalName = this.xcodeproj.substring(this.xcodeproj.lastIndexOf(path.sep)+1, this.xcodeproj.indexOf('.xcodeproj'));
         this.cordovaproj = path.join(project, this.originalName);
     } catch(e) {
-        throw new Error('The provided path is not a Cordova iOS project.');
+        throw new Error('The provided path is not a xFace iOS project.');
     }
     this.path = project;
     this.pbxproj = path.join(this.xcodeproj, 'project.pbxproj');
@@ -187,7 +187,7 @@ module.exports.prototype = {
     },
 
     update_www:function() {
-        var projectRoot = util.isCordova(this.path);
+        var projectRoot = util.isxFace(this.path);
         var www = util.projectWww(projectRoot);
         var project_www = this.www_dir();
 
@@ -207,7 +207,7 @@ module.exports.prototype = {
 
     // update the overrides folder into the www folder
     update_overrides:function() {
-        var projectRoot = util.isCordova(this.path);
+        var projectRoot = util.isxFace(this.path);
         var merges_path = path.join(util.appDir(projectRoot), 'merges', 'ios');
         if (fs.existsSync(merges_path)) {
             var overrides = path.join(merges_path, '*');
@@ -217,7 +217,7 @@ module.exports.prototype = {
 
     // update the overrides folder into the www folder
     update_staging:function() {
-        var projectRoot = util.isCordova(this.path);
+        var projectRoot = util.isxFace(this.path);
         if (fs.existsSync(this.staging_dir())) {
             var staging = path.join(this.staging_dir(), '*');
             shell.cp('-rf', staging, this.www_dir());

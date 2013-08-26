@@ -30,7 +30,7 @@ describe('compile command', function() {
     var is_cordova, list_platforms, fire, exec;
     var project_dir = '/some/path';
     beforeEach(function() {
-        is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
+        is_cordova = spyOn(util, 'isxFace').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(hooker.prototype, 'fire').andCallFake(function(e, opts, cb) {
             cb(false);

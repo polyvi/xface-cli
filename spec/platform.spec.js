@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../cordova'),
+var xface = require('../xface'),
     path = require('path'),
     shell = require('shelljs'),
     plugman = require('plugman'),
@@ -33,14 +33,14 @@ var supported_platforms = Object.keys(platforms).filter(function(p) { return p !
 var project_dir = path.join('some', 'path');
 
 describe('platform command', function() {
-    var is_cordova, list_platforms, fire, config_parser, find_plugins, config_read, load, load_custom, rm, mkdir, existsSync, supports, pkg, name, exec, prep_spy, plugman_install, parsers = {};
+    var is_xface, list_platforms, fire, config_parser, find_plugins, config_read, load, load_custom, rm, mkdir, existsSync, supports, pkg, name, exec, prep_spy, plugman_install, parsers = {};
     beforeEach(function() {
         supported_platforms.forEach(function(p) {
             parsers[p] = spyOn(platforms[p], 'parser').andReturn({
                 staging_dir:function(){}
             });
         });
-        is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
+        is_xface = spyOn(util, 'isxFace').andReturn(project_dir);
         fire = spyOn(hooker.prototype, 'fire').andCallFake(function(e, opts, cb) {
             if (cb === undefined) cb = opts;
             cb(false);
@@ -69,65 +69,65 @@ describe('platform command', function() {
         exec = spyOn(shell, 'exec').andCallFake(function(cmd, opts, cb) {
             cb(0, '');
         });
-        prep_spy = spyOn(cordova, 'prepare').andCallFake(function(t, cb) {
+        prep_spy = spyOn(xface, 'prepare').andCallFake(function(t, cb) {
             cb();
         });
         plugman_install = spyOn(plugman, 'install');
     });
 
     describe('failure', function() {
-        it('should not run outside of a Cordova-based project by calling util.isCordova', function() {
-            is_cordova.andReturn(false);
+        it('should not run outside of a xFace-based project by calling util.isxFace', function() {
+            is_xface.andReturn(false);
             expect(function() {
-                cordova.platform();
-                expect(is_cordova).toHaveBeenCalled();
-            }).toThrow('Current working directory is not a Cordova-based project.');
+                xface.platform();
+                expect(is_xface).toHaveBeenCalled();
+            }).toThrow('Current working directory is not a xFace-based project.');
         });
         it('should report back an error if used with `add` and no platform is specified', function() {
             expect(function() {
-               cordova.platform('add');
+               xface.platform('add');
             }).toThrow('You need to qualify `add` or `remove` with one or more platforms!');
         });
         it('should report back an error if used with `rm` and no platform is specified', function() {
             expect(function() {
-               cordova.platform('rm');
+               xface.platform('rm');
             }).toThrow('You need to qualify `add` or `remove` with one or more platforms!');
         });
     });
 
     describe('success', function() {
-        it('should run inside a Cordova-based project by calling util.isCordova', function() {
-            cordova.platform();
-            expect(is_cordova).toHaveBeenCalled();
+        it('should run inside a xFace-based project by calling util.isxFace', function() {
+            xface.platform();
+            expect(is_xface).toHaveBeenCalled();
         });
 
         describe('`ls`', function() { 
             afterEach(function() {
-                cordova.removeAllListeners('results');
+                xface.removeAllListeners('results');
             });
             it('should list out no platforms for a fresh project', function(done) {
                 list_platforms.andReturn([]);
-                cordova.on('results', function(res) {
-                    expect(res).toEqual('No platforms added. Use `cordova platform add <platform>`.');
+                xface.on('results', function(res) {
+                    expect(res).toEqual('No platforms added. Use `xface platform add <platform>`.');
                     done();
                 });
-                cordova.platform('list');
+                xface.platform('list');
             });
 
             it('should list out added platforms in a project', function(done) {
-                cordova.on('results', function(res) {
+                xface.on('results', function(res) {
                     expect(res.length).toEqual(5);
                     done();
                 });
-                cordova.platform('list');
+                xface.platform('list');
             });
         });
         describe('`add`', function() {
             it('should shell out to specified platform\'s bin/create, using the version that is specified in platforms manifest', function() {
-                cordova.platform('add', 'android');
+                xface.platform('add', 'android');
                 expect(exec.mostRecentCall.args[0]).toMatch(/lib.android.cordova.\d.\d.\d[\d\w]*.bin.create/gi);
                 expect(exec.mostRecentCall.args[0]).toContain(project_dir);
-                cordova.platform('add', 'wp8');
+                xface.platform('add', 'wp8');
                 expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp8.cordova.\d.\d.\d[\d\w]*.wp8.bin.create/gi);
                 expect(exec.mostRecentCall.args[0]).toContain(project_dir);
             });
@@ -142,7 +142,7 @@ describe('platform command', function() {
                         }
                     }
                 });
-                cordova.platform('add', 'wp8');
+                xface.platform('add', 'wp8');
                 expect(load_custom).toHaveBeenCalledWith('haha', 'phonegap', 'wp8', 'bleeding edge', jasmine.any(Function));
                 expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp8.phonegap.bleeding edge.wp8.bin.create/gi);
                 expect(exec.mostRecentCall.args[0]).toContain(project_dir);
@@ -150,13 +150,13 @@ describe('platform command', function() {
         });
         describe('`remove`',function() {
             it('should remove a supported and added platform', function() {
-                cordova.platform('remove', 'android');
+                xface.platform('remove', 'android');
                 expect(rm).toHaveBeenCalledWith('-rf', path.join(project_dir, 'platforms', 'android'));
                 expect(rm).toHaveBeenCalledWith('-rf', path.join(project_dir, 'merges', 'android'));
             });
 
             it('should be able to remove multiple platforms', function() {
-                cordova.platform('remove', ['android', 'blackberry10']);
+                xface.platform('remove', ['android', 'blackberry10']);
                 expect(rm).toHaveBeenCalledWith('-rf', path.join(project_dir, 'platforms', 'android'));
                 expect(rm).toHaveBeenCalledWith('-rf', path.join(project_dir, 'merges', 'android'));
                 expect(rm).toHaveBeenCalledWith('-rf', path.join(project_dir, 'platforms', 'blackberry10'));
@@ -167,27 +167,27 @@ describe('platform command', function() {
     describe('hooks', function() {
         describe('list (ls) hooks', function() {
             it('should fire before hooks through the hooker module', function() {
-                cordova.platform();
+                xface.platform();
                 expect(fire).toHaveBeenCalledWith('before_platform_ls', jasmine.any(Function));
             });
             it('should fire after hooks through the hooker module', function() {
-                cordova.platform();
+                xface.platform();
                 expect(fire).toHaveBeenCalledWith('after_platform_ls', jasmine.any(Function));
             });
         });
         describe('remove (rm) hooks', function() {
             it('should fire before hooks through the hooker module', function() {
-                cordova.platform('rm', 'android');
+                xface.platform('rm', 'android');
                 expect(fire).toHaveBeenCalledWith('before_platform_rm', {platforms:['android']}, jasmine.any(Function));
             });
             it('should fire after hooks through the hooker module', function() {
-                cordova.platform('rm', 'android');
+                xface.platform('rm', 'android');
                 expect(fire).toHaveBeenCalledWith('after_platform_rm', {platforms:['android']}, jasmine.any(Function));
             });
         });
         describe('add hooks', function() {
             it('should fire before and after hooks through the hooker module', function() {
-                cordova.platform('add', 'android');
+                xface.platform('add', 'android');
                 expect(fire).toHaveBeenCalledWith('before_platform_add', {platforms:['android']}, jasmine.any(Function));
                 expect(fire).toHaveBeenCalledWith('after_platform_add', {platforms:['android']}, jasmine.any(Function));
             });
@@ -204,19 +204,19 @@ describe('platform.supports(name, callback)', function() {
     });
     it('should require a platform name', function() {
         expect(function() {
-            cordova.platform.supports(project_dir, undefined, function(e){});
+            xface.platform.supports(project_dir, undefined, function(e){});
         }).toThrow();
     });
 
     it('should require a callback function', function() {
         expect(function() {
-            cordova.platform.supports(project_dir, 'android', undefined);
+            xface.platform.supports(project_dir, 'android', undefined);
         }).toThrow();
     });
 
     describe('when platform is unknown', function() {
         it('should trigger callback with false', function(done) {
-            cordova.platform.supports(project_dir, 'windows-3.1', function(e) {
+            xface.platform.supports(project_dir, 'windows-3.1', function(e) {
                 expect(e).toEqual(jasmine.any(Error));
                 done();
             });
@@ -225,7 +225,7 @@ describe('platform.supports(name, callback)', function() {
 
     describe('when platform is supported', function() {
         it('should trigger callback without error', function(done) {
-            cordova.platform.supports(project_dir, 'android', function(e) {
+            xface.platform.supports(project_dir, 'android', function(e) {
                 expect(e).toBeNull();
                 done();
             });
@@ -237,7 +237,7 @@ describe('platform.supports(name, callback)', function() {
             supported_platforms.forEach(function(p) {
                 supports[p].andCallFake(function(project, cb) { cb(new Error('no sdk')); });
             });
-            cordova.platform.supports(project_dir, 'android', function(e) {
+            xface.platform.supports(project_dir, 'android', function(e) {
                 expect(e).toEqual(jasmine.any(Error));
                 done();
             });
@@ -248,9 +248,9 @@ describe('platform.supports(name, callback)', function() {
 describe('platform parsers', function() {
     it('should be exposed on the platform module', function() {
         for (var platform in platforms) {
-            expect(cordova.platform[platform]).toBeDefined();
+            expect(xface.platform[platform]).toBeDefined();
             for (var prop in platforms[platform]) {
-                expect(cordova.platform[platform][prop]).toBeDefined();
+                expect(xface.platform[platform][prop]).toBeDefined();
             }
         }
     });

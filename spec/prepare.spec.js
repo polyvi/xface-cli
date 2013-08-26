@@ -35,7 +35,7 @@ var supported_platforms_paths = supported_platforms.map(function(p) { return pat
 describe('prepare command', function() {
     var is_cordova, list_platforms, fire, config_parser, parsers = {}, plugman_prepare, find_plugins, plugman_get_json, load;
     beforeEach(function() {
-        is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
+        is_cordova = spyOn(util, 'isxFace').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(hooker.prototype, 'fire').andCallFake(function(e, opts, cb) {
             cb(false);
@@ -57,7 +57,7 @@ describe('prepare command', function() {
     });
 
     describe('failure', function() {
-        it('should not run outside of a cordova-based project by calling util.isCordova', function() {
+        it('should not run outside of a cordova-based project by calling util.isxFace', function() {
             is_cordova.andReturn(false);
             expect(function() {
                 cordova.prepare();
@@ -73,7 +73,7 @@ describe('prepare command', function() {
     });
     
     describe('success', function() {
-        it('should run inside a Cordova-based project by calling util.isCordova', function() {
+        it('should run inside a Cordova-based project by calling util.isxFace', function() {
             cordova.prepare();
             expect(is_cordova).toHaveBeenCalled();
         });

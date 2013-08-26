@@ -92,7 +92,7 @@ describe('ios project parser', function () {
             p = new platforms.ios.parser(ios_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
-            is_cordova = spyOn(util, 'isCordova').andReturn(proj);
+            is_cordova = spyOn(util, 'isxFace').andReturn(proj);
             write = spyOn(fs, 'writeFileSync');
             read = spyOn(fs, 'readFileSync').andReturn('');
         });

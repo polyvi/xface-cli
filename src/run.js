@@ -57,7 +57,7 @@ function shell_out_to_run(projectRoot, platform, error_callback, done) {
 }
 
 module.exports = function run(platformList, callback) {
-    var projectRoot = cordova_util.isCordova(process.cwd());
+    var projectRoot = cordova_util.isxFace(process.cwd());
 
     if (!projectRoot) {
         var err = new Error('Current working directory is not a Cordova-based project.');

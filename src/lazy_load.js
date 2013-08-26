@@ -33,7 +33,7 @@ var path          = require('path'),
 module.exports = {
     cordova:function lazy_load(platform, callback) {
         if (!(platform in platforms)) {
-            var err = new Error('Cordova library "' + platform + '" not recognized.');
+            var err = new Error('xFace library "' + platform + '" not recognized.');
             if (callback) return callback(err);
             else throw err;
         }

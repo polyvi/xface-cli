@@ -1,10 +1,10 @@
-# cordova-cli
+﻿# xface-cli
 
-> The command line tool to build, deploy and manage [Cordova](http://cordova.io)-based applications.
+> The command line tool to build, deploy and manage [xFace](http://polyvi.github.io/openxface/)-based applications.
 
-[Apache Cordova](http://cordova.io) allows for building native mobile applications using HTML, CSS and JavaScript. This tool helps with management of multi-platform Cordova applications as well as Cordova plugin integration.
+[xFace](http://polyvi.github.io/openxface/) allows for building native mobile applications using HTML, CSS and JavaScript. This tool helps with management of multi-platform xFace applications as well as xFace plugin integration.
 
-Check out the [Getting Started guides](http://cordova.apache.org/docs/en/edge/guide_getting-started_index.md.html#Getting%20Started%20Guides) for more details on how to work with Cordova sub-projects.
+Check out the [Getting Started guides](http://polyvi.github.io/openxface/) for more details on how to work with xFace sub-projects.
 
 # Supported Platforms
 
@@ -23,19 +23,19 @@ Check out the [Getting Started guides](http://cordova.apache.org/docs/en/edge/gu
     will not work unless you have the absolute latest updates for all
     Android SDK components. Also you will need the SDK's `tools` and `platform-tools` directories on your __system path__ otherwise Android support will fail.
 
-cordova-cli has been tested on Mas OS X, Linux, Windows 7 and Windows 8.
+xface-cli has been tested on Mas OS X, Linux, Windows 7 and Windows 8.
 
 # Install
 
-    npm install -g cordova
+    npm install -g xface
 
 # Getting Started
 
-cordova-cli has a single global `create` command that creates new cordova projects into a specified directory. Once you create a project, `cd` into it and you can execute a variety of project-level commands. Completely inspired by git's interface.
+xface-cli has a single global `create` command that creates new xface projects into a specified directory. Once you create a project, `cd` into it and you can execute a variety of project-level commands. Completely inspired by git's interface.
 
 ## Global Command
 
-- `create <directory> [<id> [<name>]]` create a new cordova project with optional name and id (package name, reverse-domain style)
+- `create <directory> [<id> [<name>]]` create a new xface project with optional name and id (package name, reverse-domain style)
 
 <a name="project_commands" />
 ## Project Commands
@@ -48,20 +48,20 @@ cordova-cli has a single global `create` command that creates new cordova projec
 - `plugin [rm | remove] <plugin-name> [<plugin-name> ...]` remove one (or more) added plugins
 - `prepare [platform...]` copies files into the specified platforms, or all platforms. it is then ready for building by Eclipse/Xcode/etc.
 - `compile [platform...]` compiles the app into a binary for each added platform. With no parameters, builds for all platforms, otherwise builds for the specified platforms.
-- `build [<platform> [<platform> [...]]]` an alias for `cordova prepare` followed by `cordova compile`
+- `build [<platform> [<platform> [...]]]` an alias for `xface prepare` followed by `xface compile`
 - `emulate [<platform> [<platform> [...]]]` launch emulators and deploy app to them. With no parameters emulates for all platforms added to the project, otherwise emulates for the specified platforms
 - `serve <platform> [port]` launch a local web server for that platform's www directory on the given port (default 8000).
 
 ### Optional Flags
 
-- `-d` or `--verbose` will pipe out more verbose output to your shell. You can also subscribe to `log` and `warn` events if you are consuming cordova-cli as a node module by calling `cordova.on('log', function() {})` or `cordova.on('warn', function() {})`.
-- `-v` or `--version` will print out the version of your cordova-cli install.
+- `-d` or `--verbose` will pipe out more verbose output to your shell. You can also subscribe to `log` and `warn` events if you are consuming xface-cli as a node module by calling `xface.on('log', function() {})` or `xface.on('warn', function() {})`.
+- `-v` or `--version` will print out the version of your xface-cli install.
 
 # Project Directory Structure
-A Cordova application built with cordova-cli will have the following directory structure:
+A xFace application built with xface-cli will have the following directory structure:
 
     myApp/
-    |--.cordova/
+    |--.xface/
     |-- merges/
     | | |-- android/
     | | |-- blackberry10/
@@ -74,10 +74,10 @@ A Cordova application built with cordova-cli will have the following directory s
     | `-- ios/
     `-- plugins/
 
-## .cordova/
-This directory identifies a tree as a cordova project. Simple configuration information is stored in here (such as BlackBerry environment variables).
+## .xface/
+This directory identifies a tree as a xface project. Simple configuration information is stored in here (such as BlackBerry environment variables).
 
-Commands other than `create` operate against the project directory itself, rather than the current directory - a search up the current directory's parents is made to find the project directory. Thus, any command (other than `create`) can be used from any subdirectory whose parent is a cordova project directory (same as git).
+Commands other than `create` operate against the project directory itself, rather than the current directory - a search up the current directory's parents is made to find the project directory. Thus, any command (other than `create`) can be used from any subdirectory whose parent is a xface project directory (same as git).
 
 ## merges/
 Platform-specific web assets (HTML, CSS and JavaScript files) are contained within appropriate subfolders in this directory. These are deployed during a `prepare` to the appropriate native directory.  Files placed under `merges/` will override matching files in the `www/` folder for the relevant platform. A quick example, assuming a project structure of:
@@ -94,11 +94,11 @@ After building the Android and iOS projects, the Android application will contai
 
 ## www/
 
-Contains the project's web artifacts, such as .html, .css and .js files. These are your main application assets. They will be copied on a `cordova prepare` to each platform's www directory.
+Contains the project's web artifacts, such as .html, .css and .js files. These are your main application assets. They will be copied on a `xface prepare` to each platform's www directory.
 
 ### Your Blanket: config.xml
 
-This file is what you should be editing to modify your application's metadata. Any time you run any cordova-cli commands, the tool will look at the contents of `config.xml` and use all relevant info from this file to define native application information. cordova-cli supports changing your application's data via the following elements inside the `config.xml` file:
+This file is what you should be editing to modify your application's metadata. Any time you run any xface-cli commands, the tool will look at the contents of `config.xml` and use all relevant info from this file to define native application information. xface-cli supports changing your application's data via the following elements inside the `config.xml` file:
 
 - The user-facing name can be modified via the contents of the `<name>` element.
 - The package name (AKA bundle identifier or application id) can be modified via the `id` attribute from the top-level `<widget>` element.
@@ -114,13 +114,13 @@ Any added plugins will be extracted or copied into this directory.
 
 # Hooks
 
-Projects created by cordova-cli have `before` and `after` hooks for each [project command](#project_commands).
+Projects created by xface-cli have `before` and `after` hooks for each [project command](#project_commands).
 
 There are two types of hooks: project-specific ones and module-level ones. Both of these types of hooks receive the project root folder as a parameter.
 
 ## Project-specific Hooks
 
-These are located under the `.cordova/hooks` directory in the root of your cordova project. Any scripts you add to these directories will be executed before and after the appropriate commands. Useful for integrating your own build systems or integrating with version control systems. __Remember__: make your scripts executable.
+These are located under the `.xface/hooks` directory in the root of your xface project. Any scripts you add to these directories will be executed before and after the appropriate commands. Useful for integrating your own build systems or integrating with version control systems. __Remember__: make your scripts executable.
 
 ### Examples
 
@@ -128,25 +128,25 @@ These are located under the `.cordova/hooks` directory in the root of your cordo
 
 ## Module-level Hooks
 
-If you are using cordova-cli as a module within a larger node application, you can also use the standard `EventEmitter` methods to attach to the events. The events include `before_build`, `before_compile`, `before_docs`, `before_emulate`, `before_run`, `before_platform_add`, `before_library_download`, `before_platform_ls`, `before_platform_rm`, `before_plugin_add`, `before_plugin_ls`, `before_plugin_rm` and `before_prepare`. There is also a `library_download` progress event. Additionally, there are `after_` flavours of all the above events.
+If you are using xface-cli as a module within a larger node application, you can also use the standard `EventEmitter` methods to attach to the events. The events include `before_build`, `before_compile`, `before_docs`, `before_emulate`, `before_run`, `before_platform_add`, `before_library_download`, `before_platform_ls`, `before_platform_rm`, `before_plugin_add`, `before_plugin_ls`, `before_plugin_rm` and `before_prepare`. There is also a `library_download` progress event. Additionally, there are `after_` flavours of all the above events.
 
-Once you `require('cordova')` in your node project, you will have the usual `EventEmitter` methods available (`on`, `off` or `removeListener`, `removeAllListeners`, and `emit` or `trigger`).
+Once you `require('xface')` in your node project, you will have the usual `EventEmitter` methods available (`on`, `off` or `removeListener`, `removeAllListeners`, and `emit` or `trigger`).
 
 # Examples
 
-## Creating a new cordova project
+## Creating a new xface project
 This example shows how to create a project from scratch named KewlApp with iOS and Android platform support, and includes a plugin named Kewlio. The project will live in ~/KewlApp
 
-    cordova create ~/KewlApp KewlApp
+    xface create ~/KewlApp KewlApp
     cd ~/KewlApp
-    cordova platform add ios android
-    cordova plugin add http://example.org/Kewlio-1.2.3.tar.gz
-    cordova build 
+    xface platform add ios android
+    xface plugin add http://example.org/Kewlio-1.2.3.tar.gz
+    xface build
 
 The directory structure of KewlApp now looks like this:
 
     KewlApp/
-    |-- .cordova/
+    |-- .xface/
     |-- merges/
     | |-- android/
     | `-- ios/
@@ -168,7 +168,7 @@ The directory structure of KewlApp now looks like this:
 
 ## TO-DO + Issues
 
-Please check [Cordova issues with the CLI Component](http://issues.cordova.io). If you find issues with this tool, please be so kind as to include relevant information needed to debug issues such as:
+Please check [xFace issues with the CLI Component]. If you find issues with this tool, please be so kind as to include relevant information needed to debug issues such as:
 
 - Your operating system and version
 - The application name, directory location, and identifier used with `create`
@@ -184,16 +184,16 @@ Thanks to everyone for contributing! For a list of people involved, please see t
 
 ##Windows
 When trying to add a platform on a Windows machine if you run into the following error message:
-    cordova library for "android" already exists. No need to download. Continuing.
+    xface library for "android" already exists. No need to download. Continuing.
     Checking if platform "android" passes minimum requirements...
     Checking Android requirements...
     Running "android list target" (output to follow)
     
     Error: The command `android` failed. Make sure you have the latest Android SDK installed, and the `android` command (inside the tools/ folder) added t
     o your path. Output:
-    at C:\Users\me\AppData\Roaming\npm\node_modules\cordova\src\platform.js:185:42
-    at C:\Users\me\AppData\Roaming\npm\node_modules\cordova\src\metadata\android_parser.js:50:13
-    at C:\Users\me\AppData\Roaming\npm\node_modules\cordova\node_modules\shelljs\shell.js:1707:7
+    at C:\Users\me\AppData\Roaming\npm\node_modules\xface\src\platform.js:185:42
+    at C:\Users\me\AppData\Roaming\npm\node_modules\xface\src\metadata\android_parser.js:50:13
+    at C:\Users\me\AppData\Roaming\npm\node_modules\xface\node_modules\shelljs\shell.js:1707:7
     at exithandler (child_process.js:633:7)
     at ChildProcess.errorhandler (child_process.js:649:5)
     at ChildProcess.EventEmitter.emit (events.js:95:17)

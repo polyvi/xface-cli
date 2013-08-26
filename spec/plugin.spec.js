@@ -35,7 +35,7 @@ var plugins_dir = path.join(project_dir, 'plugins');
 describe('plugin command', function() {
     var is_cordova, list_platforms, fire, find_plugins, rm, mkdir, existsSync, exec, prep_spy, plugman_install, plugman_fetch, parsers = {}, uninstallPlatform, uninstallPlugin;
     beforeEach(function() {
-        is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
+        is_cordova = spyOn(util, 'isxFace').andReturn(project_dir);
         fire = spyOn(hooker.prototype, 'fire').andCallFake(function(e, opts, cb) {
             if (cb === undefined) cb = opts;
             cb(false);
@@ -68,7 +68,7 @@ describe('plugin command', function() {
     });
 
     describe('failure', function() {
-        it('should not run outside of a Cordova-based project by calling util.isCordova', function() {
+        it('should not run outside of a Cordova-based project by calling util.isxFace', function() {
             is_cordova.andReturn(false);
             expect(function() {
                 cordova.plugin();
@@ -88,7 +88,7 @@ describe('plugin command', function() {
     });
 
     describe('success', function() {
-        it('should run inside a Cordova-based project by calling util.isCordova', function() {
+        it('should run inside a Cordova-based project by calling util.isxFace', function() {
             cordova.plugin();
             expect(is_cordova).toHaveBeenCalled();
         });

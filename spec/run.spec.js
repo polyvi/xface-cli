@@ -31,7 +31,7 @@ describe('run command', function() {
     var project_dir = '/some/path';
     var prepare_spy;
     beforeEach(function() {
-        is_cordova = spyOn(util, 'isCordova').andReturn(project_dir);
+        is_cordova = spyOn(util, 'isxFace').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(hooker.prototype, 'fire').andCallFake(function(e, opts, cb) {
             cb(false);

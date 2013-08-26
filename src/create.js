@@ -26,8 +26,8 @@ var path          = require('path'),
     lazy_load     = require('./lazy_load'),
     util          = require('./util');
 
-var DEFAULT_NAME = "HelloCordova",
-    DEFAULT_ID   = "io.cordova.hellocordova";
+var DEFAULT_NAME = "HelloxFace",
+    DEFAULT_ID   = "io.xface.hello";
 
 /**
  * Usage:
@@ -59,9 +59,9 @@ module.exports = function create (dir, id, name, callback) {
     // Make absolute.
     dir = path.resolve(dir);
 
-    events.emit('log', 'Creating a new cordova project with name "' + name + '" and id "' + id + '" at location "' + dir + '"');
+    events.emit('log', 'Creating a new xface project with name "' + name + '" and id "' + id + '" at location "' + dir + '"');
 
-    var dotCordova = path.join(dir, '.cordova');
+    var dotCordova = path.join(dir, '.xface');
     var www_dir = path.join(dir, 'www');
 
     // Create basic project structure.
@@ -99,8 +99,8 @@ module.exports = function create (dir, id, name, callback) {
     shell.mkdir(path.join(hooks, 'before_prepare'));
     shell.mkdir(path.join(hooks, 'before_run'));
 
-    // Write out .cordova/config.json file with a simple json manifest
-    require('../cordova').config(dir, {
+    // Write out .xface/config.json file with a simple json manifest
+    require('../xface').config(dir, {
         id:id,
         name:name
     });
@@ -143,14 +143,14 @@ module.exports = function create (dir, id, name, callback) {
             }
         });
     } else {
-        // Nope, so use stock cordova-hello-world-app one.
-        events.emit('log', 'Using stock cordova hello-world application.');
+        // Nope, so use stock xface-hello-world-app one.
+        events.emit('log', 'Using stock xface hello-world application.');
         lazy_load.cordova('www', function(err) {
             if (err) {
                 if (callback) callback(err);
                 else throw err;
             } else {
-                events.emit('log', 'Copying stock Cordova www assets into "' + www_dir + '"');
+                events.emit('log', 'Copying stock xFace www assets into "' + www_dir + '"');
                 finalize(path.join(util.libDirectory, 'www', 'cordova', platforms.www.version));
             }
         });

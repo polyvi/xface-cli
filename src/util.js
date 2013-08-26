@@ -24,29 +24,29 @@ var fs            = require('fs'),
 
 // Global configuration paths
 var HOME = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
-var global_config_path = path.join(HOME, '.cordova');
+var global_config_path = path.join(HOME, '.xface');
 var lib_path = path.join(global_config_path, 'lib');
 shell.mkdir('-p', lib_path);
 
 module.exports = {
     globalConfig:global_config_path,
     libDirectory:lib_path,
-    // Runs up the directory chain looking for a .cordova directory.
-    // IF it is found we are in a Cordova project.
+    // Runs up the directory chain looking for a .xface directory.
+    // IF it is found we are in a xFace project.
     // If not.. we're not. HOME directory doesnt count.
     // HOMEDRIVE is used to catch when we've backed up to the root drive in windows (i.e C:\)
-    isCordova: function isCordova(dir) {
+    isxFace: function isxFace(dir) {
         if (dir && dir != process.env['HOMEDRIVE'] + path.sep) {
             if (dir == HOME) {
                 return false;
             } else {
                 var contents = fs.readdirSync(dir);
-                if (contents && contents.length && (contents.indexOf('.cordova') > -1)) {
+                if (contents && contents.length && (contents.indexOf('.xface') > -1)) {
                     return dir;
                 } else {
                     var parent = path.join(dir, '..');
                     if (parent && parent.length > 1) {
-                        return isCordova(parent);
+                        return isxFace(parent);
                     } else return false;
                 }
             }

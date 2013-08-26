@@ -13,15 +13,15 @@ describe('lazy_load module', function() {
     beforeEach(function() {
         custom_path = spyOn(config, 'has_custom_path').andReturn(false);
     });
-    describe('cordova method (loads stock cordova libs)', function() {
+    describe('cordova method (loads stock xface libs)', function() {
         var custom;
         beforeEach(function() {
             custom = spyOn(lazy_load, 'custom');
         });
-        it('should throw if platform is not a stock cordova platform', function() {
+        it('should throw if platform is not a stock xface platform', function() {
             expect(function() {
                 lazy_load.cordova('atari');
-            }).toThrow('Cordova library "atari" not recognized.');
+            }).toThrow('xFace library "atari" not recognized.');
         });
         it('should invoke lazy_load.custom with appropriate url, platform, and version as specified in platforms manifest', function() {
             lazy_load.cordova('android');
@@ -29,7 +29,7 @@ describe('lazy_load module', function() {
         });
     });
 
-    describe('custom method (loads custom cordova libs)', function() {
+    describe('custom method (loads custom xface libs)', function() {
         var mkdir, exists, fire, rm, sym;
         beforeEach(function() {
             mkdir = spyOn(shell, 'mkdir');

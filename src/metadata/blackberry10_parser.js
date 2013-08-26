@@ -97,7 +97,7 @@ module.exports.prototype = {
     },
 
     update_www:function() {
-        var projectRoot = util.isCordova(this.path);
+        var projectRoot = util.isxFace(this.path);
         var www = util.projectWww(projectRoot);
         var platformWww = this.www_dir();
         // remove the stock www folder
@@ -126,7 +126,7 @@ module.exports.prototype = {
 
     // update the overrides folder into the www folder
     update_overrides:function() {
-        var projectRoot = util.isCordova(this.path);
+        var projectRoot = util.isxFace(this.path);
         var merges_path = path.join(util.appDir(projectRoot), 'merges', 'blackberry10');
         if (fs.existsSync(merges_path)) {
             var overrides = path.join(merges_path, '*');
@@ -136,7 +136,7 @@ module.exports.prototype = {
 
     // update the overrides folder into the www folder
     update_staging:function() {
-        var projectRoot = util.isCordova(this.path);
+        var projectRoot = util.isxFace(this.path);
         if (fs.existsSync(this.staging_dir())) {
             var staging = path.join(this.staging_dir(), '*');
             shell.cp('-rf', staging, this.www_dir());

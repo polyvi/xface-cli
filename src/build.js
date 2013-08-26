@@ -25,7 +25,7 @@ var util              = require('./util'),
     n                 = require('ncallbacks');
 
 module.exports = function build(platformList, callback) {
-    var projectRoot = util.isCordova(process.cwd());
+    var projectRoot = util.isxFace(process.cwd());
     if (!projectRoot) {
         var err = new Error('Current working directory is not a Cordova-based project.');
         if (callback) callback(err);

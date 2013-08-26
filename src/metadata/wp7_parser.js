@@ -149,7 +149,7 @@ module.exports.prototype = {
     },
     // copies the app www folder into the wp7 project's www folder and updates the csproj file.
     update_www:function() {
-        var project_root = util.isCordova(this.wp7_proj_dir);
+        var project_root = util.isxFace(this.wp7_proj_dir);
         var project_www = util.projectWww(project_root);
         // remove stock platform assets
         shell.rm('-rf', this.www_dir());
@@ -189,7 +189,7 @@ module.exports.prototype = {
         }
 
         // now add all www references back in from the root www folder
-        var project_root = util.isCordova(this.wp7_proj_dir);
+        var project_root = util.isxFace(this.wp7_proj_dir);
         var www_files = this.folder_contents('www', util.projectWww(project_root));
         for(file in www_files) {
             var item = new et.Element('ItemGroup');
@@ -228,7 +228,7 @@ module.exports.prototype = {
     },
 
     update_staging: function() {
-        var projectRoot = util.isCordova(this.wp7_proj_dir);
+        var projectRoot = util.isxFace(this.wp7_proj_dir);
         if (fs.existsSync(this.staging_dir())) {
             var staging = path.join(this.staging_dir(), '*');
             shell.cp('-rf', staging, this.www_dir());

@@ -1,4 +1,4 @@
-var cordova = require('../cordova'),
+var xface = require('../xface'),
     shell = require('shelljs'),
     path = require('path'),
     fs = require('fs'),
@@ -10,28 +10,28 @@ var cwd = process.cwd();
 var home = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
 
 describe('util module', function() {
-    describe('isCordova method', function() {
+    describe('isxFace method', function() {
         it('should return false if it hits the home directory', function() {
             var somedir = path.join(home, 'somedir');
             this.after(function() {
                 shell.rm('-rf', somedir);
             });
             shell.mkdir(somedir);
-            expect(util.isCordova(somedir)).toEqual(false);
+            expect(util.isxFace(somedir)).toEqual(false);
         });
-        it('should return false if it cannot find a .cordova directory up the directory tree', function() {
+        it('should return false if it cannot find a .xface directory up the directory tree', function() {
             var somedir = path.join(home, '..');
-            expect(util.isCordova(somedir)).toEqual(false);
+            expect(util.isxFace(somedir)).toEqual(false);
         });
-        it('should return the first directory it finds with a .cordova folder in it', function() {
+        it('should return the first directory it finds with a .xface folder in it', function() {
             var somedir = path.join(home,'somedir');
             var anotherdir = path.join(somedir, 'anotherdir');
             this.after(function() {
                 shell.rm('-rf', somedir);
             });
             shell.mkdir('-p', anotherdir);
-            shell.mkdir(path.join(somedir, '.cordova'));
-            expect(util.isCordova(somedir)).toEqual(somedir);
+            shell.mkdir(path.join(somedir, '.xface'));
+            expect(util.isxFace(somedir)).toEqual(somedir);
         });
     });
     describe('deleteSvnFolders method', function() {
@@ -54,7 +54,7 @@ describe('util module', function() {
         afterEach(function() {
             shell.rm('-rf', temp);
         });
-        it('should only return supported platform directories present in a cordova project dir', function() {
+        it('should only return supported platform directories present in a xface project dir', function() {
             var platforms = path.join(temp, 'platforms');
             var android = path.join(platforms, 'android');
             var ios = path.join(platforms, 'ios');
@@ -73,7 +73,7 @@ describe('util module', function() {
         afterEach(function() {
             shell.rm('-rf', temp);
         });
-        it('should only return plugin directories present in a cordova project dir', function() {
+        it('should only return plugin directories present in a xface project dir', function() {
             var plugins = path.join(temp, 'plugins');
             var android = path.join(plugins, 'android');
             var ios = path.join(plugins, 'ios');

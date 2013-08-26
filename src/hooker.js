@@ -23,8 +23,8 @@ var shell = require('shelljs'),
     path  = require('path');
 
 module.exports = function hooker(root) {
-    var r = util.isCordova(root);
-    if (!r) throw new Error('Not a Cordova project, can\'t use hooks.');
+    var r = util.isxFace(root);
+    if (!r) throw new Error('Not a xFace project, can\'t use hooks.');
     else this.root = r;
 }
 
@@ -46,7 +46,7 @@ module.exports.prototype = {
             opts = {};
         }
         var self = this;
-        var dir = path.join(this.root, '.cordova', 'hooks', hook);
+        var dir = path.join(this.root, '.xface', 'hooks', hook);
         opts.root = this.root;
 
         // Fire JS hook for the event

@@ -160,7 +160,7 @@ module.exports.prototype = {
     },
 
     update_www:function() {
-        var projectRoot = util.isCordova(this.path);
+        var projectRoot = util.isxFace(this.path);
         var www = util.projectWww(projectRoot);
         var platformWww = path.join(this.path, 'assets');
         // remove stock platform assets
@@ -181,7 +181,7 @@ module.exports.prototype = {
 
     // update the overrides folder into the www folder
     update_overrides:function() {
-        var projectRoot = util.isCordova(this.path);
+        var projectRoot = util.isxFace(this.path);
         var merges_path = path.join(util.appDir(projectRoot), 'merges', 'android');
         if (fs.existsSync(merges_path)) {
             var overrides = path.join(merges_path, '*');

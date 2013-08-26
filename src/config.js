@@ -33,7 +33,7 @@ module.exports = function config(project_root, opts) {
 };
 
 module.exports.read = function get_config(project_root) {
-    var dotCordova = path.join(project_root, '.cordova');
+    var dotCordova = path.join(project_root, '.xface');
 
     if (!fs.existsSync(dotCordova)) {
         shell.mkdir('-p', dotCordova);
@@ -48,7 +48,7 @@ module.exports.read = function get_config(project_root) {
 };
 
 module.exports.write = function set_config(project_root, json) {
-    var dotCordova = path.join(project_root, '.cordova');
+    var dotCordova = path.join(project_root, '.xface');
     var config_json = path.join(dotCordova, 'config.json');
     fs.writeFileSync(config_json, JSON.stringify(json), 'utf-8');
     return json;

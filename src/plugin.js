@@ -28,7 +28,7 @@ var cordova_util  = require('./util'),
     events        = require('./events');
 
 module.exports = function plugin(command, targets, callback) {
-    var projectRoot = cordova_util.isCordova(process.cwd());
+    var projectRoot = cordova_util.isxFace(process.cwd());
 
     if (!projectRoot) {
         var err = new Error('Current working directory is not a Cordova-based project.');
@@ -166,7 +166,7 @@ module.exports = function plugin(command, targets, callback) {
                     if (callback) callback(err);
                     else throw err;
                 } else {
-                    events.emit('results', (plugins.length ? plugins : 'No plugins added. Use `cordova plugin add <plugin>`.'));
+                    events.emit('results', (plugins.length ? plugins : 'No plugins added. Use `xface plugin add <plugin>`.'));
                     hooks.fire('after_plugin_ls', function(err) {
                         if (err) {
                             if (callback) callback(err);
