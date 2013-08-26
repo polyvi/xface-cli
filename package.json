@@ -1,29 +1,29 @@
 {
-  "name": "cordova",
-  "version": "3.0.0",
+  "name": "xface",
+  "version": "1.0.0",
   "preferGlobal": "true",
-  "description": "Cordova command line interface tool",
-  "main": "cordova",
+  "description": "OepnxFace command line interface tool",
+  "main": "xface",
   "engines":{
       "node":">=0.9.9"
   },
   "engineStrict":true,
   "bin": {
-    "cordova": "./bin/cordova"
+    "xface": "./bin/xface"
   },
   "scripts": {
     "test": "jasmine-node --color spec"
   },
   "repository": {
     "type": "git",
-    "url": "https://git-wip-us.apache.org/repos/asf/cordova-cli.git"
+    "url": "git@git.polyvi.com:xface-cli.git"
   },
   "bugs":{
     "url" : "https://issues.apache.org/jira/browse/CB",
     "email" : "dev@cordova.apache.org"
   },
   "keywords": [
-    "cordova",
+    "OpenxFace",
     "client",
     "cli"
   ],

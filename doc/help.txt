@@ -1,10 +1,10 @@
 Synopsis
     
-    cordova command [options]
+    xface command [options]
 
 Global Commands
 
-    create <PATH> [ID] [NAME] ................ creates a cordova project in the specified PATH, with
+    create <PATH> [ID] [NAME] ................ creates a xface project in the specified PATH, with
                                                optional NAME and ID (reverse-domain-style package name)
     help ..................................... shows this syntax summary
 
@@ -30,13 +30,13 @@ Command-line Flags/Options
 
     -v, --version ............................. prints out this utility's version
     -d, --verbose ............................. debug mode produces verbose log output for all activity,
-                                                including output of sub-commands cordova invokes
+                                                including output of sub-commands xface invokes
 
 Example usage
 
-    $ cordova create Baz
+    $ xface create Baz
     $ cd Baz
-    $ cordova platform add android
-    $ cordova build
-    $ cordova serve android
+    $ xface platform add android
+    $ xface build
+    $ xface serve android
 
