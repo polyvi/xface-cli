@@ -2,7 +2,7 @@
   "name": "xface",
   "version": "1.0.0",
   "preferGlobal": "true",
-  "description": "OepnxFace command line interface tool",
+  "description": "xFace command line interface tool",
   "main": "xface",
   "engines":{
       "node":">=0.9.9"
