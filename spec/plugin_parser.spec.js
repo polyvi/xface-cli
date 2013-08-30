@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../cordova'),
+var xface = require('../xface'),
     path = require('path'),
     fs = require('fs'),
     plugin_parser = require('../src/plugin_parser'),

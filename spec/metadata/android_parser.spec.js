@@ -24,7 +24,7 @@ var platforms = require('../../platforms'),
     ET = require('elementtree'),
     config = require('../../src/config'),
     config_parser = require('../../src/config_parser'),
-    cordova = require('../../cordova');
+    xface = require('../../xface');
 
 describe('android project parser', function() {
     var proj = path.join('some', 'path');
@@ -114,7 +114,7 @@ describe('android project parser', function() {
         });
 
         describe('update_from_config method', function() {
-            var et, xml, find, write_xml, root, cfg, readdir, cfg_parser, find_obj, root_obj, cfg_access_add, cfg_access_rm, cfg_pref_add, cfg_pref_rm;
+            var et, xml, find, write_xml, root, cfg, readdir, cfg_parser, find_obj, root_obj, cfg_access_add, cfg_access_rm, cfg_pref_add, cfg_pref_rm, cfg_content;
             beforeEach(function() {
                 find_obj = {
                     text:'hi'
@@ -140,11 +140,13 @@ describe('android project parser', function() {
                 cfg.version = function() { return 'one point oh' };
                 cfg.access.get = function() { return [] };
                 cfg.preference.get = function() { return [] };
+                cfg.content = function() { return 'index.html' };
                 read.andReturn('some java package');
                 cfg_access_add = jasmine.createSpy('config_parser access add');
                 cfg_access_rm = jasmine.createSpy('config_parser access rm');
                 cfg_pref_rm = jasmine.createSpy('config_parser pref rm');
                 cfg_pref_add = jasmine.createSpy('config_parser pref add');
+                cfg_content = jasmine.createSpy('config_parser content');
                 cfg_parser = spyOn(util, 'config_parser').andReturn({
                     access:{
                         remove:cfg_access_rm,
@@ -155,7 +157,8 @@ describe('android project parser', function() {
                         remove:cfg_pref_rm,
                         get:function(){},
                         add:cfg_pref_add
-                    }
+                    },
+                    content:cfg_content
                 });
             });
 
@@ -163,7 +166,7 @@ describe('android project parser', function() {
                 p.update_from_config(cfg);
                 expect(find_obj.text).toEqual('testname');
             });
-            it('should write out the app id to androidmanifest.xml and update the cordova-android entry Java class', function() {
+            it('should write out the app id to androidmanifest.xml and update the xface-android entry Java class', function() {
                 p.update_from_config(cfg);
                 expect(root_obj.attrib.package).toEqual('testpkg');
             });
@@ -197,6 +200,10 @@ describe('android project parser', function() {
                 expect(cfg_pref_add).toHaveBeenCalledWith({name:"useBrowserHistory",value:"true"});
                 expect(cfg_pref_add).toHaveBeenCalledWith({name:"exit-on-suspend",value:"false"});
             });
+            it('should update the content tag', function() {
+                p.update_from_config(cfg);
+                expect(cfg_content).toHaveBeenCalledWith('index.html');
+            });
         });
         describe('www_dir method', function() {
             it('should return assets/www', function() {
@@ -219,12 +226,12 @@ describe('android project parser', function() {
                 expect(rm).toHaveBeenCalled();
                 expect(cp).toHaveBeenCalled();
             });
-            it('should copy in a fresh cordova.js from stock cordova lib if no custom lib is specified', function() {
+            it('should copy in a fresh xface.js from stock xface lib if no custom lib is specified', function() {
                 p.update_www();
                 expect(write).toHaveBeenCalled();
                 expect(read.mostRecentCall.args[0]).toContain(util.libDirectory);
             });
-            it('should copy in a fresh cordova.js from custom cordova lib if custom lib is specified', function() {
+            it('should copy in a fresh xface.js from custom xface lib if custom lib is specified', function() {
                 var custom_path = path.join('custom', 'path');
                 custom.andReturn(custom_path);
                 p.update_www();

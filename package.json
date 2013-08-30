@@ -1,6 +1,6 @@
 {
   "name": "xface",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "preferGlobal": "true",
   "description": "xFace command line interface tool",
   "main": "xface",
@@ -30,7 +30,7 @@
   "dependencies": {
     "colors":">=0.6.0",
     "elementtree":"0.1.3",
-    "plugman":"0.9.10",
+    "plugman":"0.10.0",
     "plist":"0.4.x",
     "xcode":"0.5.1",
     "express":"3.0.0",
@@ -43,7 +43,9 @@
     "follow-redirects":"0.0.x",
     "prompt":"0.2.7",
     "tar":"0.1.x",
-    "open": "0.0.3"
+    "open": "0.0.3",
+    "npm":"1.3.x",
+    "optimist":"0.6.0"
   },
   "devDependencies": {
     "jasmine-node":"1.8.x"
@@ -69,7 +71,9 @@
     {"name": "Matt LeGrand", "email": "mlegrand@gmail.com"},
     {"name": "Michal Mocny", "email": "mmocny@gmail.com"},
     {"name": "Sam Breed", "email": "sam@quickleft.com"},
-    {"name": "Tommy-Carlos Williams", "email": "tommy@devgeeks.org"}
+    {"name": "Tommy-Carlos Williams", "email": "tommy@devgeeks.org"},
+    {"name": "Rubén Norte", "email": "rubennorte@gmail.com"},
+    {"name": "Germano Gabbianelli", "email": "tyrion.mx@gmail.com"}
   ],
   "license": "Apache version 2.0"
 }

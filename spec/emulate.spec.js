@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../cordova'),
+var xface = require('../xface'),
     platforms = require('../platforms'),
     shell = require('shelljs'),
     path = require('path'),
@@ -36,32 +36,39 @@ describe('emulate command', function() {
         fire = spyOn(hooker.prototype, 'fire').andCallFake(function(e, opts, cb) {
             cb(false);
         });
-        prepare_spy = spyOn(cordova, 'prepare').andCallFake(function(platforms, cb) {
+        prepare_spy = spyOn(xface, 'prepare').andCallFake(function(platforms, cb) {
             cb();
         });
         exec = spyOn(shell, 'exec').andCallFake(function(cmd, opts, cb) { cb(0, ''); });
     });
     describe('failure', function() {
-        it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function() {
+        it('should not run inside a xFace-based project with no added platforms by calling util.listPlatforms', function() {
             list_platforms.andReturn([]);
             expect(function() {
-                cordova.emulate();
-            }).toThrow('No platforms added to this project. Please use `cordova platform add <platform>`.');
+                xface.emulate();
+            }).toThrow('No platforms added to this project. Please use `xface platform add <platform>`.');
         });
-        it('should not run outside of a Cordova-based project', function() {
+        it('should not run outside of a xFace-based project', function() {
             is_cordova.andReturn(false);
             expect(function() {
-                cordova.emulate();
-            }).toThrow('Current working directory is not a Cordova-based project.');
+                xface.emulate();
+            }).toThrow('Current working directory is not a xFace-based project.');
         });
     });
 
     describe('success', function() {
-        it('should run inside a Cordova-based project with at least one added platform and call prepare and shell out to the emulate script', function(done) {
-            cordova.emulate(['android','ios'], function(err) {
+        it('should run inside a xFace-based project with at least one added platform and call prepare and shell out to the emulate script', function(done) {
+            xface.emulate(['android','ios'], function(err) {
                 expect(prepare_spy).toHaveBeenCalledWith(['android', 'ios'], jasmine.any(Function));
                 expect(exec).toHaveBeenCalledWith('"' + path.join(project_dir, 'platforms', 'android', 'cordova', 'run') + '" --emulator', jasmine.any(Object), jasmine.any(Function));
                 expect(exec).toHaveBeenCalledWith('"' + path.join(project_dir, 'platforms', 'ios', 'cordova', 'run') + '" --emulator', jasmine.any(Object), jasmine.any(Function));
+                done();
+            });
+        });
+        it('should pass down options', function(done) {
+            xface.emulate({platforms: ['ios'], options:["--optionTastic"]}, function(err) {
+                expect(prepare_spy).toHaveBeenCalledWith(['ios'], jasmine.any(Function));
+                expect(exec).toHaveBeenCalledWith('"' + path.join(project_dir, 'platforms', 'ios', 'cordova', 'run') + '" --optionTastic', jasmine.any(Object), jasmine.any(Function));
                 done();
             });
         });
@@ -70,12 +77,12 @@ describe('emulate command', function() {
     describe('hooks', function() {
         describe('when platforms are added', function() {
             it('should fire before hooks through the hooker module', function() {
-                cordova.emulate(['android', 'ios']);
-                expect(fire).toHaveBeenCalledWith('before_emulate', {platforms:['android', 'ios']}, jasmine.any(Function));
+                xface.emulate(['android', 'ios']);
+                expect(fire).toHaveBeenCalledWith('before_emulate', {verbose: false, platforms:['android', 'ios'], options: []}, jasmine.any(Function));
             });
             it('should fire after hooks through the hooker module', function(done) {
-                cordova.emulate('android', function() {
-                     expect(fire).toHaveBeenCalledWith('after_emulate', {platforms:['android']}, jasmine.any(Function));
+                xface.emulate('android', function() {
+                     expect(fire).toHaveBeenCalledWith('after_emulate', {verbose: false, platforms:['android'], options: []}, jasmine.any(Function));
                      done();
                 });
             });
@@ -85,7 +92,7 @@ describe('emulate command', function() {
             it('should not fire the hooker', function() {
                 list_platforms.andReturn([]);
                 expect(function() {
-                    cordova.emulate();
+                    xface.emulate();
                 }).toThrow();
                 expect(fire).not.toHaveBeenCalled();
             });

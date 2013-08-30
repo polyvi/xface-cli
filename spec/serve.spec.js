@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../cordova'),
+var xface = require('../xface'),
     path = require('path'),
     shell = require('shelljs'),
     request = require('request'),
@@ -39,7 +39,7 @@ xdescribe('serve command', function() {
         shell.rm('-rf', tempDir);
         shell.mkdir('-p', tempDir);
     });
-    it('should not run outside of a Cordova-based project', function() {
+    it('should not run outside of a xFace-based project', function() {
         this.after(function() {
             process.chdir(cwd);
         });
@@ -47,7 +47,7 @@ xdescribe('serve command', function() {
         process.chdir(tempDir);
 
         expect(function() {
-            cordova.serve('android');
+            xface.serve('android');
         }).toThrow();
     });
 
@@ -59,10 +59,10 @@ xdescribe('serve command', function() {
         };
 
         beforeEach(function() {
-            cordova.create(tempDir);
+            xface.create(tempDir);
             process.chdir(tempDir);
-            cordova.platform('add', 'android');
-            cordova.platform('add', 'ios');
+            xface.platform('add', 'android');
+            xface.platform('add', 'ios');
 
             // Write testing HTML files into the directory.
             fs.writeFileSync(path.join(tempDir, 'platforms', 'android', 'assets', 'www', 'test.html'), payloads.android);
@@ -77,7 +77,7 @@ xdescribe('serve command', function() {
             return function() {
                 var ret;
                 runs(function() {
-                    ret = port ? cordova.serve(platform, port) : cordova.serve(platform);
+                    ret = port ? xface.serve(platform, port) : xface.serve(platform);
                 });
 
                 waitsFor(function() {

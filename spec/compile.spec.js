@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../cordova'),
+var xface = require('../xface'),
     platforms = require('../platforms'),
     shell = require('shelljs'),
     path = require('path'),
@@ -40,24 +40,31 @@ describe('compile command', function() {
         });
     });
     describe('failure', function() {
-        it('should not run inside a Cordova-based project with no added platforms by calling util.listPlatforms', function() {
+        it('should not run inside a xFace-based project with no added platforms by calling util.listPlatforms', function() {
             list_platforms.andReturn([]);
             expect(function() {
-                cordova.compile();
-            }).toThrow('No platforms added to this project. Please use `cordova platform add <platform>`.');
+                xface.compile();
+            }).toThrow('No platforms added to this project. Please use `xface platform add <platform>`.');
         });
-        it('should not run outside of a Cordova-based project', function() {
+        it('should not run outside of a xFace-based project', function() {
             is_cordova.andReturn(false);
             expect(function() {
-                cordova.compile();
-            }).toThrow('Current working directory is not a Cordova-based project.');
+                xface.compile();
+            }).toThrow('Current working directory is not a xFace-based project.');
         });
     });
 
     describe('success', function() {
-        it('should run inside a Cordova-based project with at least one added platform and shell out to build', function(done) {
-            cordova.compile(['android','ios'], function(err) {
+        it('should run inside a xFace-based project with at least one added platform and shell out to build', function(done) {
+            xface.compile(['android','ios'], function(err) {
                 expect(exec).toHaveBeenCalledWith('"' + path.join(project_dir, 'platforms', 'android', 'cordova', 'build') + '"', jasmine.any(Object), jasmine.any(Function));
+                done();
+            });
+        });
+        it('should pass down optional parameters', function (done) {
+            xface.compile({platforms:["blackberry10"], options:["--release"]}, function (err) {
+                var buildCommand = path.join(project_dir, 'platforms', 'blackberry10', 'cordova', 'build');
+                expect(exec).toHaveBeenCalledWith('"' + buildCommand + '" --release', jasmine.any(Object), jasmine.any(Function));
                 done();
             });
         });
@@ -66,12 +73,12 @@ describe('compile command', function() {
     describe('hooks', function() {
         describe('when platforms are added', function() {
             it('should fire before hooks through the hooker module', function() {
-                cordova.compile(['android', 'ios']);
-                expect(fire).toHaveBeenCalledWith('before_compile', {platforms:['android', 'ios']}, jasmine.any(Function));
+                xface.compile(['android', 'ios']);
+                expect(fire).toHaveBeenCalledWith('before_compile', {verbose: false, platforms:['android', 'ios'], options: []}, jasmine.any(Function));
             });
             it('should fire after hooks through the hooker module', function(done) {
-                cordova.compile('android', function() {
-                     expect(fire).toHaveBeenCalledWith('after_compile', {platforms:['android']}, jasmine.any(Function));
+                xface.compile('android', function() {
+                     expect(fire).toHaveBeenCalledWith('after_compile', {verbose: false, platforms:['android'], options: []}, jasmine.any(Function));
                      done();
                 });
             });
@@ -81,7 +88,7 @@ describe('compile command', function() {
             it('should not fire the hooker', function() {
                 list_platforms.andReturn([]);
                 expect(function() {
-                    cordova.compile();
+                    xface.compile();
                 }).toThrow();
                 expect(fire).not.toHaveBeenCalled();
             });

@@ -26,7 +26,7 @@ var platforms = require('../../platforms'),
     fs = require('fs'),
     config = require('../../src/config'),
     config_parser = require('../../src/config_parser'),
-    cordova = require('../../cordova');
+    xface = require('../../xface');
 
 describe('ios project parser', function () {
     var proj = path.join('some', 'path');
@@ -44,7 +44,7 @@ describe('ios project parser', function () {
             readdir.andReturn(['noxcodehere']);
             expect(function() {
                 new platforms.ios.parser(proj);
-            }).toThrow('The provided path is not a Cordova iOS project.');
+            }).toThrow('The provided path is not a xFace iOS project.');
         });
         it('should create an instance with path, pbxproj, xcodeproj, originalName and cordovaproj properties', function() {
             expect(function() {
@@ -99,7 +99,7 @@ describe('ios project parser', function () {
 
         describe('update_from_config method', function() {
             var et, xml, find, write_xml, root, mv;
-            var cfg, find_obj, root_obj, cfg_access_add, cfg_access_rm, cfg_pref_add, cfg_pref_rm;
+            var cfg, find_obj, root_obj, cfg_access_add, cfg_access_rm, cfg_pref_add, cfg_pref_rm, cfg_content;
             var plist_parse, plist_build, xc;
             var update_name, xc_write;
             beforeEach(function() {
@@ -137,10 +137,12 @@ describe('ios project parser', function () {
                 cfg.version = function() { return 'one point oh' };
                 cfg.access.get = function() { return [] };
                 cfg.preference.get = function() { return [] };
+                cfg.content = function() { return 'index.html'; };
                 cfg_access_add = jasmine.createSpy('config_parser access add');
                 cfg_access_rm = jasmine.createSpy('config_parser access rm');
                 cfg_pref_rm = jasmine.createSpy('config_parser pref rm');
                 cfg_pref_add = jasmine.createSpy('config_parser pref add');
+                cfg_content = jasmine.createSpy('config_parser content');
                 cfg_parser.andReturn({
                     access:{
                         remove:cfg_access_rm,
@@ -151,7 +153,8 @@ describe('ios project parser', function () {
                         remove:cfg_pref_rm,
                         get:function(){},
                         add:cfg_pref_add
-                    }
+                    },
+                    content:cfg_content
                 });
                 p = new platforms.ios.parser(ios_proj);
             });
@@ -198,6 +201,12 @@ describe('ios project parser', function () {
                 cfg.preference.get = function() { return [sample_pref] };
                 p.update_from_config(cfg, function() {
                     expect(cfg_pref_add).toHaveBeenCalledWith(sample_pref);
+                    done();
+                });
+            });
+            it('should update the content tag / start page', function(done) {
+                p.update_from_config(cfg, function() {
+                    expect(cfg_content).toHaveBeenCalledWith('index.html');
                     done();
                 });
             });
@@ -248,11 +257,11 @@ describe('ios project parser', function () {
                 expect(rm).toHaveBeenCalled();
                 expect(cp).toHaveBeenCalled();
             });
-            it('should copy in a fresh cordova.js from stock cordova lib if no custom lib is specified', function() {
+            it('should copy in a fresh xface.js from stock xface lib if no custom lib is specified', function() {
                 p.update_www();
                 expect(cp.mostRecentCall.args[1]).toContain(util.libDirectory);
             });
-            it('should copy in a fresh cordova.js from custom cordova lib if custom lib is specified', function() {
+            it('should copy in a fresh xface.js from custom xface lib if custom lib is specified', function() {
                 var custom_path = path.join('custom', 'path');
                 custom.andReturn(custom_path);
                 p.update_www();

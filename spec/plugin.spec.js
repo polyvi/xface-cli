@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-var cordova = require('../cordova'),
+var xface = require('../xface'),
     path = require('path'),
     shell = require('shelljs'),
     plugman = require('plugman'),
@@ -56,11 +56,12 @@ describe('plugin command', function() {
         exec = spyOn(shell, 'exec').andCallFake(function(cmd, opts, cb) {
             cb(0, '');
         });
-        prep_spy = spyOn(cordova, 'prepare').andCallFake(function(t, cb) {
+        prep_spy = spyOn(xface, 'prepare').andCallFake(function(t, cb) {
             cb();
         });
         plugman_install = spyOn(plugman, 'install');
         plugman_fetch = spyOn(plugman, 'fetch').andCallFake(function(target, plugins_dir, opts, cb) { cb(false, path.join(plugins_dir, target)); });
+        plugman_search = spyOn(plugman, 'search').andCallFake(function(params, cb) { cb(); });
         uninstallPlatform = spyOn(plugman.uninstall, 'uninstallPlatform');
         uninstallPlugin = spyOn(plugman.uninstall, 'uninstallPlugin').andCallFake(function(target, plugins_dir, cb) {
             cb && cb();
@@ -68,52 +69,52 @@ describe('plugin command', function() {
     });
 
     describe('failure', function() {
-        it('should not run outside of a Cordova-based project by calling util.isxFace', function() {
+        it('should not run outside of a xFace-based project by calling util.isxFace', function() {
             is_cordova.andReturn(false);
             expect(function() {
-                cordova.plugin();
+                xface.plugin();
                 expect(is_cordova).toHaveBeenCalled();
-            }).toThrow('Current working directory is not a Cordova-based project.');
+            }).toThrow('Current working directory is not a xFace-based project.');
         });
         it('should report back an error if used with `add` and no plugin is specified', function() {
             expect(function() {
-               cordova.plugin('add');
+               xface.plugin('add');
             }).toThrow('You need to qualify `add` or `remove` with one or more plugins!');
         });
         it('should report back an error if used with `rm` and no plugin is specified', function() {
             expect(function() {
-               cordova.plugin('rm');
+               xface.plugin('rm');
             }).toThrow('You need to qualify `add` or `remove` with one or more plugins!');
         });
     });
 
     describe('success', function() {
-        it('should run inside a Cordova-based project by calling util.isxFace', function() {
-            cordova.plugin();
+        it('should run inside a xFace-based project by calling util.isxFace', function() {
+            xface.plugin();
             expect(is_cordova).toHaveBeenCalled();
         });
 
-        describe('`ls`', function() { 
+        describe('`ls`', function() {
             afterEach(function() {
-                cordova.removeAllListeners('results');
+                xface.removeAllListeners('results');
             });
             it('should list out no plugins for a fresh project', function(done) {
                 find_plugins.andReturn([]);
-                cordova.on('results', function(res) {
-                    expect(res).toEqual('No plugins added. Use `cordova plugin add <plugin>`.');
+                xface.on('results', function(res) {
+                    expect(res).toEqual('No plugins added. Use `xface plugin add <plugin>`.');
                     done();
                 });
-                cordova.plugin('list');
+                xface.plugin('list');
             });
             it('should list out added plugins in a project', function(done) {
-                cordova.on('results', function(res) {
+                xface.on('results', function(res) {
                     expect(res).toEqual(sample_plugins);
                     done();
                 });
-                cordova.plugin('list');
+                xface.plugin('list');
             });
             it('should trigger callback with list of plugins', function(done) {
-                cordova.plugin('list', [], function(e, plugins) {
+                xface.plugin('list', [], function(e, plugins) {
                     expect(e).not.toBeDefined();
                     expect(plugins).toEqual(sample_plugins);
                     done();
@@ -122,24 +123,36 @@ describe('plugin command', function() {
         });
         describe('`add`', function() {
             it('should call plugman.fetch for each plugin', function() {
-                cordova.plugin('add', sample_plugins);
+                xface.plugin('add', sample_plugins);
                 sample_plugins.forEach(function(p) {
-                    expect(plugman_fetch).toHaveBeenCalledWith(p, plugins_dir, {}, jasmine.any(Function)); 
+                    expect(plugman_fetch).toHaveBeenCalledWith(p, plugins_dir, {}, jasmine.any(Function));
                 });
             });
             it('should call plugman.install, for each plugin, for every platform', function() {
-                cordova.plugin('add', sample_plugins);
+                xface.plugin('add', sample_plugins);
                 sample_plugins.forEach(function(plug) {
                     supported_platforms.forEach(function(plat) {
-                        expect(plugman_install).toHaveBeenCalledWith((plat=='blackberry'?'blackberry10':plat), path.join(project_dir, 'platforms', plat), plug, plugins_dir, jasmine.any(Object)); 
+                        expect(plugman_install).toHaveBeenCalledWith((plat=='blackberry'?'blackberry10':plat), path.join(project_dir, 'platforms', plat), plug, plugins_dir, jasmine.any(Object));
                     });
                 });
             });
+            it('should pass down variables into plugman', function() {
+                xface.plugin('add', "one", "--variable", "foo=bar");
+                supported_platforms.forEach(function(plat) {
+                    expect(plugman_install).toHaveBeenCalledWith((plat=='blackberry'?'blackberry10':plat), path.join(project_dir, 'platforms', plat), "one", plugins_dir, {www_dir: jasmine.any(String), cli_variables: { FOO: "bar"}});
+                });
+            });
             it('should trigger callback without an error', function(done) {
-                cordova.plugin('add', sample_plugins, function(e) {
+                xface.plugin('add', sample_plugins, function(e) {
                     expect(e).not.toBeDefined();
                     done();
                 });
+            });
+        });
+        describe('`search`', function() {
+            it('should call plugman.search', function() {
+                xface.plugin('search', sample_plugins);
+                expect(plugman_search).toHaveBeenCalledWith(sample_plugins, jasmine.any(Function));
             });
         });
         describe('`remove`',function() {
@@ -152,12 +165,12 @@ describe('plugin command', function() {
             });
             it('should throw if plugin is not installed', function() {
                 expect(function() {
-                    cordova.plugin('rm', 'somethingrandom');
+                    xface.plugin('rm', 'somethingrandom');
                 }).toThrow('Plugin "somethingrandom" not added to project.');
             });
 
             it('should call plugman.uninstall.uninstallPlatform for every matching installedplugin-supportedplatform pair', function() {
-                cordova.plugin('rm', sample_plugins);
+                xface.plugin('rm', sample_plugins);
                 sample_plugins.forEach(function(plug) {
                     subset.forEach(function(plat) {
                         expect(uninstallPlatform).toHaveBeenCalledWith(plat, path.join(project_dir, 'platforms', plat), plug, plugins_dir, jasmine.any(Object));
@@ -166,11 +179,11 @@ describe('plugin command', function() {
             });
             it('should call plugman.uninstall.uninstallPlugin once for every removed plugin', function() {
                 uninstallPlugin.reset();
-                cordova.plugin('rm', sample_plugins);
+                xface.plugin('rm', sample_plugins);
                 expect(uninstallPlugin.callCount).toBe(2);
             });
             it('should trigger callback without an error', function(done) {
-                cordova.plugin('rm', sample_plugins, function(e) {
+                xface.plugin('rm', sample_plugins, function(e) {
                     expect(e).not.toBeDefined();
                     done();
                 });
@@ -186,29 +199,29 @@ describe('plugin command', function() {
         });
         describe('list (ls) hooks', function() {
             it('should fire before hooks through the hooker module', function() {
-                cordova.plugin();
+                xface.plugin();
                 expect(fire).toHaveBeenCalledWith('before_plugin_ls', jasmine.any(Function));
             });
             it('should fire after hooks through the hooker module', function() {
-                cordova.plugin();
+                xface.plugin();
                 expect(fire).toHaveBeenCalledWith('after_plugin_ls', jasmine.any(Function));
             });
         });
         describe('remove (rm) hooks', function() {
             it('should fire before hooks through the hooker module', function() {
-                cordova.plugin('rm', 'two');
-                expect(fire).toHaveBeenCalledWith('before_plugin_rm', {plugins:['two']}, jasmine.any(Function));
+                xface.plugin('rm', 'two');
+                expect(fire).toHaveBeenCalledWith('before_plugin_rm', {plugins:['two'], options: []}, jasmine.any(Function));
             });
             it('should fire after hooks through the hooker module', function() {
-                cordova.plugin('rm', 'one');
-                expect(fire).toHaveBeenCalledWith('after_plugin_rm', {plugins:['one']}, jasmine.any(Function));
+                xface.plugin('rm', 'one');
+                expect(fire).toHaveBeenCalledWith('after_plugin_rm', {plugins:['one'], options:[]}, jasmine.any(Function));
             });
         });
         describe('add hooks', function() {
             it('should fire before and after hooks through the hooker module', function() {
-                cordova.plugin('add', 'android');
-                expect(fire).toHaveBeenCalledWith('before_plugin_add', {plugins:['android']}, jasmine.any(Function));
-                expect(fire).toHaveBeenCalledWith('after_plugin_add', {plugins:['android']}, jasmine.any(Function));
+                xface.plugin('add', 'android');
+                expect(fire).toHaveBeenCalledWith('before_plugin_add', {plugins:['android'], options: []}, jasmine.any(Function));
+                expect(fire).toHaveBeenCalledWith('after_plugin_add', {plugins:['android'], options: []}, jasmine.any(Function));
             });
         });
     });
