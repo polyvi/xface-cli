@@ -20,6 +20,7 @@ var path          = require('path'),
     fs            = require('fs'),
     shell         = require('shelljs'),
     platforms     = require('../platforms'),
+    npm           = require('npm'),
     events        = require('./events'),
     request       = require('request'),
     config        = require('./config'),
@@ -49,9 +50,8 @@ module.exports = {
         });
     },
     custom:function(url, id, platform, version, callback) {
-        var id_dir = path.join(util.libDirectory, platform, id);
-        shell.mkdir('-p', id_dir);
-        var download_dir = path.join(id_dir, version);
+        var download_dir = (platform == 'wp7' || platform == 'wp8' ? path.join(util.libDirectory, 'wp', id, version) :
+                                                                     path.join(util.libDirectory, platform, id, version));
         if (fs.existsSync(download_dir)) {
             events.emit('log', id + ' library for "' + platform + '" already exists. No need to download. Continuing.');
             if (callback) return callback();
@@ -64,13 +64,27 @@ module.exports = {
         }, function() {
             var uri = URL.parse(url);
             if (uri.protocol && uri.protocol[1] != ':') { // second part of conditional is for awesome windows support. fuuu windows
-                shell.mkdir('-p', download_dir);
-                events.emit('log', 'Requesting ' + url + '...');
-                var size = 0;
-                request.get({uri:url}, function(err, req, body) { size = body.length; })
+                npm.load(function() {
+                    // Check if NPM proxy settings are set. If so, include them in the request() call.
+                    var proxy;
+                    if (uri.protocol == 'https:') {
+                        proxy = npm.config.get('https-proxy');
+                    } else if (uri.protocol == 'http:') {
+                        proxy = npm.config.get('proxy');
+                    }
+
+                    shell.mkdir('-p', download_dir);
+                    var size = 0;
+                    var request_options = {uri:url};
+                    if (proxy) {
+                        request_options.proxy = proxy;
+                    }
+                    events.emit('log', 'Requesting ' + JSON.stringify(request_options) + '...');
+                    request.get(request_options, function(err, req, body) { size = body.length; })
                     .pipe(zlib.createUnzip())
                     .pipe(tar.Extract({path:download_dir}))
                     .on('error', function(err) {
+                        shell.rm('-rf', download_dir);
                         if (callback) callback(err);
                         else throw err;
                     })
@@ -91,10 +105,12 @@ module.exports = {
                         }, function() {
                             if (callback) callback();
                         });
+                    });
                 });
             } else {
                 // local path
                 // symlink instead of copying
+                shell.mkdir('-p', path.join(download_dir, '..'));
                 fs.symlinkSync((uri.protocol && uri.protocol[1] == ':' ? uri.href : uri.path), download_dir, 'dir');
                 hooker.fire('after_library_download', {
                     platform:platform,

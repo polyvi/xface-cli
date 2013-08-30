@@ -30,7 +30,7 @@ var cordova = require('../cordova'),
 
 var project_dir = '/some/path';
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
-var supported_platforms_paths = supported_platforms.map(function(p) { return path.join(project_dir, 'platforms', p, 'www'); }); 
+var supported_platforms_paths = supported_platforms.map(function(p) { return path.join(project_dir, 'platforms', p, 'www'); });
 
 describe('prepare command', function() {
     var is_cordova, list_platforms, fire, config_parser, parsers = {}, plugman_prepare, find_plugins, plugman_get_json, load;
@@ -71,15 +71,29 @@ describe('prepare command', function() {
             }).toThrow('No platforms added to this project. Please use `cordova platform add <platform>`.');
         });
     });
-    
+
     describe('success', function() {
         it('should run inside a Cordova-based project by calling util.isCordova', function() {
             cordova.prepare();
             expect(is_cordova).toHaveBeenCalled();
         });
-        it('should parse user\'s config.xml by calling instantiating a config_parser', function() {
-            cordova.prepare();
-            expect(config_parser).toHaveBeenCalledWith(path.join(project_dir, 'www', 'config.xml'));
+        it('should parse user\'s config.xml by instantiating a config_parser only _after_ before_prepare is called', function() {
+            var before_prep, after_prep, cont;
+            fire.andCallFake(function(e, opts, cb) {
+                if (e == 'before_prepare') {
+                    before_prep = true;
+                }
+                cont = cb;
+            });
+            runs(function() {
+                cordova.prepare();
+            });
+            waitsFor(function() { return before_prep; });
+            runs(function() {
+                expect(config_parser).not.toHaveBeenCalled();
+                cont();
+                expect(config_parser).toHaveBeenCalledWith(path.join(project_dir, 'www', 'config.xml'));
+            });
         });
         it('should invoke each platform\'s parser\'s update_project method', function() {
             cordova.prepare();
@@ -125,11 +139,11 @@ describe('prepare command', function() {
         describe('when platforms are added', function() {
             it('should fire before hooks through the hooker module, and pass in platforms and paths as data object', function() {
                 cordova.prepare();
-                expect(fire).toHaveBeenCalledWith('before_prepare', {platforms:supported_platforms, paths:supported_platforms_paths}, jasmine.any(Function));
+                expect(fire).toHaveBeenCalledWith('before_prepare', {verbose: false, platforms:supported_platforms, options: [], paths:supported_platforms_paths}, jasmine.any(Function));
             });
             it('should fire after hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
                 cordova.prepare('android', function() {
-                     expect(fire).toHaveBeenCalledWith('after_prepare', {platforms:['android'], paths:[path.join(project_dir, 'platforms', 'android', 'www')]}, jasmine.any(Function));
+                     expect(fire).toHaveBeenCalledWith('after_prepare', {verbose: false, platforms:['android'], options: [], paths:[path.join(project_dir, 'platforms', 'android', 'www')]}, jasmine.any(Function));
                      done();
                 });
             });
