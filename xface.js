@@ -58,5 +58,7 @@ module.exports = {
     },
     emit:      emit,
     trigger:   emit,
-    build:     require('./src/build')
+    build:     require('./src/build'),
+
+    extra:  require('./extra')
 };
