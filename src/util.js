@@ -96,7 +96,7 @@ module.exports = {
         return path.join(projectDir, 'www', 'config.xml');
     },
     preProcessOptions: function (inputOptions) {
-        var projectRoot = this.isCordova(process.cwd()),
+        var projectRoot = this.isxFace(process.cwd()),
             projectPlatforms = this.listPlatforms(projectRoot),
             DEFAULT_OPTIONS = {
                 verbose: false,
