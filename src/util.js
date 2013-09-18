@@ -135,5 +135,18 @@ module.exports = {
             }
         }
         return result;
+    },
+    getRepoSetPath: function() {
+        var settingPath = path.join(global_config_path, 'global_setting.json');
+        var json = {};
+        if(!fs.existsSync(settingPath)) {
+            throw new Error('Global setting file: ' + settingPath + " is not existed! ");
+        }
+        json = JSON.parse(fs.readFileSync(settingPath, 'utf-8'));
+        if(json.repoSet) {
+            return json.repoSet;
+        } else {
+            throw new Error('Can\'t find repo set path in file: ' + settingPath);
+        }
     }
 };

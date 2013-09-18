@@ -83,21 +83,28 @@ module.exports = function platform(command, targets, callback) {
                     if (callback) callback(err);
                     else throw err;
                 } else {
-                    var config_json = config.read(projectRoot);
-                    targets.forEach(function(t) {
-                        lazy_load.based_on_config(projectRoot, t, function(err) {
-                            if (err) {
-                                if (callback) callback(err);
-                                else throw err;
-                            } else {
-                                if (config_json.lib && config_json.lib[t]) {
-                                    call_into_create(t, projectRoot, cfg, config_json.lib[t].id, config_json.lib[t].version, config_json.lib[t].template, callback, end);
-                                } else {
-                                    call_into_create(t, projectRoot, cfg, 'cordova', platforms[t].version, null, callback, end);
-                                }
-                            }
+                    var config_json = config.read(projectRoot),
+                        internalDev = config.internalDev(projectRoot);
+                    if(internalDev) {
+                        targets.forEach(function(t) {
+                            call_into_create(t, projectRoot, cfg, null, null, null, callback, end);
                         });
-                    });
+                    } else {
+                        targets.forEach(function(t) {
+                            lazy_load.based_on_config(projectRoot, t, function(err) {
+                                if (err) {
+                                    if (callback) callback(err);
+                                    else throw err;
+                                } else {
+                                    if (config_json.lib && config_json.lib[t]) {
+                                        call_into_create(t, projectRoot, cfg, config_json.lib[t].id, config_json.lib[t].version, config_json.lib[t].template, callback, end);
+                                    } else {
+                                        call_into_create(t, projectRoot, cfg, 'cordova', platforms[t].version, null, callback, end);
+                                    }
+                                }
+                            });
+                        });
+                    }
                 }
             });
             break;
@@ -216,9 +223,14 @@ function call_into_create(target, projectRoot, cfg, id, version, template_dir, c
             } else {
                 // Create a platform app using the ./bin/create scripts that exist in each repo.
                 // Run platform's create script
-                var bin = path.join(cordova_util.libDirectory, target, id, version, 'bin', 'create');
-                if(target == 'wp7') bin = path.join(cordova_util.libDirectory, 'wp', id, version, 'wp7', 'bin', 'create');
-                if(target == 'wp8') bin = path.join(cordova_util.libDirectory, 'wp', id, version, 'wp8', 'bin', 'create');
+                var bin;
+                if(config.internalDev(projectRoot)) {
+                    bin = path.join(cordova_util.getRepoSetPath(), 'xface-' + target, 'bin', 'create');
+                } else {
+                    bin = path.join(cordova_util.libDirectory, target, id, version, 'bin', 'create');
+                    if(target == 'wp7') bin = path.join(cordova_util.libDirectory, 'wp', id, version, 'wp7', 'bin', 'create');
+                    if(target == 'wp8') bin = path.join(cordova_util.libDirectory, 'wp', id, version, 'wp8', 'bin', 'create');
+                }
                 var args = (target=='ios') ? '--arc' : '';
                 var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
                 var name = cfg.name();

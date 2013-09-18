@@ -24,6 +24,14 @@ var path          = require('path'),
     events        = require('./events'),
     util          = require('./util');
 
+/**
+ * 将opts中的属性值以json格式添加到<proj_root>/.xface/config.json中
+ * config.json包含的属性主要有id, name, lib, target_proj, dev_type
+ * id和name分别为工程的id和名称，target_proj为工程所关联项目（不存在或者为空时表示不关联任何项目）
+ * dev_type用于标识是内部项目开发还是外部开发者使用（'internal'表示内部项目开发，不存在或者为空时为外部使用）
+ * @param {String} project_root
+ * @param {Object} opts
+ */
 module.exports = function config(project_root, opts) {
     var json = module.exports.read(project_root);
     Object.keys(opts).forEach(function(p) {
@@ -63,3 +71,12 @@ module.exports.has_custom_path = function(project_root, platform) {
     }
     return false;
 };
+
+/**
+ * 判断指定工程是否为内部开发使用的工程
+ * @param {String} project_root 工程根路径
+ */
+module.exports.internalDev = function(project_root) {
+    var json = module.exports.read(project_root);
+    return json.dev_type === 'internal';
+}
