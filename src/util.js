@@ -18,9 +18,10 @@
 */
 var fs            = require('fs'),
     path          = require('path'),
+    shell         = require('shelljs'),
     config_parser = require('./config_parser'),
     plugin_parser = require('./plugin_parser'),
-    shell         = require('shelljs');
+    config        = require('./config');
 
 // Global configuration paths
 var HOME = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
@@ -147,6 +148,22 @@ module.exports = {
             return json.repoSet;
         } else {
             throw new Error('Can\'t find repo set path in file: ' + settingPath);
+        }
+    },
+    /**
+     * 获取平台默认的lib工程目录
+     * @param projectRoot xFace工程根目录
+     * @param platform 平台名称
+     */
+    getDefaultPlatformLibProject: function(projectRoot, platform) {
+        var platforms = require('../platforms');
+        if(!platforms.hasOwnProperty(platform)) {
+            throw new Error('Platform `' + platform + '` is not valid! ');
+        }
+        if(config.internalDev(projectRoot)) {
+            return path.join(module.exports.getRepoSetPath(), 'xface-' + platform, 'framework');
+        } else {
+            return path.join(module.exports.libDirectory, platform, 'cordova', platforms[platform].version, 'framework');
         }
     }
 };
