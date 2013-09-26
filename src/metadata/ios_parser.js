@@ -42,7 +42,8 @@ var default_prefs = {
     "MediaPlaybackRequiresUserAction":"false",
     "AllowInlineMediaPlayback":"false",
     "OpenAllWhitelistURLsInWebView":"false",
-    "BackupWebStorage":"cloud"
+    "BackupWebStorage":"cloud",
+    "UsePlayerMode":"true" //TODO:To be removed!
 };
 
 module.exports = function ios_parser(project) {
@@ -117,7 +118,7 @@ module.exports.prototype = {
 
         // Update content (start page)
         this.config.content(config.content());
-        
+
         // Update preferences
         this.config.preference.remove();
         var prefs = config.preference.get();
@@ -142,7 +143,7 @@ module.exports.prototype = {
                 value:pref.value
             });
         });
-        
+
         if (name != this.originalName) {
             // Update product name inside pbxproj file
             var proj = new xcode.project(this.pbxproj);
