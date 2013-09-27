@@ -204,10 +204,9 @@ module.exports.prototype = {
 
         // write out proper cordova.js
         var custom_path = config.has_custom_path(projectRoot, 'ios');
-        var lib_path = path.join(util.libDirectory, 'ios', 'cordova', require('../../platforms').ios.version);
+        var lib_path = util.getDefaultPlatformLibPath(projectRoot, 'ios');
         if (custom_path) lib_path = custom_path;
-        shell.cp('-f', path.join(lib_path, 'CordovaLib', 'cordova.js'), path.join(project_www, 'cordova.js'));
-
+        shell.cp('-f', path.join(lib_path, 'xFaceLib', 'xFaceLib', 'xface.js'), path.join(project_www, 'xface.js'));
     },
 
     // update the overrides folder into the www folder

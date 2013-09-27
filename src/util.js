@@ -151,19 +151,19 @@ module.exports = {
         }
     },
     /**
-     * 获取平台默认的lib工程目录
+     * 获取平台默认的lib根目录，即xface core的根目录
      * @param projectRoot xFace工程根目录
      * @param platform 平台名称
      */
-    getDefaultPlatformLibProject: function(projectRoot, platform) {
+    getDefaultPlatformLibPath: function(projectRoot, platform) {
         var platforms = require('../platforms');
         if(!platforms.hasOwnProperty(platform)) {
             throw new Error('Platform `' + platform + '` is not valid! ');
         }
         if(config.internalDev(projectRoot)) {
-            return path.join(module.exports.getRepoSetPath(), 'xface-' + platform, 'framework');
+            return path.join(module.exports.getRepoSetPath(), 'xface-' + platform);
         } else {
-            return path.join(module.exports.libDirectory, platform, 'cordova', platforms[platform].version, 'framework');
+            return path.join(module.exports.libDirectory, platform, 'cordova', platforms[platform].version);
         }
     }
 };
