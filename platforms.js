@@ -44,7 +44,7 @@ module.exports = {
         version: '3.0.0'
     },
     'www':{
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-app-hello-world.git',
-        version: '3.0.0'
+        url    : 'http://git.polyvi.com/gitweb/?p=xface-default-app.git',
+        version: '0.0.1'
     }
 };

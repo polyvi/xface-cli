@@ -150,8 +150,8 @@ module.exports = function create (dir, id, name, callback) {
             }
         });
     } else {
-        // Nope, so use stock xface-hello-world-app one.
-        events.emit('log', 'Using stock xface hello-world application.');
+        // Nope, so use stock xface-default-app one.
+        events.emit('log', 'Using stock xface default-app application.');
         lazy_load.cordova('www', function(err) {
             if (err) {
                 if (callback) callback(err);
