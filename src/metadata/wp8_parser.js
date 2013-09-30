@@ -45,7 +45,7 @@ module.exports = function wp8_parser(project) {
 
 module.exports.check_requirements = function(project_root, callback) {
     events.emit('log', 'Checking wp8 requirements...');
-    var lib_path = path.join(util.libDirectory, 'wp', 'cordova', require('../../platforms').wp8.version, 'wp8');
+    var lib_path = util.getDefaultPlatformLibPath(project_root, 'wp8');
     var custom_path = config.has_custom_path(project_root, 'wp8');
     if (custom_path) lib_path = custom_path;
     var command = '"' + path.join(lib_path, 'bin', 'check_reqs') + '"';
@@ -140,7 +140,7 @@ module.exports.prototype = {
     },
     // Returns the platform-specific www directory.
     www_dir:function() {
-        return path.join(this.wp8_proj_dir, 'www');
+        return path.join(this.wp8_proj_dir, 'xface3', 'helloxface');
     },
     config_xml:function() {
     },
@@ -148,10 +148,12 @@ module.exports.prototype = {
     update_www:function() {
         var project_root = util.isxFace(this.wp8_proj_dir);
         var project_www = util.projectWww(project_root);
+        var platformWww = path.resolve(path.join(this.www_dir(), '..'));
         // remove stock platform assets
         shell.rm('-rf', this.www_dir());
+        shell.mkdir('-p', platformWww);
         // copy over all app www assets
-        shell.cp('-rf', project_www, this.wp8_proj_dir);
+        shell.cp('-rf', project_www + '/*', platformWww);
 
         // copy all files from merges directory
         var merges_path = path.join(util.appDir(project_root), 'merges', 'wp8');
@@ -161,69 +163,11 @@ module.exports.prototype = {
         }
 
         // copy over wp8 lib's cordova.js
-        var lib_path = path.join(util.libDirectory, 'wp', 'cordova', require('../../platforms').wp8.version);
+        var lib_path = util.getDefaultPlatformLibPath(project_root, 'wp8');
         var custom_path = config.has_custom_path(project_root, 'wp8');
         if (custom_path) lib_path = custom_path;
-        var cordovajs_path = path.join(lib_path, 'common', 'www', 'cordova.js');
-        fs.writeFileSync(path.join(this.www_dir(), 'cordova.js'), fs.readFileSync(cordovajs_path, 'utf-8'), 'utf-8');
-        this.update_csproj();
-    },
-    // updates the csproj file to explicitly list all www content.
-    update_csproj:function() {
-        var csproj_xml = xml.parseElementtreeSync(this.csproj_path);
-        // remove any previous references to the www files
-        var item_groups = csproj_xml.findall('ItemGroup');
-        for (var i = 0, l = item_groups.length; i < l; i++) {
-            var group = item_groups[i];
-            var files = group.findall('Content');
-            for (var j = 0, k = files.length; j < k; j++) {
-                var file = files[j];
-                if (file.attrib.Include.substr(0, 3) == 'www' && file.attrib.Include.indexOf('cordova.js') < 0) {
-                    // remove file reference
-                    group.remove(0, file);
-                    // remove ItemGroup if empty
-                    var new_group = group.findall('Content');
-                    if(new_group.length < 1) {
-                        csproj_xml.getroot().remove(0, group);
-                    }
-                }
-            }
-        }
-
-        // now add all www references back in from the root www folder
-        var project_root = util.isxFace(this.wp8_proj_dir);
-        var www_files = this.folder_contents('www', util.projectWww(project_root));
-        for(file in www_files) {
-            var item = new et.Element('ItemGroup');
-            var content = new et.Element('Content');
-            content.attrib.Include = www_files[file];
-            item.append(content);
-            csproj_xml.getroot().append(item);
-        }
-        // save file
-        fs.writeFileSync(this.csproj_path, csproj_xml.write({indent:4}), 'utf-8');
-    },
-    // Returns an array of all the files in the given directory with reletive paths
-    // - name     : the name of the top level directory (i.e all files will start with this in their path)
-    // - path     : the directory whos contents will be listed under 'name' directory
-    folder_contents:function(name, dir) {
-        var results = [];
-        var folder_dir = fs.readdirSync(dir);
-        for(item in folder_dir) {
-            var stat = fs.statSync(path.join(dir, folder_dir[item]));
-            // means its a folder?
-            if(stat.size == 0) {
-                var sub_dir = this.folder_contents(path.join(name, folder_dir[item]), path.join(dir, folder_dir[item]));
-                //Add all subfolder item paths
-                for(sub_item in sub_dir) {
-                    results.push(sub_dir[sub_item]);
-                }
-            }
-            else {
-                results.push(path.join(name, folder_dir[item]));
-            }
-        }
-        return results;
+        var cordovajs_path = path.join(lib_path, 'xFaceLib', 'xFaceLib', 'xface.js');
+        fs.writeFileSync(path.join(this.www_dir(), 'xface.js'), fs.readFileSync(cordovajs_path, 'utf-8'), 'utf-8');
     },
     staging_dir: function() {
         return path.join(this.wp8_proj_dir, '.staging', 'www');

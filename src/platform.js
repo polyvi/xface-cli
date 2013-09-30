@@ -227,13 +227,11 @@ function call_into_create(target, projectRoot, cfg, id, version, template_dir, c
                 var shared = '';
                 if(config.internalDev(projectRoot)) {
                     bin = path.join(cordova_util.getRepoSetPath(), 'xface-' + target, 'bin', 'create');
-                    if(target == 'ios') shared = '--shared ';
+                    if(target == 'ios' || target == 'wp8') shared = '--shared ';
                 } else {
                     bin = path.join(cordova_util.libDirectory, target, id, version, 'bin', 'create');
-                    if(target == 'wp7') bin = path.join(cordova_util.libDirectory, 'wp', id, version, 'wp7', 'bin', 'create');
-                    if(target == 'wp8') bin = path.join(cordova_util.libDirectory, 'wp', id, version, 'wp8', 'bin', 'create');
                 }
-                var args = (target=='ios') ? shared + '--arc' : '';
+                var args = (target=='ios') ? shared + '--arc' : shared;
                 var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
                 var name = cfg.name();
                 var command = util.format('"%s" %s "%s" "%s" "%s"', bin, args, output, pkg, name);
