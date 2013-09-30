@@ -152,7 +152,7 @@ module.exports.prototype = {
 
     // Returns the platform-specific www directory.
     www_dir:function() {
-        return path.join(this.path, 'assets', 'www');
+        return path.join(this.path, 'assets', 'xface3', 'helloxface');
     },
 
     staging_dir: function() {
@@ -166,21 +166,22 @@ module.exports.prototype = {
     update_www:function() {
         var projectRoot = util.isxFace(this.path);
         var www = util.projectWww(projectRoot);
-        var platformWww = path.join(this.path, 'assets');
+        var platformWww = path.resolve(path.join(this.www_dir(), '..'));
         // remove stock platform assets
-        shell.rm('-rf', this.www_dir());
+        shell.rm('-rf', platformWww);
+        shell.mkdir('-p', platformWww);
         // copy over all app www assets
-        shell.cp('-rf', www, platformWww);
+        shell.cp('-rf', www + '/*', platformWww);
 
-        // write out android lib's cordova.js
+        // write out android lib's xface.js
         var custom_path = project_config.has_custom_path(projectRoot, 'android');
         var jsPath;
         if (custom_path) {
-            jsPath = path.resolve(path.join(custom_path, 'framework', 'assets', 'www', 'cordova.js'));
+            jsPath = path.resolve(path.join(custom_path, 'framework', 'assets', 'xface.js'));
         } else {
-            jsPath = path.join(util.getDefaultPlatformLibPath(projectRoot, 'android'), 'framework', 'assets', 'www', 'cordova.js');
+            jsPath = path.join(util.getDefaultPlatformLibPath(projectRoot, 'android'), 'framework', 'assets', 'xface.js');
         }
-        fs.writeFileSync(path.join(this.www_dir(), 'cordova.js'), fs.readFileSync(jsPath, 'utf-8'), 'utf-8');
+        fs.writeFileSync(path.join(this.www_dir(), 'xface.js'), fs.readFileSync(jsPath, 'utf-8'), 'utf-8');
     },
 
     // update the overrides folder into the www folder
