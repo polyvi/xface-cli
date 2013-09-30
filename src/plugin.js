@@ -24,7 +24,7 @@ var cordova_util  = require('./util'),
     platforms     = require('../platforms'),
     n             = require('ncallbacks'),
     hooker        = require('./hooker'),
-    plugman       = require('plugman'),
+    plugman       = require('xplugin'),
     events        = require('./events');
 
 module.exports = function plugin(command, targets, callback) {

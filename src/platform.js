@@ -26,7 +26,7 @@ var config            = require('./config'),
     lazy_load         = require('./lazy_load'),
     n                 = require('ncallbacks'),
     platforms         = require('../platforms'),
-    plugman           = require('plugman'),
+    plugman           = require('xplugin'),
     shell             = require('shelljs');
 
 module.exports = function platform(command, targets, callback) {

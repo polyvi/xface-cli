@@ -45,6 +45,6 @@ module.exports = {
     },
     'www':{
         url    : 'http://git.polyvi.com/gitweb/?p=xface-default-app.git',
-        version: '0.0.1'
+        version: '0.0.2'
     }
 };

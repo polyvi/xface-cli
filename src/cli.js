@@ -19,7 +19,7 @@
 
 var optimist  = require('optimist'),
     xface   = require('../xface'),
-    plugman   = require('plugman'),
+    plugman   = require('xplugin'),
     platforms = require("../platforms");
 
 module.exports = function CLI(inputArgs) {

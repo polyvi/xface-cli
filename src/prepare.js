@@ -29,7 +29,7 @@ var cordova_util      = require('./util'),
     events            = require('./events'),
     n                 = require('ncallbacks'),
     prompt            = require('prompt'),
-    plugman           = require('plugman'),
+    plugman           = require('xplugin'),
     util              = require('util');
 
 module.exports = function prepare(options, callback) {
