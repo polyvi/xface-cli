@@ -18,10 +18,11 @@
 */
 var xface = require('../xface'),
     platforms = require('../platforms'),
-    shell = require('shelljs'),
+    child_process = require('child_process'),
     path = require('path'),
     fs = require('fs'),
     hooker = require('../src/hooker'),
+    Q = require('q'),
     util = require('../src/util');
 
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
@@ -33,68 +34,80 @@ describe('run command', function() {
     beforeEach(function() {
         is_cordova = spyOn(util, 'isxFace').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(hooker.prototype, 'fire').andCallFake(function(e, opts, cb) {
-            cb(false);
+        fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
+        prepare_spy = spyOn(xface.raw, 'prepare').andReturn(Q());
+        exec = spyOn(child_process, 'exec').andCallFake(function(cmd, opts, cb) {
+            if (!cb) cb = opts;
+            cb(0, '', '');
         });
-        prepare_spy = spyOn(xface, 'prepare').andCallFake(function(platforms, cb) {
-            cb();
-        });
-        exec = spyOn(shell, 'exec').andCallFake(function(cmd, opts, cb) { cb(0, ''); });
     });
     describe('failure', function() {
-        it('should not run inside a xFace-based project with no added platforms by calling util.listPlatforms', function() {
+        it('should not run inside a xFace-based project with no added platforms by calling util.listPlatforms', function(done) {
             list_platforms.andReturn([]);
-            expect(function() {
-                xface.run();
-            }).toThrow('No platforms added to this project. Please use `xface platform add <platform>`.');
+            xface.raw.run().then(function() {
+                expect('this call').toBe('fail');
+            }, function(err) {
+                expect(err).toEqual(new Error('No platforms added to this project. Please use `xface platform add <platform>`.'));
+            }).fin(done);
         });
-        it('should not run outside of a xFace-based project', function() {
+        it('should not run outside of a xFace-based project', function(done) {
             is_cordova.andReturn(false);
-            expect(function() {
-                xface.run();
-            }).toThrow('Current working directory is not a xFace-based project.');
+            xface.raw.run().then(function() {
+                expect('this call').toBe('fail');
+            }, function(err) {
+                expect(err).toEqual(new Error('Current working directory is not a xFace-based project.'));
+            }).fin(done);
         });
     });
 
     describe('success', function() {
         it('should run inside a xFace-based project with at least one added platform and call prepare and shell out to the run script', function(done) {
-            xface.run(['android','ios'], function(err) {
-                expect(prepare_spy).toHaveBeenCalledWith(['android', 'ios'], jasmine.any(Function));
-                expect(exec).toHaveBeenCalledWith('"' + path.join(project_dir, 'platforms', 'android', 'cordova', 'run') + '" --device', jasmine.any(Object), jasmine.any(Function));
-                expect(exec).toHaveBeenCalledWith('"' + path.join(project_dir, 'platforms', 'ios', 'cordova', 'run') + '" --device', jasmine.any(Object), jasmine.any(Function));
-                done();
-            });
+            xface.raw.run(['android','ios']).then(function() {
+                expect(prepare_spy).toHaveBeenCalledWith(['android', 'ios']);
+                expect(exec).toHaveBeenCalledWith('"' + path.join(project_dir, 'platforms', 'android', 'cordova', 'run') + '" --device', jasmine.any(Function));
+                expect(exec).toHaveBeenCalledWith('"' + path.join(project_dir, 'platforms', 'ios', 'cordova', 'run') + '" --device', jasmine.any(Function));
+            }, function(err) {
+                console.log(err);
+                expect(err).toBeUndefined();
+            }).fin(done);
         });
         it('should pass down parameters', function(done) {
-            xface.run({platforms: ['blackberry10'], options:['--device', '--password', '1q1q']}, function(err) {
-                expect(prepare_spy).toHaveBeenCalledWith(['blackberry10'], jasmine.any(Function));
-                expect(exec).toHaveBeenCalledWith('"' + path.join(project_dir, 'platforms', 'blackberry10', 'cordova', 'run') + '" --device --password 1q1q', jasmine.any(Object), jasmine.any(Function));
-                done();
-            });
+            xface.raw.run({platforms: ['blackberry10'], options:['--password', '1q1q']}).then(function() {
+                expect(prepare_spy).toHaveBeenCalledWith(['blackberry10']);
+                expect(exec).toHaveBeenCalledWith('"' + path.join(project_dir, 'platforms', 'blackberry10', 'cordova', 'run') + '" --device --password 1q1q', jasmine.any(Function));
+            }, function(err) {
+                expect(err).toBeUndefined();
+            }).fin(done);
         });
     });
 
     describe('hooks', function() {
         describe('when platforms are added', function() {
-            it('should fire before hooks through the hooker module', function() {
-                xface.run(['android', 'ios']);
-                expect(fire).toHaveBeenCalledWith('before_run', {verbose: false, platforms:['android', 'ios'], options: []}, jasmine.any(Function));
+            it('should fire before hooks through the hooker module', function(done) {
+                xface.raw.run(['android', 'ios']).then(function() {
+                    expect(fire).toHaveBeenCalledWith('before_run', {verbose: false, platforms:['android', 'ios'], options: []});
+                }, function(err) {
+                    expect(err).toBeUndefined();
+                }).fin(done);
             });
             it('should fire after hooks through the hooker module', function(done) {
-                xface.run('android', function() {
-                     expect(fire).toHaveBeenCalledWith('after_run', {verbose: false, platforms:['android'], options: []}, jasmine.any(Function));
-                     done();
-                });
+                xface.raw.run('android').then(function() {
+                     expect(fire).toHaveBeenCalledWith('after_run', {verbose: false, platforms:['android'], options: []});
+                }, function(err) {
+                    expect(err).toBeUndefined();
+                }).fin(done);
             });
         });
 
         describe('with no platforms added', function() {
-            it('should not fire the hooker', function() {
+            it('should not fire the hooker', function(done) {
                 list_platforms.andReturn([]);
-                expect(function() {
-                    xface.run();
-                }).toThrow();
-                expect(fire).not.toHaveBeenCalled();
+                xface.raw.run().then(function() {
+                    expect('this call').toBe('fail');
+                }, function(err) {
+                    expect(fire).not.toHaveBeenCalled();
+                    expect(err).toEqual(new Error('No platforms added to this project. Please use `xface platform add <platform>`.'));
+                }).fin(done);
             });
         });
     });

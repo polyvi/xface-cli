@@ -20,9 +20,7 @@
 var path          = require('path'),
     fs            = require('fs'),
     url           = require('url'),
-    shell         = require('shelljs'),
-    events        = require('./events'),
-    util          = require('./util');
+    shell         = require('shelljs');
 
 /**
  * 将opts中的属性值以json格式添加到<proj_root>/.xface/config.json中

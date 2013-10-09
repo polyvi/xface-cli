@@ -26,6 +26,7 @@ var xface = require('../xface'),
     platforms = require('../platforms'),
     hooker = require('../src/hooker'),
     fixtures = path.join(__dirname, 'fixtures'),
+    Q = require('q'),
     hooks = path.join(fixtures, 'hooks');
 
 var project_dir = '/some/path';
@@ -37,86 +38,99 @@ describe('prepare command', function() {
     beforeEach(function() {
         is_cordova = spyOn(util, 'isxFace').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
-        fire = spyOn(hooker.prototype, 'fire').andCallFake(function(e, opts, cb) {
-            cb(false);
-        });
+        fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
         config_parser = spyOn(util, 'config_parser');
         supported_platforms.forEach(function(p) {
-            parsers[p] = jasmine.createSpy(p + ' update_project').andCallFake(function(cfg, cb) {
-                cb();
-            });
+            parsers[p] = jasmine.createSpy(p + ' update_project').andReturn(Q());
             spyOn(platforms[p], 'parser').andReturn({
                 update_project:parsers[p],
                 www_dir:function() { return path.join(project_dir, 'platforms', p, 'www'); }
             });
         });
-        plugman_prepare = spyOn(plugman, 'prepare');
+        plugman_prepare = spyOn(plugman, 'prepare').andReturn(Q());
         find_plugins = spyOn(util, 'findPlugins').andReturn([]);
         plugman_get_json = spyOn(plugman.config_changes, 'get_platform_json').andReturn({});
-        load = spyOn(lazy_load, 'based_on_config').andCallFake(function(root, platform, cb) { cb(); });
+        load = spyOn(lazy_load, 'based_on_config').andReturn(Q());
     });
 
     describe('failure', function() {
-        it('should not run outside of a xface-based project by calling util.isxFace', function() {
+        it('should not run outside of a xFace-based project by calling util.isxFace', function(done) {
             is_cordova.andReturn(false);
-            expect(function() {
-                xface.prepare();
-                expect(is_cordova).toHaveBeenCalled();
-            }).toThrow('Current working directory is not a xFace-based project.');
+            xface.raw.prepare().then(function() {
+                expect('this call').toBe('fail');
+            }, function(err) {
+                expect(err).toEqual(new Error('Current working directory is not a xFace-based project.'));
+            }).fin(done);
         });
-        it('should not run inside a xface-based project with no platforms', function() {
+        it('should not run inside a xFace-based project with no platforms', function(done) {
             list_platforms.andReturn([]);
-            expect(function() {
-                xface.prepare();
-            }).toThrow('No platforms added to this project. Please use `xface platform add <platform>`.');
+            xface.raw.prepare().then(function() {
+                expect('this call').toBe('fail');
+            }, function(err) {
+                expect(err).toEqual(new Error('No platforms added to this project. Please use `xface platform add <platform>`.'));
+            }).fin(done);
         });
     });
 
     describe('success', function() {
-        it('should run inside a xFace-based project by calling util.isxFace', function() {
-            xface.prepare();
-            expect(is_cordova).toHaveBeenCalled();
+        it('should run inside a xFace-based project by calling util.isxFace', function(done) {
+            xface.raw.prepare().then(function() {
+                expect(is_cordova).toHaveBeenCalled();
+            }, function(err) {
+                expect(err).toBeUndefined();
+            }).fin(done);
         });
-        it('should parse user\'s config.xml by instantiating a config_parser only _after_ before_prepare is called', function() {
-            var before_prep, after_prep, cont;
-            fire.andCallFake(function(e, opts, cb) {
+        it('should parse user\'s config.xml by instantiating a config_parser only _after_ before_prepare is called', function(done) {
+            var before_prep;
+            config_parser.andCallFake(function() {
+                expect(before_prep).toBe(true);
+            });
+            fire.andCallFake(function(e, opts) {
                 if (e == 'before_prepare') {
                     before_prep = true;
+                    expect(config_parser).not.toHaveBeenCalled();
                 }
-                cont = cb;
+                return Q();
             });
-            runs(function() {
-                xface.prepare();
-            });
-            waitsFor(function() { return before_prep; });
-            runs(function() {
-                expect(config_parser).not.toHaveBeenCalled();
-                cont();
+
+            xface.raw.prepare().then(function() {
+                expect(before_prep).toBe(true);
                 expect(config_parser).toHaveBeenCalledWith(path.join(project_dir, 'www', 'config.xml'));
-            });
+            }, function(err) {
+                expect(err).toBeUndefined();
+            }).fin(done);
         });
-        it('should invoke each platform\'s parser\'s update_project method', function() {
-            xface.prepare();
-            supported_platforms.forEach(function(p) {
-                expect(parsers[p]).toHaveBeenCalled();
-            });
+        it('should invoke each platform\'s parser\'s update_project method', function(done) {
+            xface.raw.prepare().then(function() {
+                supported_platforms.forEach(function(p) {
+                    expect(parsers[p]).toHaveBeenCalled();
+                });
+            }, function(err) {
+                expect(err).toBeUndefined();
+            }).fin(done);
         });
-        it('should invoke lazy_load for each platform to make sure platform libraries are loaded', function() {
-            xface.prepare();
-            supported_platforms.forEach(function(p) {
-                expect(load).toHaveBeenCalledWith(project_dir, p, jasmine.any(Function));
-            });
+        it('should invoke lazy_load for each platform to make sure platform libraries are loaded', function(done) {
+            xface.raw.prepare().then(function() {
+                supported_platforms.forEach(function(p) {
+                    expect(load).toHaveBeenCalledWith(project_dir, p);
+                });
+            }, function(err) {
+                expect(err).toBeUndefined();
+            }).fin(done);
         });
         describe('plugman integration', function() {
-            it('should invoke plugman.prepare after update_project', function() {
-                xface.prepare();
-                var plugins_dir = path.join(project_dir, 'plugins');
-                supported_platforms.forEach(function(p) {
-                    var platform_path = path.join(project_dir, 'platforms', p);
-                    expect(plugman_prepare).toHaveBeenCalledWith(platform_path, (p=='blackberry'?'blackberry10':p), plugins_dir);
-                });
+            it('should invoke plugman.prepare after update_project', function(done) {
+                xface.raw.prepare().then(function() {
+                    var plugins_dir = path.join(project_dir, 'plugins');
+                    supported_platforms.forEach(function(p) {
+                        var platform_path = path.join(project_dir, 'platforms', p);
+                        expect(plugman_prepare).toHaveBeenCalledWith(platform_path, (p=='blackberry'?'blackberry10':p), plugins_dir);
+                    });
+                }, function(err) {
+                    expect(err).toBeUndefined();
+                }).fin(done);
             });
-            it('should invoke add_plugin_changes for any added plugins to verify configuration changes for plugins are in place', function() {
+            it('should invoke add_plugin_changes for any added plugins to verify configuration changes for plugins are in place', function(done) {
                 var plugins_dir = path.join(project_dir, 'plugins');
                 find_plugins.andReturn(['testPlugin']);
                 plugman_get_json.andReturn({
@@ -125,11 +139,14 @@ describe('prepare command', function() {
                     }
                 });
                 var add_plugin_changes = spyOn(plugman.config_changes, 'add_plugin_changes');
-                xface.prepare();
-                supported_platforms.forEach(function(p) {
-                    var platform_path = path.join(project_dir, 'platforms', p);
-                    expect(add_plugin_changes).toHaveBeenCalledWith((p=='blackberry'?'blackberry10':p), platform_path, plugins_dir, 'testPlugin', 'plugin vars', true, false);
-                });
+                xface.raw.prepare().then(function() {
+                    supported_platforms.forEach(function(p) {
+                        var platform_path = path.join(project_dir, 'platforms', p);
+                        expect(add_plugin_changes).toHaveBeenCalledWith((p=='blackberry'?'blackberry10':p), platform_path, plugins_dir, 'testPlugin', 'plugin vars', true, false);
+                    });
+                }, function(err) {
+                    expect(err).toBeUndefined();
+                }).fin(done);
             });
         });
     });
@@ -137,15 +154,19 @@ describe('prepare command', function() {
 
     describe('hooks', function() {
         describe('when platforms are added', function() {
-            it('should fire before hooks through the hooker module, and pass in platforms and paths as data object', function() {
-                xface.prepare();
-                expect(fire).toHaveBeenCalledWith('before_prepare', {verbose: false, platforms:supported_platforms, options: [], paths:supported_platforms_paths}, jasmine.any(Function));
+            it('should fire before hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
+                xface.raw.prepare().then(function() {
+                    expect(fire).toHaveBeenCalledWith('before_prepare', {verbose: false, platforms:supported_platforms, options: [], paths:supported_platforms_paths});
+                }, function(err) {
+                    expect(err).toBeUndefined();
+                }).fin(done);
             });
             it('should fire after hooks through the hooker module, and pass in platforms and paths as data object', function(done) {
-                xface.prepare('android', function() {
-                     expect(fire).toHaveBeenCalledWith('after_prepare', {verbose: false, platforms:['android'], options: [], paths:[path.join(project_dir, 'platforms', 'android', 'www')]}, jasmine.any(Function));
-                     done();
-                });
+                xface.raw.prepare('android').then(function() {
+                     expect(fire).toHaveBeenCalledWith('after_prepare', {verbose: false, platforms:['android'], options: [], paths:[path.join(project_dir, 'platforms', 'android', 'www')]});
+                }, function(err) {
+                    expect(err).toBeUndefined();
+                }).fin(done);
             });
         });
 
@@ -153,12 +174,14 @@ describe('prepare command', function() {
             beforeEach(function() {
                 list_platforms.andReturn([]);
             });
-            it('should not fire the hooker', function() {
-                expect(function() {
-                    xface.prepare();
-                }).toThrow();
-                expect(fire).not.toHaveBeenCalledWith('before_prepare');
-                expect(fire).not.toHaveBeenCalledWith('after_prepare');
+            it('should not fire the hooker', function(done) {
+                xface.raw.prepare().then(function() {
+                    expect('this call').toBe('fail');
+                }, function(err) {
+                    expect(err).toEqual(jasmine.any(Error));
+                    expect(fire).not.toHaveBeenCalledWith('before_prepare');
+                    expect(fire).not.toHaveBeenCalledWith('after_prepare');
+                }).fin(done);
             });
         });
     });

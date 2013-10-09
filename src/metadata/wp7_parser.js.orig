@@ -148,7 +148,7 @@ module.exports.prototype = {
     },
     // copy files from merges directory to actual www dir
     copy_merges:function(merges_sub_path) {
-        var merges_path = path.join(util.appDir(util.isxFace(this.wp7_proj_dir)), 'merges', merges_sub_path);
+        var merges_path = path.join(util.appDir(util.isCordova(this.wp7_proj_dir)), 'merges', merges_sub_path);
         if (fs.existsSync(merges_path)) {
             var overrides = path.join(merges_path, '*');
             shell.cp('-rf', overrides, this.www_dir());
@@ -197,8 +197,14 @@ module.exports.prototype = {
             }
         }
 
+<<<<<<< HEAD
+        // now add all www references back in from the root www folder
+        var project_root = util.isxFace(this.wp7_proj_dir);
+        var www_files = this.folder_contents('www', util.projectWww(project_root));
+=======
         // now add all www references back in from the wp www folder
         var www_files = this.folder_contents('www', this.www_dir());
+>>>>>>> cordova-cli
         for(file in www_files) {
             var item = new et.Element('ItemGroup');
             var content = new et.Element('Content');
@@ -254,7 +260,7 @@ module.exports.prototype = {
         this.update_www();
 
         // trigger an event in case anyone needs to modify the contents of the www folder before we package it.
-        var projectRoot = util.isxFace(process.cwd());
+        var projectRoot = util.isCordova(process.cwd());
         var hooks = new hooker(projectRoot);
         hooks.fire('pre_package', { wwwPath:this.www_dir() }, function(err) { });
         this.update_csproj();

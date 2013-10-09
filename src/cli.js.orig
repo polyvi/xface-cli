@@ -17,9 +17,17 @@
     under the License.
 */
 
+<<<<<<< HEAD
+var optimist  = require('optimist'),
+    xface   = require('../xface'),
+    plugman   = require('xplugin'),
+    platforms = require("../platforms");
+
+=======
+>>>>>>> cordova-cli
 module.exports = function CLI(inputArgs) {
     var optimist  = require('optimist'),
-        xface   = require('../xface');
+        cordova   = require('../cordova');
 
    args = optimist(inputArgs)
         .boolean('d')
@@ -53,10 +61,16 @@ module.exports = function CLI(inputArgs) {
     });
     xface.on('results', console.log);
 
-    if (!opts.silent) {
+<<<<<<< HEAD
+    if (opts.verbose) {
         xface.on('log', console.log);
         xface.on('warn', console.warn);
-        var plugman = require('xplugin');
+=======
+    if (!opts.silent) {
+        cordova.on('log', console.log);
+        cordova.on('warn', console.warn);
+        var plugman = require('plugman');
+>>>>>>> cordova-cli
         plugman.on('log', console.log);
         plugman.on('warn', console.warn);
     } else {
@@ -67,8 +81,8 @@ module.exports = function CLI(inputArgs) {
 
     if (opts.verbose) {
         // Add handlers for verbose logging.
-        xface.on('verbose', console.log);
-        require('xplugin').on('verbose', console.log);
+        cordova.on('verbose', console.log);
+        require('plugman').on('verbose', console.log);
 
         //Remove the corresponding token
         if(args.d && args.verbose) {
@@ -96,15 +110,25 @@ module.exports = function CLI(inputArgs) {
                     opts.options.push(option);
                 }
             });
-            xface.raw[cmd].call(this, opts).done();
+<<<<<<< HEAD
+            xface[cmd].call(this, opts);
         } else if (cmd == 'create' || cmd == 'serve') {
-            xface.raw[cmd].apply(this, tokens).done();
+            xface[cmd].apply(this, tokens);
+=======
+            cordova.raw[cmd].call(this, opts).done();
+        } else if (cmd == 'create' || cmd == 'serve') {
+            cordova.raw[cmd].apply(this, tokens).done();
+>>>>>>> cordova-cli
         } else {
             // platform/plugins add/rm [target(s)]
             var invocation = tokens.slice(0,1); // this has the sub-command, i.e. "platform add" or "plugin rm"
             var targets = tokens.slice(1); // this should be an array of targets, be it platforms or plugins
             invocation.push(targets);
-            xface.raw[cmd].apply(this, invocation).done();
+<<<<<<< HEAD
+            xface[cmd].apply(this, invocation);
+=======
+            cordova.raw[cmd].apply(this, invocation).done();
+>>>>>>> cordova-cli
         }
     } else {
         throw new Error('xFace does not know ' + cmd + '; try help for a list of all the available commands.');

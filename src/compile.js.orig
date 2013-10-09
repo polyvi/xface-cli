@@ -41,9 +41,14 @@ function shell_out_to_build(projectRoot, platform, options) {
     return d.promise;
 }
 
+<<<<<<< HEAD
+module.exports = function compile(options, callback) {
+    var projectRoot = cordova_util.isxFace(process.cwd());
+=======
 // Returns a promise.
 module.exports = function compile(options) {
-    var projectRoot = cordova_util.isxFace(process.cwd());
+    var projectRoot = cordova_util.isCordova(process.cwd());
+>>>>>>> cordova-cli
 
     if (!options) {
         options = {

@@ -144,12 +144,25 @@ module.exports = function create (dir, id, name) {
             return finalize(path.join(util.libDirectory, 'www', config_json.lib.www.id, config_json.lib.www.version));
         });
     } else {
+<<<<<<< HEAD
         // Nope, so use stock xface-default-app one.
-        events.emit('log', 'Using stock cordova hello-world application.');
+        events.emit('log', 'Using stock xface default-app application.');
+        lazy_load.cordova('www', function(err) {
+            if (err) {
+                if (callback) callback(err);
+                else throw err;
+            } else {
+                events.emit('log', 'Copying stock xFace www assets into "' + www_dir + '"');
+                finalize(path.join(util.libDirectory, 'www', 'cordova', platforms.www.version));
+            }
+=======
+        // Nope, so use stock cordova-hello-world-app one.
+        events.emit('verbose', 'Using stock cordova hello-world application.');
         return lazy_load.cordova('www')
         .then(function() {
-            events.emit('verbose', 'Copying stock xFace www assets into "' + www_dir + '"');
+            events.emit('verbose', 'Copying stock Cordova www assets into "' + www_dir + '"');
             return finalize(path.join(util.libDirectory, 'www', 'cordova', platforms.www.version));
+>>>>>>> cordova-cli
         });
     }
 };

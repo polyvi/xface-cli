@@ -18,8 +18,14 @@
 */
 var fs            = require('fs'),
     path          = require('path'),
+<<<<<<< HEAD
     shell         = require('shelljs'),
+    config_parser = require('./config_parser'),
+    plugin_parser = require('./plugin_parser'),
     config        = require('./config');
+=======
+    shell         = require('shelljs');
+>>>>>>> cordova-cli
 
 // Global configuration paths
 var HOME = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
@@ -93,16 +99,22 @@ exports = module.exports = {
         return path.join(projectDir, 'www', 'config.xml');
     },
     preProcessOptions: function (inputOptions) {
+<<<<<<< HEAD
+        var projectRoot = this.isxFace(process.cwd()),
+            projectPlatforms = this.listPlatforms(projectRoot),
+            DEFAULT_OPTIONS = {
+=======
         var DEFAULT_OPTIONS = {
+>>>>>>> cordova-cli
                 verbose: false,
                 platforms: [],
                 options: []
             },
             result = inputOptions || DEFAULT_OPTIONS,
-            projectRoot = this.isxFace(process.cwd());
+            projectRoot = this.isCordova(process.cwd());
 
         if (!projectRoot) {
-            return new Error('Current working directory is not a xFace-based project.');
+            return new Error('Current working directory is not a Cordova-based project.');
         }
         var projectPlatforms = this.listPlatforms(projectRoot);
         if (projectPlatforms.length === 0) {

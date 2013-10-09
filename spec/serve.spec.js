@@ -59,10 +59,10 @@ xdescribe('serve command', function() {
         };
 
         beforeEach(function() {
-            xface.create(tempDir);
+            xface.raw.create(tempDir);
             process.chdir(tempDir);
-            xface.platform('add', 'android');
-            xface.platform('add', 'ios');
+            xface.raw.platform('add', 'android');
+            xface.raw.platform('add', 'ios');
 
             // Write testing HTML files into the directory.
             fs.writeFileSync(path.join(tempDir, 'platforms', 'android', 'assets', 'www', 'test.html'), payloads.android);

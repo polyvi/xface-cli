@@ -27,12 +27,20 @@ var config            = require('./config'),
     lazy_load         = require('./lazy_load'),
     Q                 = require('q'),
     platforms         = require('../platforms'),
+<<<<<<< HEAD
+    plugman           = require('xplugin'),
+    shell             = require('shelljs');
+
+module.exports = function platform(command, targets, callback) {
+    var projectRoot = cordova_util.isxFace(process.cwd());
+=======
     child_process     = require('child_process'),
     shell             = require('shelljs');
 
 // Returns a promise.
 module.exports = function platform(command, targets) {
-    var projectRoot = cordova_util.isxFace(process.cwd());
+    var projectRoot = cordova_util.isCordova(process.cwd());
+>>>>>>> cordova-cli
 
     if (!projectRoot) {
         return Q.reject(new Error('Current working directory is not a Cordova-based project.'));
@@ -64,36 +72,69 @@ module.exports = function platform(command, targets) {
 
     switch(command) {
         case 'add':
-            var config_json = config.read(projectRoot),
-                internalDev = config.internalDev(projectRoot);
+<<<<<<< HEAD
+            var end = n(targets.length, function() {
+                hooks.fire('after_platform_add', opts, function(err) {
+                    if (err) {
+                        if (callback) callback(err);
+                        else throw err;
+                    } else {
+                        if (callback) callback();
+                    }
+                });
+            });
+            hooks.fire('before_platform_add', opts, function(err) {
+                if (err) {
+                    if (callback) callback(err);
+                    else throw err;
+                } else {
+                    var config_json = config.read(projectRoot),
+                        internalDev = config.internalDev(projectRoot);
+                    if(internalDev) {
+                        targets.forEach(function(t) {
+                            call_into_create(t, projectRoot, cfg, null, null, null, callback, end);
+                        });
+                    } else {
+                        targets.forEach(function(t) {
+                            lazy_load.based_on_config(projectRoot, t, function(err) {
+                                if (err) {
+                                    if (callback) callback(err);
+                                    else throw err;
+                                } else {
+                                    if (config_json.lib && config_json.lib[t]) {
+                                        call_into_create(t, projectRoot, cfg, config_json.lib[t].id, config_json.lib[t].version, config_json.lib[t].template, callback, end);
+                                    } else {
+                                        call_into_create(t, projectRoot, cfg, 'cordova', platforms[t].version, null, callback, end);
+                                    }
+                                }
+                            });
+                        });
+                    }
+                }
+=======
+            var config_json = config.read(projectRoot);
+
 
             return hooks.fire('before_platform_add', opts)
             .then(function() {
-                if(internalDev) {
-                    return targets.reduce(function(soFar, t) {
-                        return soFar.then(function() {
-                            return call_into_create(t, projectRoot, cfg, null, null, null);
+                return targets.reduce(function(soFar, t) {
+                    return soFar.then(function() {
+                        return lazy_load.based_on_config(projectRoot, t)
+                        .then(function() {
+                            if (config_json.lib && config_json.lib[t]) {
+                                return call_into_create(t, projectRoot, cfg, config_json.lib[t].id, config_json.lib[t].version, config_json.lib[t].template);
+                            } else {
+                                return call_into_create(t, projectRoot, cfg, 'cordova', platforms[t].version, null);
+                            }
+                        }, function(err) {
+                            throw new Error('Unable to fetch platform ' + t + ': ' + err);
                         });
-                    }, Q());
-                } else {
-                    return targets.reduce(function(soFar, t) {
-                        return soFar.then(function() {
-                            return lazy_load.based_on_config(projectRoot, t)
-                            .then(function() {
-                                if (config_json.lib && config_json.lib[t]) {
-                                    return call_into_create(t, projectRoot, cfg, config_json.lib[t].id, config_json.lib[t].version, config_json.lib[t].template);
-                                } else {
-                                    return call_into_create(t, projectRoot, cfg, 'cordova', platforms[t].version, null);
-                                }
-                            }, function(err) {
-                                throw new Error('Unable to fetch platform ' + t + ': ' + err);
-                            });
-                        });
-                    }, Q());
-                }
+                    });
+                }, Q());
             })
             .then(function() {
                 return hooks.fire('after_platform_add', opts);
+>>>>>>> cordova-cli
             });
 
             break;
@@ -236,20 +277,67 @@ function call_into_create(target, projectRoot, cfg, id, version, template_dir) {
         return Q.reject(new Error('Platform ' + target + ' already added'));
     } else {
         // Make sure we have minimum requirements to work with specified platform
+<<<<<<< HEAD
+        events.emit('log', 'Checking if platform "' + target + '" passes minimum requirements...');
+        module.exports.supports(projectRoot, target, function(err) {
+            if (err) {
+                if (callback) callback(err);
+                else throw err;
+            } else {
+                // Create a platform app using the ./bin/create scripts that exist in each repo.
+                // Run platform's create script
+                var bin;
+                var shared = '';
+                if(config.internalDev(projectRoot)) {
+                    bin = path.join(cordova_util.getRepoSetPath(), 'xface-' + target, 'bin', 'create');
+                    if(target == 'ios' || target == 'wp8') shared = '--shared ';
+                } else {
+                    bin = path.join(cordova_util.libDirectory, target, id, version, 'bin', 'create');
+                }
+                var args = (target=='ios') ? shared + '--arc' : shared;
+                var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
+                var name = cfg.name();
+                var command = util.format('"%s" %s "%s" "%s" "%s"', bin, args, output, pkg, name);
+                if (template_dir) {
+                    command += ' "' + template_dir + '"';
+                }
+                events.emit('log', 'Running bin/create for platform "' + target + '" with command: "' + command + '" (output to follow)');
+
+                shell.exec(command, {silent:true,async:true}, function(code, create_output) {
+                    events.emit('log', create_output);
+                    if (code > 0) {
+                        var err = new Error('An error occured during creation of ' + target + ' sub-project. ' + create_output);
+                        if (callback) callback(err);
+                        else throw err;
+                    } else {
+                        require('../xface').prepare(target, function(err) {
+                            if (err) {
+                                if (callback) callback(err);
+                                else throw err;
+                            } else {
+                                createOverrides(projectRoot, target);
+                                end(); //platform add is done by now.
+                                // Install all currently installed plugins into this new platform.
+                                var plugins_dir = path.join(projectRoot, 'plugins');
+                                var plugins = cordova_util.findPlugins(plugins_dir);
+                                var parser = new platforms[target].parser(output);
+                                plugins && plugins.forEach(function(plugin) {
+                                    events.emit('log', 'Installing plugin "' + plugin + '" following successful platform add of ' + target);
+                                    plugman.install(target, output, path.basename(plugin), plugins_dir, { www_dir: parser.staging_dir() });
+                                });
+                            }
+                        });
+                    }
+=======
         events.emit('verbose', 'Checking if platform "' + target + '" passes minimum requirements...');
         return module.exports.supports(projectRoot, target)
         .then(function() {
             // Create a platform app using the ./bin/create scripts that exist in each repo.
             // Run platform's create script
-            var bin;
-            var shared = '';
-            if(config.internalDev(projectRoot)) {
-                bin = path.join(cordova_util.getRepoSetPath(), 'xface-' + target, 'bin', 'create');
-                if(target == 'ios' || target == 'wp8') shared = '--shared ';
-            } else {
-                bin = path.join(cordova_util.libDirectory, target, id, version, 'bin', 'create');
-            }
-            var args = (target=='ios') ? shared + '--arc' : shared;
+            var bin = path.join(cordova_util.libDirectory, target, id, version, 'bin', 'create');
+            if(target == 'wp7') bin = path.join(cordova_util.libDirectory, 'wp', id, version, 'wp7', 'bin', 'create');
+            if(target == 'wp8') bin = path.join(cordova_util.libDirectory, 'wp', id, version, 'wp8', 'bin', 'create');
+            var args = (target=='ios') ? '--arc' : '';
             var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
             var name = cfg.name();
             var command = util.format('"%s" %s "%s" "%s" "%s"', bin, args, output, pkg, name);
@@ -265,7 +353,7 @@ function call_into_create(target, projectRoot, cfg, id, version, template_dir) {
                 if (err) {
                     d.reject(new Error('An error occured during creation of ' + target + ' sub-project. ' + create_output));
                 } else {
-                    d.resolve(require('../xface').raw.prepare(target));
+                    d.resolve(require('../cordova').raw.prepare(target));
                 }
             });
             return d.promise.then(function() {
@@ -277,7 +365,8 @@ function call_into_create(target, projectRoot, cfg, id, version, template_dir) {
                 if (!plugins) return Q();
                 var promises = plugins.map(function(plugin) {
                     events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + target);
-                    return require('xplugin').install(target, output, path.basename(plugin), plugins_dir, { www_dir: parser.staging_dir() });
+                    return require('plugman').install(target, output, path.basename(plugin), plugins_dir, { www_dir: parser.staging_dir() });
+>>>>>>> cordova-cli
                 });
                 return promises.reduce(function(soFar, f) {
                     return soFar.then(f);

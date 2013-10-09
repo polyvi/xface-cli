@@ -58,9 +58,14 @@ function shell_out_to_run(projectRoot, platform, options) {
     return d.promise;
 }
 
+<<<<<<< HEAD
+module.exports = function run(options, callback) {
+    var projectRoot = cordova_util.isxFace(process.cwd());
+=======
 // Returns a promise.
 module.exports = function run(options) {
-    var projectRoot = cordova_util.isxFace(process.cwd());
+    var projectRoot = cordova_util.isCordova(process.cwd());
+>>>>>>> cordova-cli
 
     if (!options) {
         options = {
@@ -76,10 +81,45 @@ module.exports = function run(options) {
     }
 
     var hooks = new hooker(projectRoot);
+<<<<<<< HEAD
+    hooks.fire('before_run', options, function(err) {
+        if (err) {
+            if (callback) callback(err);
+            else throw err;
+        } else {
+            var end = n(options.platforms.length, function() {
+                hooks.fire('after_run', options, function(err) {
+                    if (err) {
+                        if (callback) callback(err);
+                        else throw err;
+                    } else {
+                        if (callback) callback();
+                    }
+                });
+            });
+
+            // Run a prepare first, then shell out to run
+            require('../xface').prepare(options.platforms, function(err) {
+                if (err) {
+                    if (callback) callback(err);
+                    else throw err;
+                } else {
+                    options.platforms.forEach(function(platform) {
+                        try {
+                            shell_out_to_run(projectRoot, platform, options.options, callback, end);
+                        } catch(e) {
+                            if (callback) callback(e);
+                            else throw e;
+                        }
+                    });
+                }
+            });
+        }
+=======
     return hooks.fire('before_run', options)
     .then(function() {
         // Run a prepare first, then shell out to run
-        return require('../xface').raw.prepare(options.platforms)
+        return require('../cordova').raw.prepare(options.platforms)
         .then(function() {
             return Q.all(options.platforms.map(function(platform) {
                 return shell_out_to_run(projectRoot, platform, options.options);
@@ -87,5 +127,6 @@ module.exports = function run(options) {
         }).then(function() {
             return hooks.fire('after_run', options);
         });
+>>>>>>> cordova-cli
     });
 };

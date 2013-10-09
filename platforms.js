@@ -19,32 +19,45 @@
 
 module.exports = {
     'ios' : {
-        parser : require('./src/metadata/ios_parser'),
+        parser : './src/metadata/ios_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git',
-        version: '3.0.0'
+        version: '3.1.0-rc1'
     }, 
     'android' : {
-        parser : require('./src/metadata/android_parser'),
+        parser : './src/metadata/android_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-android.git',
-        version: '3.0.0'
+        version: '3.1.0-rc1'
     }, 
     'wp7' : {
-        parser : require('./src/metadata/wp7_parser'),
+        parser : './src/metadata/wp7_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git',
-        version: '3.0.0'
+        version: '3.1.0-rc1'
     },
     'wp8' : {
-        parser : require('./src/metadata/wp8_parser'),
+        parser : './src/metadata/wp8_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git',
-        version: '3.0.0'
+        version: '3.1.0-rc1'
     },
-    blackberry10 : {
-        parser : require('./src/metadata/blackberry10_parser'),
+    'blackberry10' : {
+        parser : './src/metadata/blackberry10_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-blackberry.git',
-        version: '3.0.0'
+        version: '3.1.0-rc1'
     },
     'www':{
         url    : 'http://git.polyvi.com/gitweb/?p=xface-default-app.git',
         version: '0.0.2'
+    },
+    'firefoxos':{
+        parser: './src/metadata/firefoxos_parser',
+        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-firefoxos.git',
+        version: '3.1.0-rc1'
     }
 };
+
+var addModuleProperty = require('./src/util').addModuleProperty;
+Object.keys(module.exports).forEach(function(key) {
+    var obj = module.exports[key];
+    if (obj.parser) {
+        addModuleProperty(module, 'parser', obj.parser, false, obj);
+    }
+});

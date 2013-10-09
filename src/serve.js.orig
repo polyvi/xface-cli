@@ -119,9 +119,18 @@ function processAddRequest(request, response, platformId, projectRoot) {
     response.end();
 }
 
-module.exports = function server(port) {
+<<<<<<< HEAD
+    // Hack for testing despite its async nature.
+    return returnValue;
+};
+
+module.exports.config = function (platform, port, callback) {
     var projectRoot = cordova_util.isxFace(process.cwd());
+=======
+module.exports = function server(port) {
+    var projectRoot = cordova_util.isCordova(process.cwd());
     port = +port || 8000;
+>>>>>>> cordova-cli
 
     if (!projectRoot) {
         throw new Error('Current working directory is not a Cordova-based project.');
@@ -131,7 +140,7 @@ module.exports = function server(port) {
     return hooks.fire('before_serve')
     .then(function() {
         // Run a prepare first!
-        return require('../xface').raw.prepare([]);
+        return require('../cordova').raw.prepare([]);
     }).then(function() {
         launchServer(projectRoot, port);
         return hooks.fire('after_serve');

@@ -37,7 +37,13 @@ module.exports = {
     // Returns a promise.
     cordova:function lazy_load(platform) {
         if (!(platform in platforms)) {
-            return Q.reject(new Error('xFace library "' + platform + '" not recognized.'));
+<<<<<<< HEAD
+            var err = new Error('xFace library "' + platform + '" not recognized.');
+            if (callback) return callback(err);
+            else throw err;
+=======
+            return Q.reject(new Error('Cordova library "' + platform + '" not recognized.'));
+>>>>>>> cordova-cli
         }
 
         var url = platforms[platform].url + ';a=snapshot;h=' + platforms[platform].version + ';sf=tgz';

@@ -16,6 +16,21 @@
     specific language governing permissions and limitations
     under the License.
 */
+<<<<<<< HEAD
+var cordova_util  = require('./util'),
+    util          = require('util'),
+    fs            = require('fs'),
+    path          = require('path'),
+    shell         = require('shelljs'),
+    platforms     = require('../platforms'),
+    n             = require('ncallbacks'),
+    hooker        = require('./hooker'),
+    plugman       = require('xplugin'),
+    events        = require('./events');
+
+module.exports = function plugin(command, targets, callback) {
+    var projectRoot = cordova_util.isxFace(process.cwd()),
+=======
 
 // Returns a promise.
 module.exports = function plugin(command, targets) {
@@ -25,7 +40,8 @@ module.exports = function plugin(command, targets) {
         Q             = require('q'),
         events        = require('./events');
 
-    var projectRoot = cordova_util.isxFace(process.cwd()),
+    var projectRoot = cordova_util.isCordova(process.cwd()),
+>>>>>>> cordova-cli
         err;
 
     if (!projectRoot) {
@@ -87,7 +103,7 @@ module.exports = function plugin(command, targets) {
 
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
-                        var plugman = require('xplugin');
+                        var plugman = require('plugman');
                         return plugman.raw.fetch(target, pluginsDir, {})
                     })
                     .fail(function(err) {
@@ -118,7 +134,7 @@ module.exports = function plugin(command, targets) {
                                     }
                                 }
 
-                                events.emit('verbose', 'Calling xplugin.install on plugin "' + dir + '" for platform "' + platform + '" with options "' + JSON.stringify(options)  + '"');
+                                events.emit('verbose', 'Calling plugman.install on plugin "' + dir + '" for platform "' + platform + '" with options "' + JSON.stringify(options)  + '"');
                                 return plugman.raw.install(platform, platformRoot, path.basename(dir), pluginsDir, options);
                             });
                         }, Q());
@@ -143,13 +159,13 @@ module.exports = function plugin(command, targets) {
                     // If this is a web-only or dependency-only plugin, then
                     // there may be nothing to do here except remove the
                     // reference from the platform's plugin config JSON.
-                    var plugman = require('xplugin');
+                    var plugman = require('plugman');
                     return platformList.reduce(function(soFar, platform) {
                         return soFar.then(function() {
                             var platformRoot = path.join(projectRoot, 'platforms', platform);
                             var platforms = require('../platforms');
                             var parser = new platforms[platform].parser(platformRoot);
-                            events.emit('verbose', 'Calling xplugin.uninstall on plugin "' + target + '" for platform "' + platform + '"');
+                            events.emit('verbose', 'Calling plugman.uninstall on plugin "' + target + '" for platform "' + platform + '"');
                             return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, path.join(projectRoot, 'plugins'), { www_dir: parser.staging_dir() });
                         });
                     }, Q())
@@ -164,7 +180,7 @@ module.exports = function plugin(command, targets) {
         case 'search':
             return hooks.fire('before_plugin_search')
             .then(function() {
-                var plugman = require('xplugin');
+                var plugman = require('plugman');
                 return plugman.raw.search(opts.plugins);
             }).then(function(plugins) {
                 for(var plugin in plugins) {
@@ -177,13 +193,31 @@ module.exports = function plugin(command, targets) {
         case 'ls':
         case 'list':
         default:
+<<<<<<< HEAD
+            hooks.fire('before_plugin_ls', function(err) {
+                if (err) {
+                    if (callback) callback(err);
+                    else throw err;
+                } else {
+                    events.emit('results', (plugins.length ? plugins : 'No plugins added. Use `xface plugin add <plugin>`.'));
+                    hooks.fire('after_plugin_ls', function(err) {
+                        if (err) {
+                            if (callback) callback(err);
+                            else throw err;
+                        } else {
+                            if (callback) callback(undefined, plugins);
+                        }
+                    });
+                }
+=======
             return hooks.fire('before_plugin_ls')
             .then(function() {
-                events.emit('results', (plugins.length ? plugins : 'No plugins added. Use `xface plugin add <plugin>`.'));
+                events.emit('results', (plugins.length ? plugins : 'No plugins added. Use `cordova plugin add <plugin>`.'));
                 return hooks.fire('after_plugin_ls')
                 .then(function() {
                     return plugins;
                 });
+>>>>>>> cordova-cli
             });
             break;
     }

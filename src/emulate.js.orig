@@ -42,9 +42,14 @@ function shell_out_to_emulate(root, platform, options) {
     return d.promise;
 }
 
+<<<<<<< HEAD
+module.exports = function emulate (options, callback) {
+    var projectRoot = cordova_util.isxFace(process.cwd());
+=======
 // Returns a promise.
 module.exports = function emulate (options) {
-    var projectRoot = cordova_util.isxFace(process.cwd());
+    var projectRoot = cordova_util.isCordova(process.cwd());
+>>>>>>> cordova-cli
 
     if (!options) {
         options = {
@@ -60,15 +65,51 @@ module.exports = function emulate (options) {
     }
 
     var hooks = new hooker(projectRoot);
+<<<<<<< HEAD
+    hooks.fire('before_emulate', options, function(err) {
+        if (err) {
+            if (callback) callback(err);
+            else throw err;
+        } else {
+            var end = n(options.platforms.length, function() {
+                hooks.fire('after_emulate', options, function(err) {
+                    if (err) {
+                        if (callback) callback(err);
+                        else throw err;
+                    } else {
+                        if (callback) callback();
+                    }
+                });
+            });
+
+            // Run a prepare first!
+            require('../xface').prepare(options.platforms, function(err) {
+                if (err) {
+                    if (callback) callback(err);
+                    else throw err;
+                } else {
+                    options.platforms.forEach(function(platform) {
+                        try {
+                            shell_out_to_emulate(projectRoot, platform, options.options, callback, end);
+                        } catch(e) {
+                            if (callback) callback(e);
+                            else throw e;
+                        }
+                    });
+                }
+            });
+        }
+=======
     return hooks.fire('before_emulate', options)
     .then(function() {
         // Run a prepare first!
-        return require('../xface').raw.prepare(options.platforms);
+        return require('../cordova').raw.prepare(options.platforms);
     }).then(function() {
         return Q.all(options.platforms.map(function(platform) {
             return shell_out_to_emulate(projectRoot, platform, options.options);
         }));
     }).then(function() {
         return hooks.fire('after_emulate', options);
+>>>>>>> cordova-cli
     });
 };
