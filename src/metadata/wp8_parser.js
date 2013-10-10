@@ -150,7 +150,7 @@ module.exports.prototype = {
     },
     // copy files from merges directory to actual www dir
     copy_merges:function(merges_sub_path) {
-        var merges_path = path.join(util.appDir(util.isCordova(this.wp8_proj_dir)), 'merges', merges_sub_path);
+        var merges_path = path.join(util.appDir(util.isxFace(this.wp8_proj_dir)), 'merges', merges_sub_path);
         if (fs.existsSync(merges_path)) {
             var overrides = path.join(merges_path, '*');
             shell.cp('-rf', overrides, this.www_dir());
