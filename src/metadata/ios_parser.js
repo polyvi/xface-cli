@@ -182,7 +182,7 @@ module.exports.prototype = {
 
     // Returns the platform-specific www directory.
     www_dir:function() {
-        return path.join(this.path, 'www');
+        return path.join(this.path, 'xface3', 'helloxface');
     },
 
     staging_dir: function() {
@@ -196,19 +196,20 @@ module.exports.prototype = {
     update_www:function() {
         var projectRoot = util.isxFace(this.path);
         var www = util.projectWww(projectRoot);
-        var project_www = this.www_dir();
+        var parentWww = path.resolve(path.join(this.www_dir(), '..'));
 
         // remove the stock www folder
-        shell.rm('-rf', project_www);
+        shell.rm('-rf', parentWww);
+        shell.mkdir('-p', parentWww);
 
         // copy over project www assets
-        shell.cp('-rf', www, this.path);
+        shell.cp('-rf', www + '/*', parentWww);
 
-        // write out proper cordova.js
+        // write out proper xface.js
         var custom_path = config.has_custom_path(projectRoot, 'ios');
         var lib_path = util.getDefaultPlatformLibPath(projectRoot, 'ios');
         if (custom_path) lib_path = custom_path;
-        shell.cp('-f', path.join(lib_path, 'xFaceLib', 'xFaceLib', 'xface.js'), path.join(project_www, 'xface.js'));
+        shell.cp('-f', path.join(lib_path, 'xFaceLib', 'xFaceLib', 'xface.js'), path.join(this.www_dir(), 'xface.js'));
     },
 
     // update the overrides folder into the www folder
