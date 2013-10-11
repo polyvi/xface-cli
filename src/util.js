@@ -44,7 +44,7 @@ exports = module.exports = {
                     return dir;
                 } else {
                     var parent = path.join(dir, '..');
-                    if (parent && parent.length > 1) {
+                    if (parent && parent != dir && parent.length > 1) {
                         return isxFace(parent);
                     } else return false;
                 }
