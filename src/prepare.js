@@ -69,7 +69,7 @@ module.exports = function prepare(options) {
                 return updateProject(projectRoot, platform, cfg);
             } else {
                 return lazy_load.based_on_config(projectRoot, platform).then(function() {
-                    return updateProject(projectRoot, platform, cfg, end);
+                    return updateProject(projectRoot, platform, cfg);
                 });
             }
         })).then(function() {

@@ -161,6 +161,27 @@ exports = module.exports = {
         } else {
             return path.join(module.exports.libDirectory, platform, 'cordova', platforms[platform].version);
         }
+    },
+    /**
+     * 将src中的所有preference数据对象合并到dest上，并返回合并后的数组，override表示是否进行覆写操作 
+     */
+    mergeConfigPrefs: function(src, dest, override) {
+        if(!(src instanceof Array) || !(dest instanceof Array)) {
+            throw new Error('The parameter "src" and "dest" must be Array! ');
+        }
+        var merges = [];
+        src.forEach(function(p) {
+            var others = dest.filter(function(t) {
+                return t.name == p.name;
+            });
+            if(others.length > 0) {
+                if(override) others[0].value = p.value;
+            } else {
+                merges.push(p);
+            }
+        });
+        merges = merges.concat(dest);
+        return merges;
     }
 };
 

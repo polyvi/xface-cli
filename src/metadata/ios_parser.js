@@ -122,8 +122,8 @@ module.exports.prototype = {
         this.config.content(config.content());
 
         // Update preferences
+        var prefs = util.mergeConfigPrefs(this.config.preference.get(), config.preference.get(), false);
         this.config.preference.remove();
-        var prefs = config.preference.get();
         // write out defaults, unless user has specifically overrode it
         for (var p in default_prefs) if (default_prefs.hasOwnProperty(p)) {
             var override = prefs.filter(function(pref) { return pref.name == p; });
