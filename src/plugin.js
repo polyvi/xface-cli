@@ -19,13 +19,14 @@
 
 // Returns a promise.
 module.exports = function plugin(command, targets) {
-    var cordova_util  = require('./util'),
+    var xface_util  = require('./util'),
         path          = require('path'),
         hooker        = require('./hooker'),
         Q             = require('q'),
-        events        = require('./events');
+        events        = require('./events'),
+        config        = require('./config');
 
-    var projectRoot = cordova_util.isxFace(process.cwd()),
+    var projectRoot = xface_util.isxFace(process.cwd()),
         err;
 
     if (!projectRoot) {
@@ -40,12 +41,12 @@ module.exports = function plugin(command, targets) {
     }
 
     var hooks = new hooker(projectRoot);
-    var platformList = cordova_util.listPlatforms(projectRoot);
+    var platformList = xface_util.listPlatforms(projectRoot);
 
     // Massage plugin name(s) / path(s)
     var pluginPath, plugins;
     pluginPath = path.join(projectRoot, 'plugins');
-    plugins = cordova_util.findPlugins(pluginPath);
+    plugins = xface_util.findPlugins(pluginPath);
     if (!targets || !targets.length) {
         if (command == 'add' || command == 'rm') {
             return Q.reject(new Error('You need to qualify `add` or `remove` with one or more plugins!'));
@@ -107,6 +108,9 @@ module.exports = function plugin(command, targets) {
                                     tokens,
                                     key,
                                     i;
+                                if(config.internalDev(projectRoot)) {
+                                    options.repoSet = xface_util.getRepoSetPath();
+                                }
                                 //parse variables into cli_variables
                                 for (i=0; i< opts.options.length; i++) {
                                     if (opts.options[i] === "--variable" && typeof opts.options[++i] === "string") {
