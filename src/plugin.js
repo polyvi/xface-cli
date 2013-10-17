@@ -88,8 +88,12 @@ module.exports = function plugin(command, targets) {
 
                         // Fetch the plugin first.
                         events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
-                        var plugman = require('xplugin');
-                        return plugman.raw.fetch(target, pluginsDir, {})
+                        var plugman = require('xplugin'),
+                            options = {};
+                        if(config.internalDev(projectRoot)) {
+                            options.repoSet = xface_util.getRepoSetPath();
+                        }
+                        return plugman.raw.fetch(target, pluginsDir, options)
                     })
                     .fail(function(err) {
                         return Q.reject(new Error('Error fetching plugin: ' + err));
