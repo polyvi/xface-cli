@@ -2,6 +2,7 @@ var fs = require('fs'),
     path = require('path'),
     Q = require('q'),
     shell = require('shelljs'),
+    child_process = require('child_process'),
     jsdom = require('jsdom-nogyp').jsdom,
     xfaceUtil = require('./util'),
     events = require('./events'),
@@ -44,7 +45,7 @@ module.exports = function(command, targets, testTemplate) {
             return Q.reject(new Error('Do not support command `xface app ' + command + desc + '`! \nPlease try command `xface app add' + desc + '`! '));
         }
         if (target == 'test' || path.basename(target) == target) {
-            return installPluginTest(xfaceProj, target);
+            return installPluginTest(xfaceProj, target, testTemplate);
         } else if (fs.existsSync(target)) {
             return installApp(xfaceProj, target);
         } else {
@@ -52,6 +53,26 @@ module.exports = function(command, targets, testTemplate) {
         }
     });
 };
+
+function fetchTestTemplate() {
+    var templateCachePath = path.join(xfaceUtil.globalConfig, 'xface-test-template');
+    if(fs.existsSync(templateCachePath)) {
+        events.emit('verbose', 'Plugin test template existed, no need to clone it.');
+        return Q(templateCachePath);
+    }
+    var d = Q.defer(),
+        cmd = 'git clone https://github.com/polyvi/xface-test-template.git ' + templateCachePath;
+    child_process.exec(cmd, function(err, stdout, stderr) {
+        if(err) {
+            d.reject(err);
+        } else {
+            d.resolve();
+        }
+    });
+    return d.promise.then(function() {
+        return Q(templateCachePath);
+    });
+}
 
 function matchPart(plugins, part) {
     var index = plugins.indexOf(part);
@@ -69,7 +90,7 @@ function matchPart(plugins, part) {
     }
 }
 
-function installPluginTest(xfaceProj, target) {
+function installPluginTest(xfaceProj, target, testTemplate) {
     var plugins = xfaceUtil.findPlugins(path.join(xfaceProj, 'plugins'));
     if(target == 'test') {
         if (plugins.length === 0) {
@@ -81,8 +102,9 @@ function installPluginTest(xfaceProj, target) {
         if(!plugin) Q.reject(new Error('Can not find plugin id that matches `' + target + '`, try command `xface plugin ls` to show installed plugins! '));
         plugins = [plugin];
     }
-    return Q.try(function() {
-        return mergePluginTests(xfaceProj, plugins);
+    var q = testTemplate ? Q(testTemplate) : fetchTestTemplate();
+    return q.then(function(template) {
+        return mergePluginTests(xfaceProj, plugins, template);
     })
     .then(function(testPath) {
         return installApp(xfaceProj, testPath);
@@ -90,65 +112,60 @@ function installPluginTest(xfaceProj, target) {
 }
 
 /**
- * 检测插件测试格式是否正确，并将xface插件和corodova插件区分开来
+ * 检测插件测试格式是否正确
  */
 function checkAndSplitPlugins(xfaceProj, plugins) {
     var result = {
-        'xface' : [],
-        'cordova' : [],
+        'valid' : [],
         'invalid' : []
     };
     plugins.forEach(function(p) {
         var testPath = path.join(xfaceProj, 'plugins', p, 'test');
-        if(!fs.existsSync(path.join(testPath, 'index.html'))) return result.invalid.push(p);
-
-        if(fs.existsSync(path.join(testPath, 'cordova-incl.js'))) result.cordova.push(p);
-        else if(fs.existsSync(path.join(testPath, 'base.js')) && fs.existsSync(testPath, 'spec.html')) result.xface.push(p);
-        else result.invalid.push(p);
+        if(!fs.existsSync(path.join(testPath, 'index.html')) && !fs.existsSync(path.join(testPath, 'spec.html'))) result.invalid.push(p);
+        else result.valid.push(p);
     });
     return result;
 }
 
-function mergePluginTests(xfaceProj, plugins) {
-    if(plugins.length === 1) {
-        return Q(path.join(xfaceProj, 'plugins', plugins[0], 'test'));
-    }
+function mergePluginTests(xfaceProj, plugins, testTemplate) {
     events.emit('verbose', 'Begin to merge test cases of installed plugins ...');
     var tmpTests = path.join(xfaceUtil.globalConfig, 'merge_tests');
     if(!fs.existsSync(tmpTests)) shell.mkdir('-p', tmpTests);
     shell.rm('-rf', path.join(tmpTests, '*'));
+    shell.cp('-rf', path.join(testTemplate, 'template', '*'), tmpTests);
 
     var splittedPlugins = checkAndSplitPlugins(xfaceProj, plugins);
     if(splittedPlugins.invalid.length > 0) {
-        events.emit('warn', 'Test cases of plugins ' + JSON.stringify(splittedPlugins.invalid) + ' are invalid, will not be added! ');
+        events.emit('warn', 'Test cases of plugins ' + JSON.stringify(splittedPlugins.invalid) + ' are invalid, will not be added. Continue... ');
     }
-    mergexFacePluginTests(xfaceProj, splittedPlugins.xface, tmpTests);
-    mergeCordovaPluginTests(xfaceProj, splittedPlugins.cordova, tmpTests, splittedPlugins.xface.length > 0);
+    handlePluginTests(xfaceProj, splittedPlugins.valid, tmpTests);
 
     // 去掉html文件中多余a标签
-    var linkHtmls = ['index.html', 'spec.html', path.join('autotest', 'index.html')];
+    var linkHtmls = ['index.html', 'spec.html', path.join('autotest', 'index.html'), path.join('autotest', 'pages', 'all.html')];
     linkHtmls.forEach(function(f) {
         var html = path.join(tmpTests, f);
         if(!fs.existsSync(html)) return;
         pruneInvalidAnchors(html);
     });
 
-    // 修改cordova-incl.js
-    var cordovaInclJs = path.join(tmpTests, 'cordova-incl.js');
-    if(fs.existsSync(cordovaInclJs)) {
-        var content = fs.readFileSync(cordovaInclJs, 'utf-8');
-        content = content.replace(/"cordova\."/g, '"xface."').replace(/"cordova\.js"/g, '"xface.js"');
-        fs.writeFileSync(cordovaInclJs, content);
+    // 去掉autotest/pages/all.html中不需要的js初始化代码
+    events.emit('verbose', 'Process auto test html file "all.html". ');
+    var allDotHtmlPath = path.join(tmpTests, 'autotest', 'pages', 'all.html'),
+        content = fs.readFileSync(allDotHtmlPath, 'utf-8'),
+        regexp = /\/\/[*]+InitForExtension\[(.+)\][*]+\/\/[\s\S]+?\/\/[*]+EndInit[*]+\/\//m,
+        matchData = content.match(regexp);
+    if(matchData && splittedPlugins.valid.indexOf(matchData[1]) == -1) {
+        content = content.replace(regexp, '');
+        fs.writeFileSync(allDotHtmlPath, content, 'utf-8');
     }
 
     return Q(tmpTests);
 }
 
-function mergexFacePluginTests(xfaceProj, plugins, dest) {
+function handlePluginTests(xfaceProj, plugins, dest) {
     plugins.forEach(function(p) {
-        events.emit('verbose', 'Process test case of xface extension "' + p + '"');
+        events.emit('verbose', 'Process test case of plugin "' + p + '"');
         var srcTestPath = path.join(xfaceProj, 'plugins', p, 'test');
-        if(fs.readdirSync(dest).length === 0) return shell.cp('-rf', path.join(srcTestPath, '*'), dest);
 
         var children = fs.readdirSync(srcTestPath);
         children.forEach(function(child) {
@@ -158,9 +175,12 @@ function mergexFacePluginTests(xfaceProj, plugins, dest) {
                 mergeAutoTestDir(srcTopChildPath, destTopChildPath);
             } else if(child == 'spec.html') {
                 mergeLink(srcTopChildPath, destTopChildPath);
-            } else if(child == 'index.html' || BASE_TEST_FRAMEWORK_FILES.indexOf(child) !== -1) {
+            } else if(child == 'index.html') {
+                if(!fs.existsSync(path.join(srcTestPath, 'spec.html'))) {
+                    mergeLink(srcTopChildPath, path.join(dest, 'spec.html'));
+                }
+            } else if(BASE_TEST_FRAMEWORK_FILES.indexOf(child) !== -1) {
                 // no need to copy or merge
-                return;
             } else {
                 shell.cp('-rf', srcTopChildPath, dest);
             }
@@ -169,15 +189,52 @@ function mergexFacePluginTests(xfaceProj, plugins, dest) {
 }
 
 function mergeAutoTestDir(srcDir, destDir) {
-    if(!fs.existsSync(path.join(destDir, 'index.html'))) return shell.cp('-rf', srcDir, path.dirname(destDir));
     var children = fs.readdirSync(srcDir);
     children.forEach(function(child) {
         // framework files are not be processed
         if(AUTO_TEST_FRAMEWORK_FILES.indexOf(child) != -1) return;
         var srcFilePath = path.join(srcDir, child);
-        if('index.html' == child) return mergeLink(srcFilePath, path.join(destDir, 'index.html'));
-        shell.cp('-rf', srcFilePath, path.join(destDir));
+        if('index.html' == child) mergeLink(srcFilePath, path.join(destDir, 'index.html'));
+        else if('pages' == child && fs.existsSync(srcDir, 'pages', 'all.html')) {
+            fs.readdirSync(path.join(srcDir, 'pages')).forEach(function(c) {
+                if(c != 'all.html') shell.cp('-rf', path.join(srcDir, 'pages', c), path.join(destDir, 'pages'));
+            });
+        }
+        else {
+            shell.cp('-rf', srcFilePath, destDir);
+            if('tests' == child) {
+                var html = path.join(destDir, 'pages', 'all.html');
+                fs.readdirSync(srcFilePath).forEach(function(js) {
+                });
+                appendScriptTag(html, fs.readdirSync(srcFilePath).map(function(js) {
+                    return '../tests/' + js;
+                }));
+            }
+        }
     });
+}
+
+/**
+ * 将自动测试对应的js文件链接添加到all.html中
+ */
+function appendScriptTag(html, jsFiles) {
+    events.emit('verbose', 'Insert script tag into all.html for auto test js "' + JSON.stringify(jsFiles) + '".');
+    var doc = jsdom(fs.readFileSync(html, 'utf-8')),
+        scriptTags = doc.getElementsByTagName('script'),
+        links = [],
+        lastScriptTag = scriptTags[scriptTags.length - 1];
+    for(var i = 0; i < scriptTags.length; i++) {
+        links.push(scriptTags[i].getAttribute('src'));
+    }
+
+    jsFiles.forEach(function(file) {
+        if(links.indexOf(file) > -1 || path.extname(file).toLowerCase() != '.js') return; // 重复链接或者非js文件，不予添加
+        var newScriptTag = jsdom('<script type="text/javascript" src="' + file + '"></script>').children[0];
+        newScriptTag = doc.importNode(newScriptTag, true);
+        doc.head.insertBefore(newScriptTag, lastScriptTag)
+    });
+    // Because wp8 need 'DOCTYPE', just add it
+    fs.writeFileSync(html, '<!DOCTYPE html>\n' + doc.innerHTML, 'utf-8');
 }
 
 /**
@@ -241,31 +298,6 @@ function mergeLink(src, dest) {
     }
     // Because wp8 need 'DOCTYPE', just add it
     fs.writeFileSync(dest, '<!DOCTYPE html>\n' + doc.innerHTML, 'utf-8');
-}
-
-function mergeCordovaPluginTests(xfaceProj, plugins, dest, xfaceExtentionExisted) {
-    plugins.forEach(function(p) {
-        events.emit('verbose', 'Process test case of cordova plugin "' + p + '"');
-        var srcTestPath = path.join(xfaceProj, 'plugins', p, 'test');
-        if(fs.readdirSync(dest).length === 0) return shell.cp('-rf', path.join(srcTestPath, '*'), dest);
-
-        var children = fs.readdirSync(srcTestPath);
-        children.forEach(function(child) {
-            var destTopChildPath = path.join(dest, child),
-                srcTopChildPath = path.join(srcTestPath, child);
-            if(child == 'autotest') {
-                mergeAutoTestDir(srcTopChildPath, destTopChildPath);
-            } else if(child == 'index.html') {
-                if(xfaceExtentionExisted) mergeLink(srcTopChildPath, path.join(dest, 'spec.html'));
-                else mergeLink(srcTopChildPath, destTopChildPath);
-            } else if(BASE_TEST_FRAMEWORK_FILES.indexOf(child) !== -1) {
-                // no need to copy or merge
-                return;
-            } else {
-                shell.cp('-rf', srcTopChildPath, dest);
-            }
-        });
-    });
 }
 
 /**
