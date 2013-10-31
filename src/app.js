@@ -8,7 +8,8 @@ var fs = require('fs'),
     events = require('./events'),
     help = require('./help');
 
-var TAG_A_EXPRESSION = '<a\\s+.*?href\\s*=\\s*"(.*?)".*?(/>|>.*?</a>)';
+var TAG_A_EXPRESSION = '<a\\s+.*?href\\s*=\\s*"(.*?)".*?(/>|>.*?</a>)',
+    CORDOVA_INCL_JS = "cordova-incl.js";
 var AUTO_TEST_FRAMEWORK_FILES = [
     'jasmine.css',
     'jasmine.js',
@@ -20,7 +21,7 @@ var BASE_TEST_FRAMEWORK_FILES = [
     'base.js',
     'main.js',
     'master.css',
-    'cordova-incl.js'
+    CORDOVA_INCL_JS
 ];
 
 /**
@@ -163,6 +164,7 @@ function mergePluginTests(xfaceProj, plugins, testTemplate) {
 }
 
 function handlePluginTests(xfaceProj, plugins, dest) {
+    var hasCordovaInclJs = false; // any plugin use cordova-incl.js?
     plugins.forEach(function(p) {
         events.emit('verbose', 'Process test case of plugin "' + p + '"');
         var srcTestPath = path.join(xfaceProj, 'plugins', p, 'test');
@@ -180,11 +182,30 @@ function handlePluginTests(xfaceProj, plugins, dest) {
                     mergeLink(srcTopChildPath, path.join(dest, 'spec.html'));
                 }
             } else if(BASE_TEST_FRAMEWORK_FILES.indexOf(child) !== -1) {
+                if(child == CORDOVA_INCL_JS) {
+                    hasCordovaInclJs = true;
+                }
                 // no need to copy or merge
             } else {
                 shell.cp('-rf', srcTopChildPath, dest);
             }
         });
+    });
+
+    if(hasCordovaInclJs) replaceCordovaInclReference(dest);
+}
+
+function replaceCordovaInclReference(dir) {
+    fs.readdirSync(dir).forEach(function(child) {
+        var childPath = path.join(dir, child);
+        if(fs.statSync(childPath).isDirectory()) replaceCordovaInclReference(childPath);
+        else if(path.extname(child).toLowerCase() == '.html') {
+            var content = fs.readFileSync(childPath, 'utf-8');
+            if(content.indexOf(CORDOVA_INCL_JS) > -1) {
+                content = content.replace(/cordova-incl\.js/mg, 'base.js');
+                fs.writeFileSync(childPath, content, 'utf-8');
+            }
+        }
     });
 }
 
