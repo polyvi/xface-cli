@@ -4,6 +4,7 @@ var fs = require('fs'),
     shell = require('shelljs'),
     child_process = require('child_process'),
     jsdom = require('jsdom-nogyp').jsdom,
+    Zip = require('adm-zip'),
     xfaceUtil = require('./util'),
     events = require('./events'),
     help = require('./help');
@@ -340,6 +341,17 @@ function installApp(projRoot, appPath) {
     shell.rm('-rf', path.join(wwwAppPath, '*'));
     if(content) fs.writeFileSync(appXml, content);
     shell.cp('-Rf', srcPath, wwwAppPath);
+
+    var workspaceDir = path.join(wwwAppPath, 'workspace');
+    if(fs.existsSync(workspaceDir) && fs.readdirSync(workspaceDir).length > 0) {
+        events.emit('verbose', 'Begin to zip folder "' + workspaceDir + '", please wait...');
+        var zip = new Zip(),
+            zipPath = workspaceDir + '.zip';
+        zip.addLocalFolder(workspaceDir);
+        zip.writeZip(zipPath);
+        shell.rm('-rf', path.join(workspaceDir, '*'));
+        shell.mv(zipPath, workspaceDir);
+    }
 
     var platforms = xfaceUtil.listPlatforms(projRoot);
     platforms.forEach(function(p) {
