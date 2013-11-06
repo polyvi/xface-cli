@@ -20,7 +20,7 @@ var xface = require('../xface'),
     path = require('path'),
     shell = require('shelljs'),
     child_process = require('child_process'),
-    plugman = require('plugman'),
+    plugman = require('xplugin'),
     fs = require('fs'),
     util = require('../src/util'),
     config = require('../src/config'),
@@ -38,6 +38,7 @@ describe('plugin command', function() {
     var is_cordova, list_platforms, fire, find_plugins, rm, mkdir, existsSync, exec, prep_spy, plugman_install, plugman_fetch, parsers = {}, uninstallPlatform, uninstallPlugin;
     beforeEach(function() {
         is_cordova = spyOn(util, 'isxFace').andReturn(project_dir);
+        spyOn(config, 'internalDev').andReturn(false);
         fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
         supported_platforms.forEach(function(p) {
             parsers[p] = jasmine.createSpy(p + ' update_project').andReturn(Q());
@@ -69,7 +70,7 @@ describe('plugin command', function() {
             }, post).fin(done);
         }
 
-        it('should not run outside of a xFace-based project by calling util.isCordova', function() {
+        it('should not run outside of a xFace-based project by calling util.isxFace', function(done) {
             is_cordova.andReturn(false);
             expectFailure(xface.raw.plugin(), done, function(err) {
                 expect(err).toEqual(new Error('Current working directory is not a xFace-based project.'));
@@ -88,7 +89,7 @@ describe('plugin command', function() {
     });
 
     describe('success', function() {
-        it('should run inside a xFace-based project by calling util.isCordova', function() {
+        it('should run inside a xFace-based project by calling util.isxFace', function(done) {
             xface.raw.plugin().then(function() {
                 expect(is_cordova).toHaveBeenCalled();
                 done();

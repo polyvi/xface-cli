@@ -20,7 +20,7 @@ var xface = require('../xface'),
     path = require('path'),
     shell = require('shelljs'),
     child_process = require('child_process'),
-    plugman = require('plugman'),
+    plugman = require('xplugin'),
     fs = require('fs'),
     util = require('../src/util'),
     config = require('../src/config'),
@@ -43,6 +43,7 @@ describe('platform command', function() {
             });
         });
         is_xface = spyOn(util, 'isxFace').andReturn(project_dir);
+        spyOn(config, 'internalDev').andReturn(false);
         fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
         name = jasmine.createSpy('config name').andReturn('magical mystery tour');
         pkg = jasmine.createSpy('config packageName').andReturn('ca.filmaj.id');
@@ -75,7 +76,7 @@ describe('platform command', function() {
             }, post).fin(done);
         }
 
-        it('should not run outside of a Cordova-based project by calling util.isCordova', function() {
+        it('should not run outside of a Cordova-based project by calling util.isCordova', function(done) {
             is_xface.andReturn(false);
             expectFailure(xface.raw.platform(), done, function(err) {
                 expect(is_xface).toHaveBeenCalled();
@@ -95,7 +96,7 @@ describe('platform command', function() {
     });
 
     describe('success', function() {
-        it('should run inside a xFace-based project by calling util.isxFace', function() {
+        it('should run inside a xFace-based project by calling util.isxFace', function(done) {
             xface.raw.platform().then(function() {
                 expect(is_xface).toHaveBeenCalled();
                 done();
@@ -131,7 +132,7 @@ describe('platform command', function() {
                 }).then(function() {
                     return xface.raw.platform('add', 'wp8');
                 }).then(function() {
-                    expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp.cordova.\d.\d.\d[\d\w\-]*.wp8.bin.create/gi);
+                    expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp8.cordova.\d.\d.\d[\d\w\-]*.bin.create/gi);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
                     done();
                 });
@@ -149,7 +150,7 @@ describe('platform command', function() {
                 });
                 xface.raw.platform('add', 'wp8').then(function() {
                     expect(load_custom).toHaveBeenCalledWith('haha', 'phonegap', 'wp8', 'bleeding edge');
-                    expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp.phonegap.bleeding edge.wp8.bin.create/gi);
+                    expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp8.phonegap.bleeding edge.bin.create/gi);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
                     done();
                 });
@@ -241,7 +242,7 @@ describe('platform command', function() {
                     var oldVersion = platforms['ios'].version;
                     platforms['ios'].version = '1.0.0';
                     xface.raw.platform('update', ['ios']).then(function() {
-                        expect(exec).toHaveBeenCalledWith('HOMEDIR/.cordova/lib/ios/cordova/1.0.0/bin/update "some/path/platforms/ios"', jasmine.any(Function));
+                        expect(exec).toHaveBeenCalledWith('HOMEDIR/.xface/lib/ios/cordova/1.0.0/bin/update "some/path/platforms/ios"', jasmine.any(Function));
                     }, function(err) {
                         expect(err).toBeUndefined();
                     }).fin(function() {
@@ -254,14 +255,14 @@ describe('platform command', function() {
     });
     describe('hooks', function() {
         describe('list (ls) hooks', function(done) {
-            it('should fire before hooks through the hooker module', function() {
-                cordova.platform();
+            it('should fire before hooks through the hooker module', function(done) {
+                xface.raw.platform().then(function() {
                     expect(fire).toHaveBeenCalledWith('before_platform_ls');
                     done();
                 });
             });
             it('should fire after hooks through the hooker module', function(done) {
-                cordova.platform();
+                xface.raw.platform().then(function() {
                     expect(fire).toHaveBeenCalledWith('after_platform_ls');
                     done();
                 });
@@ -269,13 +270,13 @@ describe('platform command', function() {
         });
         describe('remove (rm) hooks', function() {
             it('should fire before hooks through the hooker module', function(done) {
-                cordova.platform('rm', 'android');
+                xface.raw.platform('rm', 'android').then(function() {
                     expect(fire).toHaveBeenCalledWith('before_platform_rm', {platforms:['android']});
                     done();
                 });
             });
             it('should fire after hooks through the hooker module', function(done) {
-                cordova.platform('rm', 'android');
+                xface.raw.platform('rm', 'android').then(function() {
                     expect(fire).toHaveBeenCalledWith('after_platform_rm', {platforms:['android']});
                     done();
                 });
@@ -283,7 +284,7 @@ describe('platform command', function() {
         });
         describe('add hooks', function() {
             it('should fire before and after hooks through the hooker module', function(done) {
-                cordova.platform('add', 'android');
+                xface.raw.platform('add', 'android').then(function() {
                     expect(fire).toHaveBeenCalledWith('before_platform_add', {platforms:['android']});
                     expect(fire).toHaveBeenCalledWith('after_platform_add', {platforms:['android']});
                     done();
@@ -308,15 +309,14 @@ describe('platform.supports(name)', function() {
     }
 
     it('should require a platform name', function(done) {
-            cordova.platform.supports(project_dir, undefined, function(e){});
+        expectFailure(xface.raw.platform.supports(project_dir, undefined), done, function(err) {
             expect(err).toEqual(jasmine.any(Error));
         });
-            cordova.platform.supports(project_dir, 'android', undefined);
     });
 
     describe('when platform is unknown', function() {
         it('should reject', function(done) {
-            cordova.platform.supports(project_dir, 'windows-3.1', function(e) {
+            xface.raw.platform.supports(project_dir, 'windows-3.1', function(e) {
                 expect(err).toEqual(jasmine.any(Error));
                 done();
             });
@@ -325,7 +325,7 @@ describe('platform.supports(name)', function() {
 
     describe('when platform is supported', function() {
         it('should resolve', function(done) {
-            cordova.platform.supports(project_dir, 'android', function(e) {
+            xface.raw.platform.supports(project_dir, 'android', function(e) {
                 expect(1).toBe(1);
             }, function(err) {
                 expect(err).toBeUndefined();
@@ -338,7 +338,7 @@ describe('platform.supports(name)', function() {
             supported_platforms.forEach(function(p) {
                 supports[p].andReturn(Q.reject(new Error('no sdk')));
             });
-            cordova.platform.supports(project_dir, 'android', function(e) {
+            xface.raw.platform.supports(project_dir, 'android', function(e) {
                 expect(err).toEqual(jasmine.any(Error));
             });
         });
@@ -348,9 +348,9 @@ describe('platform.supports(name)', function() {
 describe('platform parsers', function() {
     it('should be exposed on the platform module', function() {
         for (var platform in platforms) {
-            expect(cordova.platform[platform]).toBeDefined();
+            expect(xface.raw.platform[platform]).toBeDefined();
             for (var prop in platforms[platform]) {
-                expect(cordova.platform[platform][prop]).toBeDefined();
+                expect(xface.raw.platform[platform][prop]).toBeDefined();
             }
         }
     });

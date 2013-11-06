@@ -18,7 +18,7 @@
 */
 var xface = require('../xface'),
     shell = require('shelljs'),
-    plugman = require('plugman'),
+    plugman = require('xplugin'),
     path = require('path'),
     fs = require('fs'),
     util = require('../src/util'),
