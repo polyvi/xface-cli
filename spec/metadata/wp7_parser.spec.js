@@ -169,10 +169,6 @@ describe('wp7 project parser', function() {
                 p.update_from_config(cfg);
                 expect(find_obj.attrib.Version).toEqual('one point oh');
             });
-            it('should update the content element (start page)', function() {
-                p.update_from_config(cfg);
-                expect(cfg_content).toHaveBeenCalledWith('index.html');
-            });
         });
         describe('www_dir method', function() {
             it('should return www', function() {
@@ -190,21 +186,14 @@ describe('wp7 project parser', function() {
                 update_csproj = spyOn(p, 'update_csproj');
             });
             it('should rm project-level www and cp in platform agnostic www', function() {
-                p.update_www();
+                p.update_www('lib/dir');
                 expect(rm).toHaveBeenCalled();
                 expect(cp).toHaveBeenCalled();
             });
-            it('should copy in a fresh xface.js from stock xface lib if no custom lib is specified', function() {
-                p.update_www();
+            it('should copy in a fresh xface.js from given cordova lib', function() {
+                p.update_www('lib/dir');
                 expect(write).toHaveBeenCalled();
-                expect(read.mostRecentCall.args[0]).toContain(util.libDirectory);
-            });
-            it('should copy in a fresh xface.js from custom xface lib if custom lib is specified', function() {
-                var custom_path = path.join('custom', 'path');
-                custom.andReturn(custom_path);
-                p.update_www();
-                expect(write).toHaveBeenCalled();
-                expect(read.mostRecentCall.args[0]).toContain(custom_path);
+                expect(read.mostRecentCall.args[0]).toContain('lib/dir');
             });
         });
         describe('update_staging method', function() {
@@ -219,17 +208,18 @@ describe('wp7 project parser', function() {
             });
         });
         describe('update_project method', function() {
-            var config, www, overrides, staging, svn;
+            var config, www, overrides, staging, svn, cfg, csproj;
             beforeEach(function() {
                 config = spyOn(p, 'update_from_config');
                 www = spyOn(p, 'update_www');
                 staging = spyOn(p, 'update_staging');
                 svn = spyOn(util, 'deleteSvnFolders');
+                csproj = spyOn(p, 'update_csproj');
             });
             it('should call update_from_config', function(done) {
-                wrapper(p.update_project(), done, function() {
+                wrapper(p.update_project(), done, function(){
                     expect(config).toHaveBeenCalled();
-                });
+                })
             });
             it('should throw if update_from_config throws', function(done) {
                 var err = new Error('uh oh!');
@@ -240,7 +230,7 @@ describe('wp7 project parser', function() {
             });
             it('should call update_www', function(done) {
                 wrapper(p.update_project(), done, function() {
-                    expect(www).toHaveBeenCalled();
+                    expect(www).not.toHaveBeenCalled();
                 });
             });
             it('should call update_staging', function(done) {

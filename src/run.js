@@ -16,51 +16,65 @@
     specific language governing permissions and limitations
     under the License.
 */
+
+/*global require: true, module: true, process: true*/
+/*jslint sloppy: true, white: true, newcap: true */
+
 var cordova_util      = require('./util'),
     path              = require('path'),
     hooker            = require('./hooker'),
     events            = require('./events'),
     Q                 = require('q'),
     child_process     = require('child_process'),
-    DEFAULT_OPTIONS   = ["--device"];
+    DEFAULT_OPTIONS   = ["--device"],
+    os                = require('os');
 
 // Returns a promise.
 function shell_out_to_run(projectRoot, platform, options) {
-    options = options.length ? DEFAULT_OPTIONS.concat(options) : DEFAULT_OPTIONS;
-    var cmd = '"' + path.join(projectRoot, 'platforms', platform, 'cordova', 'run') + '" ' + options.join(" ");
-    // TODO: inconsistent API for BB10 run command
-/*    if (platform == 'blackberry') {
-        var bb_project = path.join(projectRoot, 'platforms', 'blackberry')
-        var project = new platforms.blackberry.parser(bb_project);
-        if (project.has_device_target()) {
-            var bb_config = project.get_cordova_config();
-            var device = project.get_device_targets()[0].name;
-            cmd = '"' + path.join(bb_project, 'cordova', 'run') + '" --target=' + device + ' -k ' + bb_config.signing_password;
-        } else {
-            var err = new Error('No BlackBerry device targets defined. If you want to run `run` with BB10, please add a device target. For more information run "' + path.join(bb_project, 'cordova', 'target') + '" -h');
-            if (error_callback) error_callback(err);
-            else throw err;
-        }
+    var cmd = path.join(projectRoot, 'platforms', platform, 'cordova', 'run'),
+        args = options.length ? DEFAULT_OPTIONS.concat(options) : DEFAULT_OPTIONS,
+        d = Q.defer(),
+        errors = "",
+        child;
+
+    if (os.platform() === 'win32') {
+        args = ['/c',cmd].concat(args);
+        cmd = 'cmd';
     }
-*/
-    events.emit('log', 'Running app on ' + platform);
-    events.emit('verbose', 'Run command: "' + cmd + '" (output to follow)');
-    var d = Q.defer();
-    child_process.exec(cmd, function(err, output, stderr) {
-        events.emit('verbose', output);
-        if (err) {
-            d.reject(new Error('An error occurred while running the ' + platform + ' project. ' + output + stderr));
-        } else {
+
+    events.emit('log', 'Running app on platform "' + platform + '" via command "' + cmd + '" ' + args.join(" "));
+
+    //using spawn instead of exec to avoid errors with stdout on maxBuffer
+    child = child_process.spawn(cmd, args);
+
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', function (data) {
+        events.emit('verbose', data);
+    });
+
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', function (data) {
+        events.emit('verbose', data);
+        errors = errors + data;
+    });
+
+    child.on('close', function (code) {
+        events.emit('verbose', "child_process.spawn(" + cmd + "," + "[" + args.join(", ") + "]) = " + code);
+        if (code === 0) {
             events.emit('log', 'Platform "' + platform + '" ran successfully.');
             d.resolve();
+        } else {
+            d.reject(new Error('n error occurred while running the ' + platform + ' project.' + errors));
         }
     });
+
     return d.promise;
 }
 
 // Returns a promise.
 module.exports = function run(options) {
-    var projectRoot = cordova_util.isxFace(process.cwd());
+    var projectRoot = cordova_util.isxFace(process.cwd()),
+        hooks;
 
     if (!options) {
         options = {
@@ -75,7 +89,7 @@ module.exports = function run(options) {
         return Q.reject(options);
     }
 
-    var hooks = new hooker(projectRoot);
+    hooks = new hooker(projectRoot);
     return hooks.fire('before_run', options)
     .then(function() {
         // Run a prepare first, then shell out to run

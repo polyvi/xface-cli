@@ -111,41 +111,6 @@ module.exports.prototype = {
         events.emit('verbose', 'Wrote out iOS Bundle Identifier to "' + pkg + '"');
         events.emit('verbose', 'Wrote out iOS Bundle Version to "' + version + '"');
 
-        // Update whitelist
-        var self = this;
-        this.config.access.remove();
-        config.access.get().forEach(function(uri) {
-            self.config.access.add(uri);
-        });
-
-        // Update content (start page)
-        this.config.content(config.content());
-
-        // Update preferences
-        var prefs = util.mergeConfigPrefs(this.config.preference.get(), config.preference.get(), false);
-        this.config.preference.remove();
-        // write out defaults, unless user has specifically overrode it
-        for (var p in default_prefs) if (default_prefs.hasOwnProperty(p)) {
-            var override = prefs.filter(function(pref) { return pref.name == p; });
-            var value = default_prefs[p];
-            if (override.length) {
-                // override exists
-                value = override[0].value;
-                // remove from prefs list so we dont write it out again below
-                prefs = prefs.filter(function(pref) { return pref.name != p });
-            }
-            this.config.preference.add({
-                name:p,
-                value:value
-            });
-        }
-        prefs.forEach(function(pref) {
-            self.config.preference.add({
-                name:pref.name,
-                value:pref.value
-            });
-        });
-
         if (name != this.originalName) {
             // Update product name inside pbxproj file
             var proj = new xcode.project(this.pbxproj);
@@ -193,7 +158,7 @@ module.exports.prototype = {
         return this.config_path;
     },
 
-    update_www:function() {
+    update_www:function(libDir) {
         var projectRoot = util.isxFace(this.path);
         var www = util.projectWww(projectRoot);
         var parentWww = path.resolve(path.join(this.www_dir(), '..'));
@@ -206,10 +171,7 @@ module.exports.prototype = {
         shell.cp('-rf', www + '/*', parentWww);
 
         // write out proper xface.js
-        var custom_path = config.has_custom_path(projectRoot, 'ios');
-        var lib_path = util.getDefaultPlatformLibPath(projectRoot, 'ios');
-        if (custom_path) lib_path = custom_path;
-        shell.cp('-f', path.join(lib_path, 'xFaceLib', 'xFaceLib', 'xface.js'), path.join(this.www_dir(), 'xface.js'));
+        shell.cp('-f', path.join(libDir, 'xFaceLib', 'xFaceLib', 'xface.js'), path.join(this.www_dir(), 'xface.js'));
     },
 
     // update the overrides folder into the www folder
@@ -236,7 +198,6 @@ module.exports.prototype = {
         var self = this;
         return this.update_from_config(cfg)
         .then(function() {
-            self.update_www();
             self.update_overrides();
             self.update_staging();
             util.deleteSvnFolders(self.www_dir());

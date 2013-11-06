@@ -55,8 +55,24 @@ describe('platform command', function() {
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         util.libDirectory = path.join('HOMEDIR', '.xface', 'lib');
         config_read = spyOn(config, 'read').andReturn({});
-        load = spyOn(lazy_load, 'based_on_config').andReturn(Q());
-        load_custom = spyOn(lazy_load, 'custom').andReturn(Q());
+
+        fakeLazyLoad = function(id, platform, version) {
+            if (platform == 'wp7' || platform == 'wp8') {
+                return Q(path.join('lib', 'wp', id, version, platform));
+            } else if (platform == 'windows8') {
+                return Q(path.join('lib', 'windows8', id, version, 'windows8'));
+            } else {
+                return Q(path.join('lib', platform, id, version));
+            }
+        };
+        lazyLoadVersion = '3.1.0';
+        load = spyOn(lazy_load, 'based_on_config').andCallFake(function(root, platform) {
+            return fakeLazyLoad('cordova', platform, lazyLoadVersion);
+        });
+        load_custom = spyOn(lazy_load, 'custom').andCallFake(function(url, id, platform, version) {
+            return fakeLazyLoad(id, platform, version);
+        });
+
         rm = spyOn(shell, 'rm');
         mkdir = spyOn(shell, 'mkdir');
         existsSync = spyOn(fs, 'existsSync').andReturn(false);
@@ -118,7 +134,7 @@ describe('platform command', function() {
 
             it('should list out added platforms in a project', function(done) {
                 xface.on('results', function(res) {
-                    expect(res).toMatch(/^Installed platforms: ios, android, wp7, wp8, blackberry10, firefoxos\s*Available platforms:\s*$/);
+                    expect(res).toMatch(/^Installed platforms: ios, android, wp7, wp8, blackberry10, firefoxos, windows8\s*Available platforms:\s*$/);
                     done();
                 });
                 xface.raw.platform('list');
@@ -133,6 +149,11 @@ describe('platform command', function() {
                     return xface.raw.platform('add', 'wp8');
                 }).then(function() {
                     expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp8.cordova.\d.\d.\d[\d\w\-]*.bin.create/gi);
+                    expect(exec.mostRecentCall.args[0]).toContain(project_dir);
+                }).then(function(){
+                    return cordova.raw.platform('add', 'windows8');
+                }).then(function(){
+                    expect(exec.mostRecentCall.args[0]).toMatch(/lib.windows8.cordova.\d.\d.\d[\d\w\-]*.windows8.bin.create/gi);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
                     done();
                 });
@@ -237,20 +258,23 @@ describe('platform command', function() {
                 });
             });
 
-            describe('success', function() {
-                it('should shell out to the platform update script', function(done) {
-                    var oldVersion = platforms['ios'].version;
-                    platforms['ios'].version = '1.0.0';
-                    xface.raw.platform('update', ['ios']).then(function() {
-                        expect(exec).toHaveBeenCalledWith('HOMEDIR/.xface/lib/ios/cordova/1.0.0/bin/update "some/path/platforms/ios"', jasmine.any(Function));
-                    }, function(err) {
-                        expect(err).toBeUndefined();
-                    }).fin(function() {
-                        platforms['ios'].version = oldVersion;
-                        done();
+            // Don't run this test on windows ... iOS will fail always
+            if(!require('os').platform().match(/^win/)) {
+                describe('success', function() {
+                    it('should shell out to the platform update script', function(done) {
+                        var oldVersion = lazyLoadVersion;
+                        lazyLoadVersion = '1.0.0';
+                        xface.raw.platform('update', ['ios']).then(function() {
+                            expect(exec).toHaveBeenCalledWith('lib/ios/cordova/1.0.0/bin/update "some/path/platforms/ios"', jasmine.any(Function));
+                        }, function(err) {
+                            expect(err).toBeUndefined();
+                        }).fin(function() {
+                            lazyLoadVersion = oldVersion;
+                            done();
+                        });
                     });
                 });
-            });
+            }
         });
     });
     describe('hooks', function() {

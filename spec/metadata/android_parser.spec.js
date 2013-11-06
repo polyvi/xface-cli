@@ -183,36 +183,6 @@ describe('android project parser', function() {
                 p.update_from_config(cfg);
                 expect(root_obj.attrib['android:versionName']).toEqual('one point oh');
             });
-            it('should wipe out the android whitelist every time', function() {
-                p.update_from_config(cfg);
-                expect(cfg_access_rm).toHaveBeenCalled();
-            });
-            it('should update the whitelist', function() {
-                cfg.access.get = function() { return ['one'] };
-                p.update_from_config(cfg);
-                expect(cfg_access_add).toHaveBeenCalledWith('one');
-            });
-            it('should update preferences', function() {
-                var sample_pref = {name:'pref',value:'yes'};
-                cfg.preference.get = function() { return [sample_pref] };
-                p.update_from_config(cfg);
-                expect(cfg_pref_add).toHaveBeenCalledWith(sample_pref);
-            });
-            it('should wipe out the android preferences every time', function() {
-                p.update_from_config(cfg);
-                expect(cfg_pref_rm).toHaveBeenCalled();
-            });
-            it('should write out default preferences every time', function() {
-                var sample_pref = {name:'preftwo',value:'false'};
-                cfg.preference.get = function() { return [sample_pref] };
-                p.update_from_config(cfg);
-                expect(cfg_pref_add).toHaveBeenCalledWith({name:"useBrowserHistory",value:"true"});
-                expect(cfg_pref_add).toHaveBeenCalledWith({name:"exit-on-suspend",value:"false"});
-            });
-            it('should update the content tag', function() {
-                p.update_from_config(cfg);
-                expect(cfg_content).toHaveBeenCalledWith('index.html');
-            });
         });
         describe('www_dir method', function() {
             it('should return assets/www', function() {
@@ -231,21 +201,14 @@ describe('android project parser', function() {
         });
         describe('update_www method', function() {
             it('should rm project-level www and cp in platform agnostic www', function() {
-                p.update_www();
+                p.update_www('lib/dir');
                 expect(rm).toHaveBeenCalled();
                 expect(cp).toHaveBeenCalled();
             });
-            it('should copy in a fresh xface.js from stock xface lib if no custom lib is specified', function() {
-                p.update_www();
+            it('should copy in a fresh xface.js from stock cordova lib if no custom lib is specified', function() {
+                p.update_www('lib/dir');
                 expect(write).toHaveBeenCalled();
-                expect(read.mostRecentCall.args[0]).toContain(util.libDirectory);
-            });
-            it('should copy in a fresh xface.js from custom xface lib if custom lib is specified', function() {
-                var custom_path = path.join('custom', 'path');
-                custom.andReturn(custom_path);
-                p.update_www();
-                expect(write).toHaveBeenCalled();
-                expect(read.mostRecentCall.args[0]).toContain(custom_path);
+                expect(read.mostRecentCall.args[0]).toContain('lib/dir');
             });
         });
         describe('update_overrides method', function() {
@@ -290,9 +253,9 @@ describe('android project parser', function() {
                     expect(err).toEqual(err);
                 });
             });
-            it('should call update_www', function() {
+            it('should not call update_www', function() {
                 p.update_project();
-                expect(www).toHaveBeenCalled();
+                expect(www).not.toHaveBeenCalled();
             });
             it('should call update_overrides', function() {
                 p.update_project();

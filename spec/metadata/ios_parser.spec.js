@@ -196,52 +196,6 @@ describe('ios project parser', function () {
                     expect(plist_build.mostRecentCall.args[0].CFBundleVersion).toEqual('one point oh');
                 });
             });
-            it('should wipe out the ios whitelist every time', function(done) {
-                wrapper(p.update_from_config(cfg), done, function() {
-                    expect(cfg_access_rm).toHaveBeenCalled();
-                });
-            });
-            it('should update the whitelist', function(done) {
-                cfg.access.get = function() { return ['one'] };
-                wrapper(p.update_from_config(cfg), done, function() {
-                    expect(cfg_access_add).toHaveBeenCalledWith('one');
-                });
-            });
-            it('should update preferences', function(done) {
-                var sample_pref = {name:'pref',value:'yes'};
-                cfg.preference.get = function() { return [sample_pref] };
-                wrapper(p.update_from_config(cfg), done, function() {
-                    expect(cfg_pref_add).toHaveBeenCalledWith(sample_pref);
-                });
-            });
-            it('should update the content tag / start page', function(done) {
-                wrapper(p.update_from_config(cfg), done, function() {
-                    expect(cfg_content).toHaveBeenCalledWith('index.html');
-                });
-            });
-            it('should wipe out the ios preferences every time', function(done) {
-                wrapper(p.update_from_config(cfg), done, function() {
-                    expect(cfg_pref_rm).toHaveBeenCalled();
-                });
-            });
-            it('should write out default preferences every time', function(done) {
-                var sample_pref = {name:'preftwo',value:'false'};
-                cfg.preference.get = function() { return [sample_pref] };
-                wrapper(p.update_from_config(cfg), done, function() {
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"KeyboardDisplayRequiresUserAction",value:"true"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"SuppressesIncrementalRendering",value:"false"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"UIWebViewBounce",value:"true"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"TopActivityIndicator",value:"gray"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"EnableLocation",value:"false"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"EnableViewportScale",value:"false"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"AutoHideSplashScreen",value:"true"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"ShowSplashScreenSpinner",value:"true"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"MediaPlaybackRequiresUserAction",value:"false"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"AllowInlineMediaPlayback",value:"false"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"OpenAllWhitelistURLsInWebView",value:"false"});
-                    expect(cfg_pref_add).toHaveBeenCalledWith({name:"BackupWebStorage",value:"cloud"});
-                });
-            });
         });
         describe('www_dir method', function() {
             it('should return /www', function() {
@@ -260,19 +214,13 @@ describe('ios project parser', function () {
         });
         describe('update_www method', function() {
             it('should rm project-level www and cp in platform agnostic www', function() {
-                p.update_www();
+                p.update_www('lib/dir');
                 expect(rm).toHaveBeenCalled();
                 expect(cp).toHaveBeenCalled();
             });
-            it('should copy in a fresh xface.js from stock xface lib if no custom lib is specified', function() {
-                p.update_www();
-                expect(cp.mostRecentCall.args[1]).toContain(util.libDirectory);
-            });
-            it('should copy in a fresh xface.js from custom xface lib if custom lib is specified', function() {
-                var custom_path = path.join('custom', 'path');
-                custom.andReturn(custom_path);
-                p.update_www();
-                expect(cp.mostRecentCall.args[1]).toContain(custom_path);
+            it('should copy in a fresh xface.js from given cordova lib', function() {
+                p.update_www('lib/dir');
+                expect(cp.mostRecentCall.args[1]).toContain('lib/dir');
             });
         });
         describe('update_overrides method', function() {
@@ -326,9 +274,9 @@ describe('ios project parser', function () {
                     expect(err).toEqual(e);
                 });
             });
-            it('should call update_www', function(done) {
+            it('should not call update_www', function(done) {
                 wrapper(p.update_project({}), done, function() {
-                    expect(www).toHaveBeenCalled();
+                    expect(www).not().toHaveBeenCalled();
                 });
             });
             it('should call update_overrides', function(done) {

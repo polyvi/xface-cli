@@ -23,23 +23,52 @@ var xface = require('../xface'),
     fs = require('fs'),
     hooker = require('../src/hooker'),
     Q = require('q'),
-    util = require('../src/util');
+    util = require('../src/util'),
+    os = require('os');
 
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
 
 describe('run command', function() {
-    var is_cordova, list_platforms, fire, exec;
+    var is_cordova, list_platforms, fire, child, spawn_wrap;
     var project_dir = '/some/path';
     var prepare_spy;
+    child = {
+        on: function(child_event,cb){
+            if(child_event === 'close'){
+                cb(0);
+            }
+        },
+        stdout: {
+            setEncoding: function(){},
+            on: function(){}
+        },
+        stderr: {
+            setEncoding: function(){},
+            on: function(){}
+        }
+    };
+    spawn_wrap = function(cmd,args,options){
+        var _cmd = cmd,
+            _args = args;
+
+        if (os.platform() === 'win32') {
+            _args = ['/c',_cmd].concat(_args);
+            _cmd = 'cmd';
+        }
+
+        return {
+                    "cmd": _cmd,
+                    "args": _args,
+                    "options": options
+                };
+    };
+
     beforeEach(function() {
         is_cordova = spyOn(util, 'isxFace').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
         prepare_spy = spyOn(xface.raw, 'prepare').andReturn(Q());
-        exec = spyOn(child_process, 'exec').andCallFake(function(cmd, opts, cb) {
-            if (!cb) cb = opts;
-            cb(0, '', '');
-        });
+        spyOn(child_process, 'spawn').andReturn(child);
     });
     describe('failure', function() {
         it('should not run inside a xFace-based project with no added platforms by calling util.listPlatforms', function(done) {
@@ -64,8 +93,13 @@ describe('run command', function() {
         it('should run inside a xFace-based project with at least one added platform and call prepare and shell out to the run script', function(done) {
             xface.raw.run(['android','ios']).then(function() {
                 expect(prepare_spy).toHaveBeenCalledWith(['android', 'ios']);
-                expect(exec).toHaveBeenCalledWith('"' + path.join(project_dir, 'platforms', 'android', 'cordova', 'run') + '" --device', jasmine.any(Function));
-                expect(exec).toHaveBeenCalledWith('"' + path.join(project_dir, 'platforms', 'ios', 'cordova', 'run') + '" --device', jasmine.any(Function));
+
+                spawn_call = spawn_wrap(path.join(project_dir, 'platforms', 'android', 'cordova', 'run'), ['--device']);
+                expect(child_process.spawn).toHaveBeenCalledWith(spawn_call.cmd, spawn_call.args);
+
+                spawn_call = spawn_wrap(path.join(project_dir, 'platforms', 'ios', 'cordova', 'run'), ['--device']);
+                expect(child_process.spawn).toHaveBeenCalledWith(spawn_call.cmd, spawn_call.args);
+
             }, function(err) {
                 console.log(err);
                 expect(err).toBeUndefined();
@@ -74,7 +108,9 @@ describe('run command', function() {
         it('should pass down parameters', function(done) {
             xface.raw.run({platforms: ['blackberry10'], options:['--password', '1q1q']}).then(function() {
                 expect(prepare_spy).toHaveBeenCalledWith(['blackberry10']);
-                expect(exec).toHaveBeenCalledWith('"' + path.join(project_dir, 'platforms', 'blackberry10', 'cordova', 'run') + '" --device --password 1q1q', jasmine.any(Function));
+
+                spawn_call = spawn_wrap(path.join(project_dir, 'platforms', 'blackberry10', 'cordova', 'run'), ['--device', '--password', '1q1q']);
+                expect(child_process.spawn).toHaveBeenCalledWith(spawn_call.cmd, spawn_call.args);
             }, function(err) {
                 expect(err).toBeUndefined();
             }).fin(done);

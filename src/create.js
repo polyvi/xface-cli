@@ -32,36 +32,23 @@ var DEFAULT_NAME = "HelloxFace",
 
 /**
  * Usage:
- * create(dir) - creates in the specified directory
- * create(dir, name) - as above, but with specified name
- * create(dir, id, name) - you get the gist
+ * @dir - required, directory where the poroject will be created.
+ * @id - app id.
+ * @name - app name.
+ * @cfg - extra config to be saved in .cordova/config.json
  **/
 // Returns a promise.
-module.exports = function create (dir, id, name) {
-    var options = [];
-
-    if (arguments.length === 0) {
+module.exports = function create (dir, id, name, cfg) {
+    if (!dir ) {
         return Q(help());
     }
 
-    var args = Array.prototype.slice.call(arguments, 0);
-
     // Massage parameters
-    if (args.length === 0) {
-        dir = process.cwd();
-        id = DEFAULT_ID;
-        name = DEFAULT_NAME;
-    } else if (args.length == 1) {
-        id = DEFAULT_ID;
-        name = DEFAULT_NAME;
-    } else if (args.length == 2) {
-        name = DEFAULT_NAME;
-    } else {
-        dir = args.shift();
-        id = args.shift();
-        name = args.shift();
-        options = args;
-    }
+    cfg = cfg || {};
+    id = id || cfg.id || DEFAULT_ID;
+    name = name || cfg.name || DEFAULT_NAME;
+    cfg.id = id;
+    cfg.name = name;
 
     // Make absolute.
     dir = path.resolve(dir);
@@ -70,6 +57,11 @@ module.exports = function create (dir, id, name) {
 
     var dotCordova = path.join(dir, '.xface');
     var www_dir = path.join(dir, 'www');
+
+    // dir must be either empty or not exist at all.
+    if (fs.existsSync(dir) && fs.readdirSync(dir).length > 0) {
+        return Q.reject(new Error('Path already exists and is not empty: ' + dir));
+    }
 
     // Create basic project structure.
     shell.mkdir('-p', dotCordova);
@@ -106,16 +98,28 @@ module.exports = function create (dir, id, name) {
     shell.mkdir(path.join(hooks, 'before_prepare'));
     shell.mkdir(path.join(hooks, 'before_run'));
 
-    // Write out .xface/config.json file with a simple json manifest
-    require('../xface').config(dir, {
-        id:id,
-        name:name
-    });
+    // Write out .xface/config.json file.
+    var config_json = config(dir, cfg);
 
-    var config_json = config.read(dir);
+    var p;
+    if (config_json.lib && config_json.lib.www) {
+        events.emit('log', 'Using custom www assets ('+config_json.lib.www.id+').');
+        p = lazy_load.custom(config_json.lib.www.uri, config_json.lib.www.id, 'www', config_json.lib.www.version)
+        .then(function(dir) {
+            events.emit('verbose', 'Copying custom www assets into "' + www_dir + '"');
+            return dir;
+        });
+    } else {
+        // Nope, so use stock xface-hello-world-app one.
+        events.emit('verbose', 'Using stock xface hello-world application.');
+        p = lazy_load.cordova('www')
+        .then(function(dir) {
+            events.emit('verbose', 'Copying stock xFace www assets into "' + www_dir + '"');
+            return dir;
+        });
+    }
 
-    // Returns a promise.
-    var finalize = function(www_lib) {
+    return p.then(function(www_lib) {
         // Keep going into child "www" folder if exists in stock app package.
         while (fs.existsSync(path.join(www_lib, 'www'))) {
             www_lib = path.join(www_lib, 'www');
@@ -133,23 +137,5 @@ module.exports = function create (dir, id, name) {
         config.packageName(id);
         config.name(name);
         return Q();
-    };
-
-    // Check if www assets to use was overridden.
-    if (config_json.lib && config_json.lib.www) {
-        events.emit('log', 'Using custom www assets ('+config_json.lib.www.id+').');
-        return lazy_load.custom(config_json.lib.www.uri, config_json.lib.www.id, 'www', config_json.lib.www.version)
-        .then(function() {
-            events.emit('verbose', 'Copying custom www assets into "' + www_dir + '"');
-            return finalize(path.join(util.libDirectory, 'www', config_json.lib.www.id, config_json.lib.www.version));
-        });
-    } else {
-        // Nope, so use stock xface-default-app one.
-        events.emit('log', 'Using stock cordova hello-world application.');
-        return lazy_load.cordova('www')
-        .then(function() {
-            events.emit('verbose', 'Copying stock xFace www assets into "' + www_dir + '"');
-            return finalize(path.join(util.libDirectory, 'www', 'cordova', platforms.www.version));
-        });
-    }
+    });
 };

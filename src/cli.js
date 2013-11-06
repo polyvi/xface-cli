@@ -85,6 +85,10 @@ module.exports = function CLI(inputArgs) {
         return xface.help();
     }
 
+    if (cmd === "info") {
+        return xface.info();
+    }
+
     if (xface.hasOwnProperty(cmd)) {
         if (cmd == 'emulate' || cmd == 'build' || cmd == 'prepare' || cmd == 'compile' || cmd == 'run') {
             // Filter all non-platforms into options

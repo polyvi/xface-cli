@@ -154,33 +154,6 @@ describe('blackberry10 project parser', function() {
                 cfg.access.remove = function() { };
                 cfg.preference.get = function() { return []; };
             });
-
-            it('should write out the app name to config.xml', function() {
-                p.update_from_config(cfg);
-                expect(xml_name).toHaveBeenCalledWith('testname');
-            });
-            it('should write out the app id to bb\'s config.xml', function() {
-                p.update_from_config(cfg);
-                expect(xml_pkg).toHaveBeenCalledWith('testpkg');
-            });
-            it('should write out the app version to bb\'s config.xml', function() {
-                p.update_from_config(cfg);
-                expect(xml_version).toHaveBeenCalledWith('one point oh');
-            });
-            it('should wipe out the bb config.xml whitelist every time', function() {
-                p.update_from_config(cfg);
-                expect(xml_access_rm).toHaveBeenCalled();
-            });
-            it('should update the whitelist', function() {
-                cfg.access.getAttributes = function() { return [{origin: 'one'},{uri: "two", subdomains: "false"}]; };
-                p.update_from_config(cfg);
-                expect(xml_access_add).toHaveBeenCalledWith('one', undefined);
-                expect(xml_access_add).toHaveBeenCalledWith('two', 'false');
-            });
-            it('should update the start page (content tag)', function() {
-                p.update_from_config(cfg);
-                expect(xml_content).toHaveBeenCalledWith('index.html');
-            });
         });
         describe('www_dir method', function() {
             it('should return /www', function() {
@@ -198,24 +171,23 @@ describe('blackberry10 project parser', function() {
             });
         });
         describe('update_www method', function() {
-            beforeEach(function() {
-                p.xml.update = jasmine.createSpy('xml update');
+            var backup_cfg_parser;
+            beforeEach(function () {
+                backup_cfg_parser = {
+                    update: jasmine.createSpy("backup_cfg_parser update")
+                };
+                config_p.andReturn(backup_cfg_parser);
             });
 
             it('should rm project-level www and cp in platform agnostic www', function() {
-                p.update_www();
+                p.update_www('lib/dir');
                 expect(rm).toHaveBeenCalled();
                 expect(cp).toHaveBeenCalled();
+                expect(backup_cfg_parser.update).toHaveBeenCalled();
             });
-            it('should copy in a fresh xface.js from stock xface lib if no custom lib is specified', function() {
-                p.update_www();
-                expect(cp).toHaveBeenCalledWith('-f', path.join(util.libDirectory, 'blackberry10', 'cordova', platforms.blackberry10.version, 'javascript', 'cordova.blackberry10.js'), path.join(proj, 'platforms', 'blackberry10', 'www', 'xface.js'));
-            });
-            it('should copy in a fresh xface.js from custom xface lib if custom lib is specified', function() {
-                var custom_path = '/custom/path';
-                custom.andReturn(custom_path);
-                p.update_www();
-                expect(cp).toHaveBeenCalledWith('-f', path.join(custom_path, 'javascript', 'xface.blackberry10.js'), path.join(proj, 'platforms', 'blackberry10', 'www', 'xface.js'));
+            it('should copy in a fresh xface.js from given cordova lib', function() {
+                p.update_www(path.join('lib', 'dir'));
+                expect(cp).toHaveBeenCalledWith('-f', path.join('lib', 'dir', 'javascript', 'cordova.blackberry10.js'), path.join(proj, 'platforms', 'blackberry10', 'www', 'cordova.js'));
             });
         });
         describe('update_overrides method', function() {
@@ -262,9 +234,9 @@ describe('blackberry10 project parser', function() {
                     expect(e).toEqual(err);
                 });
             });
-            it('should call update_www', function(done) {
+            it('should not call update_www', function(done) {
                 wrapper(p.update_project(), done, function() {
-                    expect(www).toHaveBeenCalled();
+                    expect(www).not.toHaveBeenCalled();
                 });
             });
             it('should call update_overrides', function(done) {

@@ -88,7 +88,7 @@ module.exports.prototype = {
             manifest.find('.//PrimaryToken').attrib.TokenID = name;
             //update name of sln and csproj.
             name = name.replace(/(\.\s|\s\.|\s+|\.+)/g, '_'); //make it a ligitamate name
-            prev_name = prev_name.replace(/(\.\s|\s\.|\s+|\.+)/g, '_'); 
+            prev_name = prev_name.replace(/(\.\s|\s\.|\s+|\.+)/g, '_');
             // TODO: might return .sln.user? (generated file)
             var sln_name = fs.readdirSync(this.wp8_proj_dir).filter(function(e) { return e.match(/\.sln$/i); })[0];
             var sln_path = path.join(this.wp8_proj_dir, sln_name);
@@ -136,9 +136,6 @@ module.exports.prototype = {
             fs.writeFileSync(path.join(this.wp8_proj_dir, 'App.xaml.cs'), appCS.replace(namespaceRegEx, 'namespace ' + pkg), 'utf-8');
          }
 
-         // Update content (start page) element
-         this.config.content(config.content());
-
          //Write out manifest
          fs.writeFileSync(this.manifest_path, manifest.write({indent: 4}), 'utf-8');
     },
@@ -147,6 +144,7 @@ module.exports.prototype = {
         return path.join(this.wp8_proj_dir, 'xface3', 'helloxface');
     },
     config_xml:function() {
+        return this.config_path;
     },
     // copy files from merges directory to actual www dir
     copy_merges:function(merges_sub_path) {
@@ -157,7 +155,7 @@ module.exports.prototype = {
         }
     },
     // copies the app www folder into the wp8 project's www folder and updates the csproj file.
-    update_www:function() {
+    update_www:function(libDir) {
         var project_root = util.isxFace(this.wp8_proj_dir);
         var project_www = util.projectWww(project_root);
         var platformWww = path.resolve(path.join(this.www_dir(), '..'));
@@ -172,10 +170,7 @@ module.exports.prototype = {
         this.copy_merges('wp8');
 
         // copy over wp8 lib's cordova.js
-        var lib_path = util.getDefaultPlatformLibPath(project_root, 'wp8');
-        var custom_path = config.has_custom_path(project_root, 'wp8');
-        if (custom_path) lib_path = custom_path;
-        var cordovajs_path = path.join(lib_path, 'xFaceLib', 'xFaceLib', 'xface.js');
+        var cordovajs_path = path.join(libDir, 'xFaceLib', 'xFaceLib', 'xface.js');
         fs.writeFileSync(path.join(this.www_dir(), 'xface.js'), fs.readFileSync(cordovajs_path, 'utf-8'), 'utf-8');
     },
     staging_dir: function() {
@@ -199,7 +194,6 @@ module.exports.prototype = {
             return Q.reject(e);
         }
         // overrides (merges) are handled in update_www()
-        this.update_www();
         this.update_staging();
         util.deleteSvnFolders(this.www_dir());
         return Q();

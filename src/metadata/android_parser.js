@@ -106,7 +106,7 @@ module.exports.prototype = {
 
         // Write out AndroidManifest.xml
         fs.writeFileSync(this.manifest, manifest.write({indent: 4}), 'utf-8');
-        
+
         var orig_pkgDir = path.join(this.path, 'src', path.join.apply(null, orig_pkg.split('.')));
         var orig_java_class = fs.readdirSync(orig_pkgDir).filter(function(f) {return f.indexOf('.svn') == -1;})[0];
         var pkgDir = path.join(this.path, 'src', path.join.apply(null, pkg.split('.')));
@@ -117,43 +117,6 @@ module.exports.prototype = {
         javs_contents = javs_contents.replace(/package [\w\.]*;/, 'package ' + pkg + ';');
         events.emit('verbose', 'Wrote out Android package name to "' + pkg + '"');
         fs.writeFileSync(new_javs, javs_contents, 'utf-8');
-
-        // Update whitelist by changing res/xml/config.xml
-        var android_cfg_xml = new util.config_parser(this.android_config);
-        // clean out all existing access elements first
-        android_cfg_xml.access.remove();
-        // add only the ones specified in the app/config.xml file
-        config.access.get().forEach(function(uri) {
-            android_cfg_xml.access.add(uri);
-        });
-
-        // Update content (start page)
-        android_cfg_xml.content(config.content());
-        
-        // Update preferences
-        var prefs = util.mergeConfigPrefs(android_cfg_xml.preference.get(), config.preference.get(), false);
-        android_cfg_xml.preference.remove();
-        // write out defaults, unless user has specifically overrode it
-        for (var p in default_prefs) if (default_prefs.hasOwnProperty(p)) {
-            var override = prefs.filter(function(pref) { return pref.name == p; });
-            var value = default_prefs[p];
-            if (override.length) {
-                // override exists
-                value = override[0].value;
-                // remove from prefs list so we dont write it out again below
-                prefs = prefs.filter(function(pref) { return pref.name != p });
-            }
-            android_cfg_xml.preference.add({
-                name:p,
-                value:value
-            });
-        }
-        prefs.forEach(function(pref) {
-            android_cfg_xml.preference.add({
-                name:pref.name,
-                value:pref.value
-            });
-        });
     },
 
     // Returns the platform-specific www directory.
@@ -169,7 +132,8 @@ module.exports.prototype = {
         return this.android_config;
     },
 
-    update_www:function() {
+    // Takes the directory where the lazy-loaded platform can be found.
+    update_www:function(libDir) {
         var projectRoot = util.isxFace(this.path);
         var www = util.projectWww(projectRoot);
         var platformWww = path.resolve(path.join(this.www_dir(), '..'));
@@ -180,13 +144,7 @@ module.exports.prototype = {
         shell.cp('-rf', www + '/*', platformWww);
 
         // write out android lib's xface.js
-        var custom_path = project_config.has_custom_path(projectRoot, 'android');
-        var jsPath;
-        if (custom_path) {
-            jsPath = path.resolve(path.join(custom_path, 'framework', 'assets', 'xface.js'));
-        } else {
-            jsPath = path.join(util.getDefaultPlatformLibPath(projectRoot, 'android'), 'framework', 'assets', 'xface.js');
-        }
+        var jsPath = path.resolve(path.join(libDir, 'framework', 'assets', 'xface.js'));
         fs.writeFileSync(path.join(this.www_dir(), 'xface.js'), fs.readFileSync(jsPath, 'utf-8'), 'utf-8');
     },
 
@@ -216,7 +174,6 @@ module.exports.prototype = {
         } catch(e) {
             return Q.reject(e);
         }
-        this.update_www();
         this.update_overrides();
         this.update_staging();
         // delete any .svn folders copied over

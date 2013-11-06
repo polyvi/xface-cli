@@ -136,9 +136,6 @@ module.exports.prototype = {
             fs.writeFileSync(path.join(this.wp7_proj_dir, 'App.xaml.cs'), appCS.replace(namespaceRegEx, 'namespace ' + pkg), 'utf-8');
          }
 
-         // Update content (start page) element
-         this.config.content(config.content());
-
          //Write out manifest
          fs.writeFileSync(this.manifest_path, manifest.write({indent: 4}), 'utf-8');
     },
@@ -155,7 +152,7 @@ module.exports.prototype = {
         }
     },
     // copies the app www folder into the wp7 project's www folder and updates the csproj file.
-    update_www:function() {
+    update_www:function(libDir) {
         var project_root = util.isxFace(this.wp7_proj_dir);
         var project_www = util.projectWww(project_root);
         // remove stock platform assets
@@ -168,15 +165,15 @@ module.exports.prototype = {
         this.copy_merges('wp7');
 
         // copy over wp7 lib's cordova.js
-        var lib_path = path.join(util.libDirectory, 'wp', 'cordova', require('../../platforms').wp7.version);
-        var custom_path = config.has_custom_path(project_root, 'wp7');
-        if (custom_path) lib_path = custom_path;
-        var cordovajs_path = path.join(lib_path, 'common', 'www', 'cordova.js');
+
+        var cordovajs_path = path.join(libDir, 'common', 'www', 'cordova.js');
         fs.writeFileSync(path.join(this.www_dir(), 'cordova.js'), fs.readFileSync(cordovajs_path, 'utf-8'), 'utf-8');
 
     },
     // updates the csproj file to explicitly list all www content.
     update_csproj:function() {
+        console.log('csproj');
+        console.log(this.csproj_path);
         var csproj_xml = xml.parseElementtreeSync(this.csproj_path);
         // remove any previous references to the www files
         var item_groups = csproj_xml.findall('ItemGroup');
@@ -251,8 +248,6 @@ module.exports.prototype = {
         } catch(e) {
             return Q.reject(e);
         }
-        this.update_www();
-
         // trigger an event in case anyone needs to modify the contents of the www folder before we package it.
         var projectRoot = util.isxFace(process.cwd());
         var hooks = new hooker(projectRoot);
