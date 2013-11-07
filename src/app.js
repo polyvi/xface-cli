@@ -4,7 +4,6 @@ var fs = require('fs'),
     shell = require('shelljs'),
     child_process = require('child_process'),
     jsdom = require('jsdom-nogyp').jsdom,
-    Zip = require('adm-zip'),
     xfaceUtil = require('./util'),
     events = require('./events'),
     help = require('./help');
@@ -101,7 +100,7 @@ function installPluginTest(xfaceProj, target, testTemplate) {
         }
     } else {
         var plugin = matchPart(plugins, target);
-        if(!plugin) Q.reject(new Error('Can not find plugin id that matches `' + target + '`, try command `xface plugin ls` to show installed plugins! '));
+        if(!plugin) return Q.reject(new Error('Can not find plugin id that matches `' + target + '`, try command `xface plugin ls` to show installed plugins! '));
         plugins = [plugin];
     }
     var q = testTemplate ? Q(testTemplate) : fetchTestTemplate();
@@ -139,6 +138,9 @@ function mergePluginTests(xfaceProj, plugins, testTemplate) {
     var splittedPlugins = checkAndSplitPlugins(xfaceProj, plugins);
     if(splittedPlugins.invalid.length > 0) {
         events.emit('warn', 'Test cases of plugins ' + JSON.stringify(splittedPlugins.invalid) + ' are invalid, will not be added. Continue... ');
+    }
+    if(splittedPlugins.valid <= 0) {
+        return Q.reject(new Error('No valid plugin tests can be added, please add new plugins.'));
     }
     handlePluginTests(xfaceProj, splittedPlugins.valid, tmpTests);
 
@@ -342,27 +344,30 @@ function installApp(projRoot, appPath) {
     if(content) fs.writeFileSync(appXml, content);
     shell.cp('-Rf', srcPath, wwwAppPath);
 
-    var workspaceDir = path.join(wwwAppPath, 'workspace');
+    var workspaceDir = path.join(wwwAppPath, 'workspace'),
+        q = Q();
     if(fs.existsSync(workspaceDir) && fs.readdirSync(workspaceDir).length > 0) {
-        events.emit('verbose', 'Begin to zip folder "' + workspaceDir + '", please wait...');
-        var zip = new Zip(),
-            zipPath = workspaceDir + '.zip';
-        zip.addLocalFolder(workspaceDir);
-        zip.writeZip(zipPath);
-        shell.rm('-rf', path.join(workspaceDir, '*'));
-        shell.mv(zipPath, workspaceDir);
+        var zipPath = workspaceDir + '.zip';
+        if(fs.existsSync(zipPath)) shell.rm(zipPath);
+        q = xfaceUtil.zipFolder(path.join(workspaceDir, '*'), zipPath)
+        .then(function() {
+            shell.rm('-rf', path.join(workspaceDir, '*'));
+            shell.mv(zipPath, workspaceDir);
+        });
     }
 
-    var platforms = xfaceUtil.listPlatforms(projRoot);
-    platforms.forEach(function(p) {
-        var platformAppPath = null;
-        events.emit('verbose', 'Install app `' + appPath + '` for platform ' + p + '! ');
-        if (p === 'android')
-            platformAppPath = path.join(projRoot, 'platforms', p, 'assets', 'xface3', 'helloxface');
-        else
-            platformAppPath = path.join(projRoot, 'platforms', p, 'xface3', 'helloxface');
-        deleteAppPages(platformAppPath);
-        shell.cp('-Rf', path.join(wwwAppPath, '*'), platformAppPath);
+    return q.then(function() {
+        var platforms = xfaceUtil.listPlatforms(projRoot);
+        platforms.forEach(function(p) {
+            var platformAppPath = null;
+            events.emit('verbose', 'Install app `' + appPath + '` for platform ' + p + '! ');
+            if (p === 'android')
+                platformAppPath = path.join(projRoot, 'platforms', p, 'assets', 'xface3', 'helloxface');
+            else
+                platformAppPath = path.join(projRoot, 'platforms', p, 'xface3', 'helloxface');
+            deleteAppPages(platformAppPath);
+            shell.cp('-Rf', path.join(wwwAppPath, '*'), platformAppPath);
+        });
     });
 }
 

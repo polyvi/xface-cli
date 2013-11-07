@@ -49,7 +49,7 @@
     "optimist": "0.6.0",
     "mime": "~1.2.11",
     "jsdom-nogyp": "~0.8.3",
-    "adm-zip": "~0.4.3"
+    "archiver": "~0.4.10"
   },
   "devDependencies": {
     "jasmine-node": "1.8.x"
@@ -149,8 +149,8 @@
       "email": "stevengill97@gmail.com"
     },
     {
-      "name":"Jesse",
-      "email":"purplecabbage@gmail.com"
+      "name": "Jesse",
+      "email": "purplecabbage@gmail.com"
     }
   ],
   "license": "Apache version 2.0"

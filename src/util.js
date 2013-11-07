@@ -19,6 +19,9 @@
 var fs            = require('fs'),
     path          = require('path'),
     shell         = require('shelljs'),
+    archiver      = require('archiver'),
+    Q             = require('q'),
+    events        = require('./events'),
     config        = require('./config');
 
 // Global configuration paths
@@ -161,8 +164,57 @@ exports = module.exports = {
         } else {
             return path.join(module.exports.libDirectory, platform, 'cordova', platforms[platform].version);
         }
+    },
+    /**
+     * 将一个文件/目录压缩为一个zip文件
+     * @param {String} filePath 源文件（夹）路径，如果以*结尾，则只压缩文件夹的内容（如路径为/a/b/*，则只压缩/a/b下的子文件或子目录）
+     * @param {String} zipPath 目标zip文件路径
+     */
+    zipFolder: function(filePath, zipPath) {
+        var zip = archiver('zip');
+            wildcard = (path.basename(filePath) == '*'),
+            output = fs.createWriteStream(zipPath);
+        if(wildcard) filePath = path.dirname(filePath);
+        if(!fs.existsSync(filePath)) return Q.reject(new Error('Path "' + filePath + '" not existed.'));
+        events.emit('verbose', 'Beginning to zip folder "' + filePath + '", please wait...');
+
+        var d = Q.defer();
+        output.on('close', function() {
+            events.emit('verbose', 'Finished zip operation, zip path "' + zipPath + '".');
+            d.resolve();
+        });
+        zip.on('error', function(err) {
+            d.reject(err);
+        });
+        zip.pipe(output);
+        if(wildcard) {
+            if(!fs.statSync(filePath).isDirectory()) {
+                return Q.reject(new Error('Path "' + filePath + '" is not a folder.'));
+            }
+            fs.readdirSync(filePath).forEach(function(f) {
+                addToZip(zip, path.join(filePath, f), f);
+            });
+        } else {
+            addToZip(zip, filePath, path.basename(filePath));
+        }
+        zip.finalize(function(err, bytes) {
+            if (err) d.reject(err);
+        });
+        return d.promise;
     }
 };
+
+function addToZip(zip, filePath, entryPath) {
+    var baseName = path.basename(filePath);
+    if(fs.statSync(filePath).isFile()) {
+        zip.append(fs.createReadStream(filePath), {name: entryPath});
+    } else {
+        zip.append(new Buffer(0), {name: entryPath + '/'});
+        fs.readdirSync(filePath).forEach(function(f) {
+            addToZip(zip, path.join(filePath, f), entryPath + '/' + f);
+        });
+    }
+}
 
 // opt_wrap is a boolean: True means that a callback-based wrapper for the promise-based function
 // should be created.
