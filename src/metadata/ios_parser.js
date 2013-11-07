@@ -43,8 +43,7 @@ var default_prefs = {
     "MediaPlaybackRequiresUserAction":"false",
     "AllowInlineMediaPlayback":"false",
     "OpenAllWhitelistURLsInWebView":"false",
-    "BackupWebStorage":"cloud",
-    "UsePlayerMode":"true" //TODO:To be removed!
+    "BackupWebStorage":"cloud"
 };
 
 module.exports = function ios_parser(project) {
