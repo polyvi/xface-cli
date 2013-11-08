@@ -44,8 +44,7 @@ module.exports = {
     },
     // Returns a promise for the path to the lazy-loaded directory.
     custom:function(url, id, platform, version) {
-        var download_dir = (platform == 'wp7' || platform == 'wp8' ? path.join(util.libDirectory, 'wp', id, version) :
-                                                                     path.join(util.libDirectory, platform, id, version));
+        var download_dir = path.join(util.libDirectory, platform, id, version);
         if (fs.existsSync(download_dir)) {
             events.emit('verbose', id + ' library for "' + platform + '" already exists. No need to download. Continuing.');
             return Q(download_dir);

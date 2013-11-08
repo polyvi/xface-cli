@@ -57,9 +57,7 @@ describe('platform command', function() {
         config_read = spyOn(config, 'read').andReturn({});
 
         fakeLazyLoad = function(id, platform, version) {
-            if (platform == 'wp7' || platform == 'wp8') {
-                return Q(path.join('lib', 'wp', id, version, platform));
-            } else if (platform == 'windows8') {
+            if (platform == 'windows8') {
                 return Q(path.join('lib', 'windows8', id, version, 'windows8'));
             } else {
                 return Q(path.join('lib', platform, id, version));
@@ -151,7 +149,7 @@ describe('platform command', function() {
                     expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp8.cordova.\d.\d.\d[\d\w\-]*.bin.create/gi);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
                 }).then(function(){
-                    return cordova.raw.platform('add', 'windows8');
+                    return xface.raw.platform('add', 'windows8');
                 }).then(function(){
                     expect(exec.mostRecentCall.args[0]).toMatch(/lib.windows8.cordova.\d.\d.\d[\d\w\-]*.windows8.bin.create/gi);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
@@ -340,7 +338,7 @@ describe('platform.supports(name)', function() {
 
     describe('when platform is unknown', function() {
         it('should reject', function(done) {
-            xface.raw.platform.supports(project_dir, 'windows-3.1', function(e) {
+            expectFailure(xface.raw.platform.supports(project_dir, 'windows-3.1'), done, function(err) {
                 expect(err).toEqual(jasmine.any(Error));
                 done();
             });
@@ -349,7 +347,7 @@ describe('platform.supports(name)', function() {
 
     describe('when platform is supported', function() {
         it('should resolve', function(done) {
-            xface.raw.platform.supports(project_dir, 'android', function(e) {
+            xface.raw.platform.supports(project_dir, 'android', function() {
                 expect(1).toBe(1);
             }, function(err) {
                 expect(err).toBeUndefined();
@@ -362,7 +360,7 @@ describe('platform.supports(name)', function() {
             supported_platforms.forEach(function(p) {
                 supports[p].andReturn(Q.reject(new Error('no sdk')));
             });
-            xface.raw.platform.supports(project_dir, 'android', function(e) {
+            expectFailure(xface.raw.platform.supports(project_dir, 'android'), done, function(err) {
                 expect(err).toEqual(jasmine.any(Error));
             });
         });

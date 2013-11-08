@@ -137,7 +137,7 @@ module.exports.prototype = {
     },
     // copy files from merges directory to actual www dir
     copy_merges:function(merges_sub_path) {
-        var merges_path = path.join(util.appDir(util.isCordova(this.windows8_proj_dir)), 'merges', merges_sub_path);
+        var merges_path = path.join(util.appDir(util.isxFace(this.windows8_proj_dir)), 'merges', merges_sub_path);
         if (fs.existsSync(merges_path)) {
             var overrides = path.join(merges_path, '*');
             shell.cp('-rf', overrides, this.www_dir());
@@ -145,7 +145,7 @@ module.exports.prototype = {
     },
     // copies the app www folder into the windows8 project's www folder and updates the jsproj file.
     update_www:function(libDir) {
-        var project_root = util.isCordova(this.windows8_proj_dir);
+        var project_root = util.isxFace(this.windows8_proj_dir);
         var project_www = util.projectWww(project_root);
         // remove stock platform assets
         shell.rm('-rf', this.www_dir());
@@ -183,7 +183,7 @@ module.exports.prototype = {
         }
 
         // now add all www references back in from the root www folder
-        var project_root = util.isCordova(this.windows8_proj_dir);
+        var project_root = util.isxFace(this.windows8_proj_dir);
         var www_files = this.folder_contents('www', this.www_dir());
         for(file in www_files) {
             var item = new et.Element('ItemGroup');
@@ -222,7 +222,7 @@ module.exports.prototype = {
     },
 
     update_staging: function() {
-        var projectRoot = util.isCordova(this.windows8_proj_dir);
+        var projectRoot = util.isxFace(this.windows8_proj_dir);
         if (fs.existsSync(this.staging_dir())) {
             var staging = path.join(this.staging_dir(), '*');
             shell.cp('-rf', staging, this.www_dir());

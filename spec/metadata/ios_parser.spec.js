@@ -199,7 +199,7 @@ describe('ios project parser', function () {
         });
         describe('www_dir method', function() {
             it('should return /www', function() {
-                expect(p.www_dir()).toEqual(path.join(ios_proj, 'www'));
+                expect(p.www_dir()).toEqual(path.join(ios_proj, 'xface3', 'helloxface'));
             });
         });
         describe('staging_dir method', function() {
@@ -220,7 +220,7 @@ describe('ios project parser', function () {
             });
             it('should copy in a fresh xface.js from given cordova lib', function() {
                 p.update_www('lib/dir');
-                expect(cp.mostRecentCall.args[1]).toContain('lib/dir');
+                expect(cp.mostRecentCall.args[1]).toMatch(/lib.dir/);
             });
         });
         describe('update_overrides method', function() {

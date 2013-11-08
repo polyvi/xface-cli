@@ -96,7 +96,7 @@ describe('config.xml parser', function () {
                 expect(testElements[0].attrib.testAttrib).toEqual("value");
                 expect(testElements[0].attrib.href).toEqual("http://cordova.io");
                 expect(testElements[0].attrib.email).toEqual("dev@callback.apache.org");
-                expect(testElements[0].text).toContain("Apache Cordova Team");
+                expect(testElements[0].text).toContain("xFace Team");
             });
 
             it("should clobber singelton children with clobber", function () {

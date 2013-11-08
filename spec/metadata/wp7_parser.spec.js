@@ -193,7 +193,7 @@ describe('wp7 project parser', function() {
             it('should copy in a fresh xface.js from given cordova lib', function() {
                 p.update_www('lib/dir');
                 expect(write).toHaveBeenCalled();
-                expect(read.mostRecentCall.args[0]).toContain('lib/dir');
+                expect(read.mostRecentCall.args[0]).toMatch(/lib.dir/);
             });
         });
         describe('update_staging method', function() {

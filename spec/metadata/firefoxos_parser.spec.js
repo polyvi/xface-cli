@@ -24,7 +24,7 @@ var platforms = require('../../platforms'),
     ET = require('elementtree'),
     config = require('../../src/config'),
     config_parser = require('../../src/config_parser'),
-    cordova = require('../../cordova');
+    xface = require('../../xface');
 
 describe('firefoxos project parser', function() {
     var proj = path.join('some', 'path');

@@ -70,7 +70,7 @@ module.exports = function platform(command, targets) {
             .then(function() {
                 if(internalDev) {
                     return targets.reduce(function(soFar, t) {
-		        var libDir = cordova_util.getDefaultPlatformLibPath(projectRoot, t);
+		                var libDir = cordova_util.getDefaultPlatformLibPath(projectRoot, t);
                         return soFar.then(function() {
                             return call_into_create(t, projectRoot, cfg, libDir, null);
                         });

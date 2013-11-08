@@ -27,7 +27,7 @@ var platforms = require('../../platforms'),
     ET = require('elementtree'),
     config = require('../../src/config'),
     config_parser = require('../../src/config_parser'),
-    cordova = require('../../cordova');
+    xface = require('../../xface');
 
 describe('windows8 project parser', function() {
 
@@ -107,7 +107,7 @@ describe('windows8 project parser', function() {
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
             mv = spyOn(shell, 'mv');
-            is_cordova = spyOn(util, 'isCordova').andReturn(proj);
+            is_cordova = spyOn(util, 'isxFace').andReturn(proj);
             write = spyOn(fs, 'writeFileSync');
             read = spyOn(fs, 'readFileSync').andReturn('');
         });
@@ -214,7 +214,7 @@ describe('windows8 project parser', function() {
             it('should copy in a fresh cordova.js from given cordova lib', function() {
                 p.update_www('lib/dir');
                 expect(write).toHaveBeenCalled();
-                expect(read.mostRecentCall.args[0]).toContain('lib/dir');
+                expect(read.mostRecentCall.args[0]).toMatch(/lib.dir/);
             });
         });
         describe('update_staging method', function() {

@@ -62,23 +62,23 @@ describe('create command', function () {
     describe('success', function() {
         it('should create a default project if only directory is specified', function(done) {
             xface.raw.create(tempDir).then(function() {
-                expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, '.cordova'));
-                expect(package).toHaveBeenCalledWith('io.cordova.hellocordova');
-                expect(name).toHaveBeenCalledWith('HelloCordova');
+                expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, '.xface'));
+                expect(package).toHaveBeenCalledWith('io.xface.hello');
+                expect(name).toHaveBeenCalledWith('HelloxFace');
                 done();
             });
         });
         it('should create a default project if only directory and id is specified', function(done) {
             xface.raw.create(tempDir, 'ca.filmaj.canucks').then(function() {
-                expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, '.cordova'));
+                expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, '.xface'));
                 expect(package).toHaveBeenCalledWith('ca.filmaj.canucks');
-                expect(name).toHaveBeenCalledWith('HelloCordova');
+                expect(name).toHaveBeenCalledWith('HelloxFace');
                 done();
             });
         });
         it('should create a project in specified directory with specified name and id', function(done) {
             xface.raw.create(tempDir, 'ca.filmaj.canucks', 'IHateTheBruins').then(function() {
-                expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, '.cordova'));
+                expect(mkdir).toHaveBeenCalledWith('-p', path.join(tempDir, '.xface'));
                 expect(package).toHaveBeenCalledWith('ca.filmaj.canucks');
                 expect(name).toHaveBeenCalledWith('IHateTheBruins');
                 done();

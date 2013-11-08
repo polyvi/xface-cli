@@ -172,7 +172,7 @@ describe('wp8 project parser', function() {
         });
         describe('www_dir method', function() {
             it('should return www', function() {
-                expect(p.www_dir()).toEqual(path.join(wp8_proj, 'www'));
+                expect(p.www_dir()).toEqual(path.join(wp8_proj, 'xface3', 'helloxface'));
             });
         });
         describe('staging_dir method', function() {
@@ -181,10 +181,6 @@ describe('wp8 project parser', function() {
             });
         });
         describe('update_www method', function() {
-            var update_csproj;
-            beforeEach(function() {
-                update_csproj = spyOn(p, 'update_csproj');
-            });
             it('should rm project-level www and cp in platform agnostic www', function() {
                 p.update_www('lib/dir');
                 expect(rm).toHaveBeenCalled();
@@ -193,7 +189,7 @@ describe('wp8 project parser', function() {
             it('should copy in a fresh xface.js from given cordova lib', function() {
                 p.update_www('lib/dir');
                 expect(write).toHaveBeenCalled();
-                expect(read.mostRecentCall.args[0]).toContain('lib/dir');
+                expect(read.mostRecentCall.args[0]).toMatch(/lib.dir/);
             });
         });
         describe('update_staging method', function() {

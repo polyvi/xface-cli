@@ -167,7 +167,7 @@ describe('prepare command', function() {
             });
         });
         it('should merge the platform level config.xml with the top level config.xml', function (done) {
-            cordova.raw.prepare().then(function() {
+            xface.raw.prepare().then(function() {
                 supported_platforms.forEach(function(p) {
                     expect(util.config_parser).toHaveBeenCalledWith(platforms[p].parser().config_xml());
                     expect(mock_config_parser.merge_with).toHaveBeenCalledWith(mock_config_parser, p, true);

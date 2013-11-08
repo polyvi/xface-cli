@@ -33,6 +33,7 @@ describe('android project parser', function() {
     var exists, exec, custom;
     beforeEach(function() {
         exists = spyOn(fs, 'existsSync').andReturn(true);
+        spyOn(config, 'internalDev').andReturn(false);
         exec = spyOn(child_process, 'exec').andCallFake(function(cmd, opts, cb) {
             if (!cb) cb = opts;
             cb(null, 'android-17', '');
@@ -186,7 +187,7 @@ describe('android project parser', function() {
         });
         describe('www_dir method', function() {
             it('should return assets/www', function() {
-                expect(p.www_dir()).toEqual(path.join(android_proj, 'assets', 'www'));
+                expect(p.www_dir()).toEqual(path.join(android_proj, 'assets', 'xface3', 'helloxface'));
             });
         });
         describe('staging_dir method', function() {
@@ -208,7 +209,7 @@ describe('android project parser', function() {
             it('should copy in a fresh xface.js from stock cordova lib if no custom lib is specified', function() {
                 p.update_www('lib/dir');
                 expect(write).toHaveBeenCalled();
-                expect(read.mostRecentCall.args[0]).toContain('lib/dir');
+                expect(read.mostRecentCall.args[0]).toMatch(/lib.dir/);
             });
         });
         describe('update_overrides method', function() {

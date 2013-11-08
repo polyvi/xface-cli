@@ -1,4 +1,4 @@
-var cordova = require('../cordova'),
+var xface = require('../xface'),
     path = require('path'),
     shell = require('shelljs'),
     fs = require('fs'),
@@ -21,17 +21,17 @@ describe('info flag', function(){
     }
 
     beforeEach(function() {
-        is_cordova = spyOn(cordova_util, 'isCordova').andReturn(project_dir);
+        is_cordova = spyOn(cordova_util, 'isxFace').andReturn(project_dir);
         writeFileSync = spyOn( fs, 'writeFileSync' );
         shellSpy = spyOn( shell, 'exec' ).andReturn( "" );
         cordova_utilSpy = spyOn( cordova_util, 'projectConfig').andReturn( fs.readFileSync( project_dir + "/no_content_config.xml" ) );
         done = false;
     });
 
-    it('should not run outside of a Cordova-based project by calling util.isCordova', function() {
+    it('should not run outside of a xFace-based project by calling util.isCordova', function() {
         is_cordova.andReturn(false);
         runs(function() {
-            infoPromise( cordova.info() );
+            infoPromise( xface.info() );
         });
         waitsFor(function() { return done; }, 'platform promise never resolved', 500);
         runs(function() {
@@ -41,7 +41,7 @@ describe('info flag', function(){
 
     it('should run inside a Cordova-based project by calling util.isCordova', function() {
         readFileSync = spyOn( fs, 'readFileSync' ).andReturn( "" );
-         cordova.raw.info().then(function() {
+         xface.raw.info().then(function() {
             expect(is_cordova).toHaveBeenCalled();
             done();
         });
@@ -50,12 +50,12 @@ describe('info flag', function(){
     it('should emit a results event with info contents', function(done) {
         readFileSync = spyOn( fs, 'readFileSync' ).andReturn( "info" );
         this.after(function() {
-            cordova.removeAllListeners('results');
+            xface.removeAllListeners('results');
         });
-        cordova.on('results', function(h) {
+        xface.on('results', function(h) {
             expect(h).toMatch(/info/gi);
             done();
         });
-        cordova.info();
+        xface.info();
     });
 });
