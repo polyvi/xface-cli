@@ -62,32 +62,28 @@ module.exports = function platform(command, targets) {
         platforms:targets
     };
 
+    var internalDev = config.internalDev(projectRoot);
     switch(command) {
         case 'add':
-            var config_json = config.read(projectRoot),
-                internalDev = config.internalDev(projectRoot);
+            var config_json = config.read(projectRoot);
             return hooks.fire('before_platform_add', opts)
             .then(function() {
-                if(internalDev) {
-                    return targets.reduce(function(soFar, t) {
-		                var libDir = cordova_util.getDefaultPlatformLibPath(projectRoot, t);
-                        return soFar.then(function() {
-                            return call_into_create(t, projectRoot, cfg, libDir, null);
+                return targets.reduce(function(soFar, t) {
+                    return soFar.then(function() {
+                        var q;
+                        if(internalDev) {
+                            q = Q(cordova_util.getDefaultPlatformLibPath(projectRoot, t));
+                        } else {
+                            q = lazy_load.based_on_config(projectRoot, t);
+                        }
+                        return q.then(function(libDir) {
+                            var template = config_json.lib && config_json.lib[t] && config_json.lib[t].template || null;
+                            return call_into_create(t, projectRoot, cfg, libDir, template);
+                        }, function(err) {
+                            throw new Error('Unable to fetch platform ' + t + ': ' + err);
                         });
-                    }, Q());
-                } else {
-                    return targets.reduce(function(soFar, t) {
-                        return soFar.then(function() {
-                            return lazy_load.based_on_config(projectRoot, t)
-                            .then(function(libDir) {
-                                var template = config_json.lib && config_json.lib[t] && config_json.lib[t].template || null;
-                                return call_into_create(t, projectRoot, cfg, libDir, template);
-                            }, function(err) {
-                                throw new Error('Unable to fetch platform ' + t + ': ' + err);
-                            });
-                        });
-                    }, Q());
-                }
+                    });
+                }, Q());
             })
             .then(function() {
                 return hooks.fire('after_platform_add', opts);
@@ -127,7 +123,7 @@ module.exports = function platform(command, targets) {
                 var config_json = config.read(projectRoot);
                 return hooks.fire('before_platform_update', opts)
                 .then(function() {
-                    return lazy_load.based_on_config(projectRoot, plat);
+                    return internalDev ? Q(cordova_util.getDefaultPlatformLibPath(projectRoot, plat)) : lazy_load.based_on_config(projectRoot, plat);
                 }).then(function(libDir) {
                     var script = path.join(libDir, 'bin', 'update');
                     var d = Q.defer();
