@@ -5,6 +5,4 @@ REPOSITORY = 'git@git.polyvi.com:xface-cli.git'
 REVIEWBOARD_URL = 'http://review.polyvi.com/reviews/'
 GUESS_FIELDS = 'true'
 TARGET_GROUPS = 'xFaceApolloCCGroup'
-USERNAME = 'your_rb_login_name'
-PASSWORD = 'your_rb_login_pwd'
-
+OPEN_BROWSER = 'true'
