@@ -126,8 +126,10 @@ module.exports = function platform(command, targets) {
                     return internalDev ? Q(cordova_util.getDefaultPlatformLibPath(projectRoot, plat)) : lazy_load.based_on_config(projectRoot, plat);
                 }).then(function(libDir) {
                     var script = path.join(libDir, 'bin', 'update');
+                    // now only android platform support '--shared' for update command
+                    var shared = (plat == 'android' && internalDev) ? '--shared' : '';
                     var d = Q.defer();
-                    child_process.exec(script + ' "' + path.join(projectRoot, 'platforms', plat) + '"', function(err, stdout, stderr) {
+                    child_process.exec(script + ' "' + path.join(projectRoot, 'platforms', plat) + '"' + ' ' + shared, function(err, stdout, stderr) {
                         if (err) {
                             d.reject(new Error('Error running update script: ' + err + stderr));
                         } else {
@@ -236,12 +238,17 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir) {
             var bin = path.join(libDir, 'bin', 'create');
             var shared = '';
             if(config.internalDev(projectRoot)) {
-                if(target == 'ios' || target == 'wp8') shared = '--shared ';
+                shared = '--shared';
             }
-            var args = (target=='ios') ? shared + '--arc' : shared;
+            var args = (target=='ios') ? '--arc' : '';
             var pkg = cfg.packageName().replace(/[^\w.]/g,'_');
             var name = cfg.name();
-            var command = util.format('"%s" %s "%s" "%s" "%s"', bin, args, output, pkg, name);
+            var command;
+            if(target == 'android') {
+                command = util.format('"%s" %s "%s" "%s" "%s" %s', bin, args, output, pkg, name, shared);
+            } else {
+                command = util.format('"%s" %s "%s" "%s" "%s"', bin, shared + ' ' + args, output, pkg, name);
+            }
             if (template_dir) {
                 command += ' "' + template_dir + '"';
             }
