@@ -169,7 +169,7 @@ module.exports.prototype = {
         var projectRoot = util.isxFace(this.wp8_proj_dir);
         var app_www = util.projectWww(projectRoot);
         var platform_www = path.join(this.wp8_proj_dir, 'platform_www');
-        var xface3_dir = path.join(this.path, 'assets', 'xface3');
+        var xface3_dir = path.join(this.wp8_proj_dir, 'xface3');
 
         // Clear the www dir
         shell.rm('-rf', xface3_dir);

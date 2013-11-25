@@ -168,7 +168,7 @@ module.exports.prototype = {
         var projectRoot = util.isxFace(this.path);
         var app_www = util.projectWww(projectRoot);
         var platform_www = path.join(this.path, 'platform_www');
-        var xface3_dir = path.join(this.path, 'assets', 'xface3');
+        var xface3_dir = path.join(this.path, 'xface3');
 
         // Clear the www dir
         shell.rm('-rf', xface3_dir);
