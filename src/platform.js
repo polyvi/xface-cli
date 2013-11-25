@@ -32,11 +32,7 @@ var config            = require('./config'),
 
 // Returns a promise.
 module.exports = function platform(command, targets) {
-    var projectRoot = cordova_util.isxFace(process.cwd());
-
-    if (!projectRoot) {
-        return Q.reject(new Error('Current working directory is not a Cordova-based project.'));
-    }
+    var projectRoot = cordova_util.cdProjectRoot();
 
     var hooks = new hooker(projectRoot);
 
@@ -125,6 +121,10 @@ module.exports = function platform(command, targets) {
                 .then(function() {
                     return internalDev ? Q(cordova_util.getDefaultPlatformLibPath(projectRoot, plat)) : lazy_load.based_on_config(projectRoot, plat);
                 }).then(function(libDir) {
+                    // Check for platforms are in subdirectories into repositories
+                    if (["wp7", "windows8", "windows81", "blackberry10"].indexOf(plat) !== -1)
+                        libDir = path.join(libDir, target);
+
                     var script = path.join(libDir, 'bin', 'update');
                     // now only android platform support '--shared' for update command
                     var shared = (plat == 'android' && internalDev) ? '--shared' : '';
@@ -233,8 +233,11 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir) {
         events.emit('verbose', 'Checking if platform "' + target + '" passes minimum requirements...');
         return module.exports.supports(projectRoot, target)
         .then(function() {
+            // Check for platforms are in subdirectories into repositories
+            if (["wp7", "windows8", "windows81", "blackberry10"].indexOf(target) !== -1)
+                libDir = path.join(libDir, target);
+
             // Create a platform app using the ./bin/create scripts that exist in each repo.
-            // Run platform's create script
             var bin = path.join(libDir, 'bin', 'create');
             var shared = '';
             if(config.internalDev(projectRoot)) {
@@ -255,6 +258,7 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir) {
             events.emit('log', 'Creating ' + target + ' project...');
             events.emit('verbose', 'Running bin/create for platform "' + target + '" with command: "' + command + '" (output to follow)');
 
+            // Run platform's create script
             var d = Q.defer();
             child_process.exec(command, function(err, create_output, stderr) {
                 events.emit('verbose', create_output);

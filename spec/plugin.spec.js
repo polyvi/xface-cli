@@ -35,10 +35,25 @@ var project_dir = path.join('some','path');
 var plugins_dir = path.join(project_dir, 'plugins');
 
 describe('plugin command', function() {
-    var is_cordova, list_platforms, fire, find_plugins, rm, mkdir, existsSync, exec, prep_spy, plugman_install, plugman_fetch, parsers = {}, uninstallPlatform, uninstallPlugin;
+    var is_cordova,
+        cd_project_root,
+        list_platforms,
+        fire,
+        find_plugins,
+        rm,
+        mkdir,
+        existsSync,
+        exec,
+        prep_spy,
+        plugman_install,
+        plugman_fetch,
+        parsers = {},
+        uninstallPlatform,
+        uninstallPlugin;
+
     beforeEach(function() {
         is_cordova = spyOn(util, 'isxFace').andReturn(project_dir);
-        spyOn(config, 'internalDev').andReturn(false);
+        cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
         supported_platforms.forEach(function(p) {
             parsers[p] = jasmine.createSpy(p + ' update_project').andReturn(Q());
@@ -70,10 +85,12 @@ describe('plugin command', function() {
             }, post).fin(done);
         }
 
-        it('should not run outside of a xFace-based project by calling util.isxFace', function(done) {
+        it('should not run outside of a xFace-based project by calling util.isCordova', function(done) {
+            var msg = 'Dummy message about not being in a cordova dir.';
+            cd_project_root.andThrow(new Error(msg));
             is_cordova.andReturn(false);
-            expectFailure(xface.raw.plugin(), done, function(err) {
-                expect(err).toEqual(new Error('Current working directory is not a xFace-based project.'));
+            expectFailure(Q().then(xface.raw.plugin), done, function(err) {
+                expect(err.message).toEqual(msg);
             });
         });
         it('should report back an error if used with `add` and no plugin is specified', function(done) {

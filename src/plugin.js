@@ -26,12 +26,8 @@ module.exports = function plugin(command, targets) {
         events        = require('./events'),
         config        = require('./config');
 
-    var projectRoot = xface_util.isxFace(process.cwd()),
+    var projectRoot = xface_util.cdProjectRoot(),
         err;
-
-    if (!projectRoot) {
-        return Q.reject(new Error('Current working directory is not a Cordova-based project.'));
-    }
 
     if (arguments.length === 0){
         command = 'ls';

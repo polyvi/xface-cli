@@ -32,11 +32,7 @@ var cordova_util  = require('./util'),
 module.exports = function info() {
 
     //Get the template
-    var projectRoot = cordova_util.isxFace(process.cwd());
-
-    if (!projectRoot) {
-        return Q.reject( new Error('Current working directory is not a xFace-based project.') );
-    }
+    var projectRoot = cordova_util.cdProjectRoot();
 
     var raw = fs.readFileSync(path.join(__dirname, '..', 'doc', 'info.txt'), 'utf-8').split("\n"),
         output;

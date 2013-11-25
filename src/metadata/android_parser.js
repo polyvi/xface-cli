@@ -25,6 +25,7 @@ var fs            = require('fs'),
     child_process = require('child_process'),
     project_config= require('../config'),
     Q             = require('q'),
+    xplugin       = require('xplugin'),
     config_parser = require('../config_parser');
 
 var default_prefs = {
@@ -108,7 +109,8 @@ module.exports.prototype = {
         fs.writeFileSync(this.manifest, manifest.write({indent: 4}), 'utf-8');
 
         var orig_pkgDir = path.join(this.path, 'src', path.join.apply(null, orig_pkg.split('.')));
-        var orig_java_class = fs.readdirSync(orig_pkgDir).filter(function(f) {return f.indexOf('.svn') == -1;})[0];
+
+        var orig_java_class = xplugin.platforms['android'].activity_name(this.path) + '.java';
         var pkgDir = path.join(this.path, 'src', path.join.apply(null, pkg.split('.')));
         shell.mkdir('-p', pkgDir);
         var orig_javs = path.join(orig_pkgDir, orig_java_class);
@@ -132,20 +134,26 @@ module.exports.prototype = {
         return this.android_config;
     },
 
-    // Takes the directory where the lazy-loaded platform can be found.
-    update_www:function(libDir) {
-        var projectRoot = util.isxFace(this.path);
-        var www = util.projectWww(projectRoot);
-        var platformWww = path.resolve(path.join(this.www_dir(), '..'));
-        // remove stock platform assets
-        shell.rm('-rf', platformWww);
-        shell.mkdir('-p', platformWww);
-        // copy over all app www assets
-        shell.cp('-rf', www + '/*', platformWww);
+    // Used for creating platform_www in projects created by older versions.
+    cordovajs_path:function(libDir) {
+        var jsPath = path.join(libDir, 'framework', 'assets', 'xface.js');
+        return path.resolve(jsPath);
+    },
 
-        // write out android lib's xface.js
-        var jsPath = path.resolve(path.join(libDir, 'framework', 'assets', 'xface.js'));
-        fs.writeFileSync(path.join(this.www_dir(), 'xface.js'), fs.readFileSync(jsPath, 'utf-8'), 'utf-8');
+    // Replace the www dir with contents of platform_www and app www.
+    update_www:function() {
+        var projectRoot = util.isxFace(this.path);
+        var app_www = util.projectWww(projectRoot);
+        var platform_www = path.join(this.path, 'platform_www');
+        var xface3_dir = path.join(this.path, 'assets', 'xface3');
+
+        // Clear the www dir
+        shell.rm('-rf', xface3_dir);
+        shell.mkdir(xface3_dir);
+        // Copy over all app www assets
+        shell.cp('-rf', path.join(app_www, '*'), xface3_dir);
+        // Copy over stock platform www assets (xface.js)
+        shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
     },
 
     // update the overrides folder into the www folder

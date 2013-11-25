@@ -26,7 +26,8 @@ var fs            = require('fs'),
     Q             = require('q'),
     config_parser = require('../config_parser'),
     xml           = require('../xml-helpers'),
-    config        = require('../config');
+    config        = require('../config'),
+    hooker        = require('../hooker');
 
 module.exports = function wp8_parser(project) {
     try {
@@ -49,7 +50,9 @@ module.exports.check_requirements = function(project_root) {
     events.emit('log', 'Checking wp8 requirements...');
     var lib_path = util.getDefaultPlatformLibPath(project_root, 'wp8');
     var custom_path = config.has_custom_path(project_root, 'wp8');
-    if (custom_path) lib_path = custom_path;
+    if (custom_path) {
+        lib_path = path.join(custom_path, 'wp8');
+    }
     var command = '"' + path.join(lib_path, 'bin', 'check_reqs') + '"';
     events.emit('verbose', 'Running "' + command + '" (output to follow)');
     var d = Q.defer();
@@ -154,25 +157,34 @@ module.exports.prototype = {
             shell.cp('-rf', overrides, this.www_dir());
         }
     },
-    // copies the app www folder into the wp8 project's www folder and updates the csproj file.
-    update_www:function(libDir) {
-        var project_root = util.isxFace(this.wp8_proj_dir);
-        var project_www = util.projectWww(project_root);
-        var platformWww = path.resolve(path.join(this.www_dir(), '..'));
-        // remove stock platform assets
-        shell.rm('-rf', this.www_dir());
-        shell.mkdir('-p', platformWww);
-        // copy over all app www assets
-        shell.cp('-rf', project_www + '/*', platformWww);
 
-        // copy all files from merges directories (generic first, then specific)
+    // Used for creating platform_www in projects created by older versions.
+    cordovajs_path:function(libDir) {
+        var jsPath = path.join(libDir, 'xFaceLib', 'xFaceLib', 'xface.js');
+        return path.resolve(jsPath);
+    },
+
+    // Replace the www dir with contents of platform_www and app www and updates the csproj file.
+    update_www:function() {
+        var projectRoot = util.isxFace(this.wp8_proj_dir);
+        var app_www = util.projectWww(projectRoot);
+        var platform_www = path.join(this.wp8_proj_dir, 'platform_www');
+        var xface3_dir = path.join(this.path, 'assets', 'xface3');
+
+        // Clear the www dir
+        shell.rm('-rf', xface3_dir);
+        shell.mkdir(xface3_dir);
+        // Copy over all app www assets
+        shell.cp('-rf', path.join(app_www, '*'), xface3_dir);
+
+        // Copy all files from merges directories - wp generic first, then wp8 specific.
         this.copy_merges('wp');
         this.copy_merges('wp8');
 
-        // copy over wp8 lib's cordova.js
-        var cordovajs_path = path.join(libDir, 'xFaceLib', 'xFaceLib', 'xface.js');
-        fs.writeFileSync(path.join(this.www_dir(), 'xface.js'), fs.readFileSync(cordovajs_path, 'utf-8'), 'utf-8');
+        // Copy over stock platform www assets (xface.js)
+        shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
     },
+
     staging_dir: function() {
         return path.join(this.wp8_proj_dir, '.staging', 'www');
     },
@@ -193,9 +205,16 @@ module.exports.prototype = {
         } catch(e) {
             return Q.reject(e);
         }
-        // overrides (merges) are handled in update_www()
-        this.update_staging();
-        util.deleteSvnFolders(this.www_dir());
-        return Q();
+
+        // trigger an event in case anyone needs to modify the contents of the www folder before we package it.
+        var that = this;
+        var projectRoot = util.isxFace(process.cwd());
+
+        var hooks = new hooker(projectRoot);
+        return hooks.fire('pre_package', { wwwPath:this.www_dir() })
+        .then(function() {
+            that.update_staging();
+            util.deleteSvnFolders(that.www_dir());
+        });
     }
 };

@@ -20,7 +20,8 @@
 var path          = require('path'),
     fs            = require('fs'),
     url           = require('url'),
-    shell         = require('shelljs');
+    shell         = require('shelljs'),
+    JSHINT        = require("jshint").JSHINT;
 
 /**
  * 将opts中的属性值以json格式添加到<proj_root>/.xface/config.json中
@@ -49,7 +50,17 @@ module.exports.read = function get_config(project_root) {
     if (!fs.existsSync(config_json)) {
         return module.exports.write(project_root, {});
     } else {
-        return JSON.parse(fs.readFileSync(config_json, 'utf-8'));
+        var data = fs.readFileSync(config_json, 'utf-8');
+        try {
+            return JSON.parse(data);
+        } catch (e) {
+            JSHINT(data);
+            var err = JSHINT.errors[0];
+            if (err) {
+                throw 'Parsing "'+config_json+'" at line '+err.line+" col "+err.character+"; "+err.reason;
+            }
+            throw e;
+        }
     }
 };
 

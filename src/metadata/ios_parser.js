@@ -157,20 +157,26 @@ module.exports.prototype = {
         return this.config_path;
     },
 
-    update_www:function(libDir) {
+    // Used for creating platform_www in projects created by older versions.
+    cordovajs_path:function(libDir) {
+        var jsPath = path.join(libDir, 'xFaceLib', 'xFaceLib', 'xface.js');
+        return path.resolve(jsPath);
+    },
+
+    // Replace the www dir with contents of platform_www and app www.
+    update_www:function() {
         var projectRoot = util.isxFace(this.path);
-        var www = util.projectWww(projectRoot);
-        var parentWww = path.resolve(path.join(this.www_dir(), '..'));
+        var app_www = util.projectWww(projectRoot);
+        var platform_www = path.join(this.path, 'platform_www');
+        var xface3_dir = path.join(this.path, 'assets', 'xface3');
 
-        // remove the stock www folder
-        shell.rm('-rf', parentWww);
-        shell.mkdir('-p', parentWww);
-
-        // copy over project www assets
-        shell.cp('-rf', www + '/*', parentWww);
-
-        // write out proper xface.js
-        shell.cp('-f', path.join(libDir, 'xFaceLib', 'xFaceLib', 'xface.js'), path.join(this.www_dir(), 'xface.js'));
+        // Clear the www dir
+        shell.rm('-rf', xface3_dir);
+        shell.mkdir(xface3_dir);
+        // Copy over all app www assets
+        shell.cp('-rf', path.join(app_www, '*'), xface3_dir);
+        // Copy over stock platform www assets (xface.js)
+        shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
     },
 
     // update the overrides folder into the www folder
