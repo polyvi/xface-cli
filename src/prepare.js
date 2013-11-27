@@ -93,6 +93,10 @@ module.exports = function prepare(options) {
                 if (!fs.existsSync(platform_www)) {
                     shell.mkdir(platform_www);
                     shell.cp(parser.cordovajs_path(libDir), path.join(platform_www, 'xface.js'));
+                } else {
+                    // TODO: cordova关于platform_www这一块还不完善，可能造成引擎更新xface.js之后，开发工程的xface.js得不到更新的问题，
+                    // 该问题如果以后得到解决，移除该逻辑
+                    shell.cp('-f', parser.cordovajs_path(libDir), path.join(platform_www, 'xface.js'));
                 }
 
                 // Replace the existing web assets with the app master versions

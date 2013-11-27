@@ -25,8 +25,7 @@ var path          = require('path'),
 
 /**
  * 将opts中的属性值以json格式添加到<proj_root>/.xface/config.json中
- * config.json包含的属性主要有id, name, lib, target_proj, dev_type
- * id和name分别为工程的id和名称，target_proj为工程所关联项目（不存在或者为空时表示不关联任何项目）
+ * config.json包含的属性主要有id, name, lib, dev_type。id和name分别为工程的id和名称，
  * dev_type用于标识是内部项目开发还是外部开发者使用（'internal'表示内部项目开发，不存在或者为空时为外部使用）
  * @param {String} project_root
  * @param {Object} opts
