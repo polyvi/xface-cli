@@ -22,6 +22,7 @@ var fs            = require('fs'),
     archiver      = require('archiver'),
     Q             = require('q'),
     events        = require('./events'),
+    xml           = require('./xml-helpers'),
     config        = require('./config');
 
 // Global configuration paths
@@ -210,6 +211,15 @@ exports = module.exports = {
             if (err) d.reject(err);
         });
         return d.promise;
+    },
+    getDefaultAppId: function(platformProj) {
+        var platform = path.basename(platformProj),
+            parser = require('../platforms')[platform].parser;
+        var configXml = new parser(platformProj).config_xml();
+        var doc = xml.parseElementtreeSync(configXml),
+            appTag = doc.find('pre_install_packages/app_package');
+        if(appTag) return appTag.attrib['id'];
+        return 'helloxface';
     }
 };
 

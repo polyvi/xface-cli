@@ -144,7 +144,8 @@ module.exports.prototype = {
     },
     // Returns the platform-specific www directory.
     www_dir:function() {
-        return path.join(this.wp8_proj_dir, 'xface3', 'helloxface');
+        var defaultAppId = util.getDefaultAppId(this.wp8_proj_dir);
+        return path.join(this.wp8_proj_dir, 'xface3', defaultAppId);
     },
     config_xml:function() {
         return this.config_path;

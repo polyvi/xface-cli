@@ -4,8 +4,10 @@ var fs = require('fs'),
     shell = require('shelljs'),
     child_process = require('child_process'),
     jsdom = require('jsdom-nogyp').jsdom,
+    et = require('elementtree'),
     xfaceUtil = require('./util'),
     events = require('./events'),
+    xml_helpers = require('./xml-helpers'),
     help = require('./help');
 
 var TAG_A_EXPRESSION = '<a\\s+.*?href\\s*=\\s*"(.*?)".*?(/>|>.*?</a>)',
@@ -48,7 +50,7 @@ module.exports = function(command, targets, testTemplate) {
         if (target == 'test' || path.basename(target) == target) {
             return installPluginTest(xfaceProj, target, testTemplate);
         } else if (fs.existsSync(target)) {
-            return installApp(xfaceProj, target);
+            return module.exports.installApp(xfaceProj, [target]);
         } else {
             return Q.reject(new Error('App path `' + target + '` not found! '));
         }
@@ -108,7 +110,7 @@ function installPluginTest(xfaceProj, target, testTemplate) {
         return mergePluginTests(xfaceProj, plugins, template);
     })
     .then(function(testPath) {
-        return installApp(xfaceProj, testPath);
+        return module.exports.installApp(xfaceProj, [testPath]);
     });
 }
 
@@ -325,64 +327,85 @@ function mergeLink(src, dest) {
 }
 
 /**
- * 将应用拷贝到平台工程及www/helloxface下面
+ * 将应用安装到平台工程下
  * @param {Object} projRoot
- * @param {Object} appPath
+ * @param {Array} apps
+ * @param {Boolean} dirAsId 是否将应用目录名作为应用的id
  */
-function installApp(projRoot, appPath) {
-    if (!fs.existsSync(path.join(appPath, 'index.html')) && !fs.existsSync(path.join(appPath, 'app.xml'))) {
-        return Q.reject(new Error('App at path `' + appPath + '` not valid, file `index.html` or `app.xml` not existed! '));
-    }
+module.exports.installApp = function(projRoot, apps, dirAsId) {
+    var clear = false, // <projRoot>/www下的应用是否已经被清除
+        autoId = 1, // 如果app.xml不存在使用该id
+        appAppIds = [],
+        projectWww = path.join(projRoot, 'www');
+    var q = apps.reduce(function(soFar, appPath) {
+        return soFar.then(function() {
+            if (!fs.existsSync(path.join(appPath, 'index.html')) && !fs.existsSync(path.join(appPath, 'app.xml'))) {
+                return Q.reject(new Error('App at path `' + appPath + '` not valid, file `index.html` or `app.xml` not existed! '));
+            }
+            // 清除www下的所有应用
+            if(!clear) {
+                clear = true;
+                fs.readdirSync(projectWww).forEach(function(f) {
+                    var subdir = path.join(projectWww, f);
+                    if(fs.lstatSync(subdir).isFile()) return;
+                    shell.rm('-rf', subdir);
+                });
+            }
+            var appId;
+            if(dirAsId) {
+                appId = path.basename(appPath);
+            } else if(fs.existsSync(path.join(appPath, 'app.xml'))){
+                var appXml = path.join(appPath, 'app.xml');
+                var doc = xml_helpers.parseElementtreeSync(appXml);
+                appId = doc.getroot().attrib['id'];
+            } else {
+                appId = String(autoId);
+                autoId += 1;
+            }
+            var destAppDir = path.join(projectWww, appId);
+            shell.mkdir(destAppDir);
+            shell.cp('-rf', path.join(appPath, '*'), destAppDir);
+            appAppIds.push(appId);
 
-    // 如果源应用中没有app.xml，使用老的app.xml，否则覆盖
-    var srcPath = path.join(appPath, '*'),
-        wwwAppPath = path.join(projRoot, 'www', 'helloxface'),
-        appXml = path.join(wwwAppPath, 'app.xml'),
-        content = null;
-    if(fs.existsSync(appXml)) content = fs.readFileSync(appXml);
-    shell.rm('-rf', path.join(wwwAppPath, '*'));
-    if(content) fs.writeFileSync(appXml, content);
-    shell.cp('-Rf', srcPath, wwwAppPath);
+            // write app id to app.xml if needed
+            var appXml = path.join(destAppDir, 'app.xml');
+            if(!fs.existsSync(appXml)) {
+                var content = fs.readFileSync(path.join(__dirname, '..', 'templates', 'app.xml'), 'utf-8');
+                content = content.replace(/TEMPLATE-APP-ID/gm, appId);
+                fs.writeFileSync(appXml, content, 'utf-8');
+            }
 
-    var workspaceDir = path.join(wwwAppPath, 'workspace'),
-        q = Q();
-    if(fs.existsSync(workspaceDir) && fs.readdirSync(workspaceDir).length > 0) {
-        var zipPath = workspaceDir + '.zip';
-        if(fs.existsSync(zipPath)) shell.rm(zipPath);
-        q = xfaceUtil.zipFolder(path.join(workspaceDir, '*'), zipPath)
-        .then(function() {
-            shell.rm('-rf', path.join(workspaceDir, '*'));
-            shell.mv(zipPath, workspaceDir);
+            // zip workspace to workspace.zip
+            var workspaceDir = path.join(destAppDir, 'workspace');
+            if(fs.existsSync(workspaceDir) && fs.readdirSync(workspaceDir).length > 0) {
+                var zipPath = workspaceDir + '.zip';
+                if(fs.existsSync(zipPath)) shell.rm(zipPath);
+                return xfaceUtil.zipFolder(path.join(workspaceDir, '*'), zipPath)
+                .then(function() {
+                    shell.rm('-rf', path.join(workspaceDir, '*'));
+                    shell.mv(zipPath, workspaceDir);
+                });
+            }
         });
-    }
+    }, Q());
 
     return q.then(function() {
-        var platforms = xfaceUtil.listPlatforms(projRoot);
-        platforms.forEach(function(p) {
-            var platformAppPath = null;
-            events.emit('verbose', 'Install app `' + appPath + '` for platform ' + p + '! ');
-            if (p === 'android')
-                platformAppPath = path.join(projRoot, 'platforms', p, 'assets', 'xface3', 'helloxface');
-            else
-                platformAppPath = path.join(projRoot, 'platforms', p, 'xface3', 'helloxface');
-            deleteAppPages(platformAppPath);
-            shell.cp('-Rf', path.join(wwwAppPath, '*'), platformAppPath);
-        });
-    });
-}
+        var configXml = path.join(projectWww, 'config.xml');
+        var doc = xml_helpers.parseElementtreeSync(configXml),
+            packagesTag = doc.find('./pre_install_packages');
+        if(!packagesTag) {
+            packagesTag = et.XML('<pre_install_packages></pre_install_packages>');
+            doc.getroot().getchildren().unshift(packagesTag);
+        }
+        var len = packagesTag.len();
+        if(len > 0) packagesTag.delSlice(0, len);
 
-/**
- * 删除应用目录下页面及资源，xface.js及插件源码除外
- */
-function deleteAppPages(appPath) {
-    var PULGIN_JS_FILES = [
-        'xface.js',
-        'cordova_plugins.js',
-        'plugins'
-    ];
-    var children = fs.readdirSync(appPath);
-    children.forEach(function(child) {
-        if(PULGIN_JS_FILES.indexOf(child) > -1) return; // next
-        shell.rm('-rf', path.join(appPath, child));
+        appAppIds.forEach(function(id) {
+            packagesTag.append(et.XML('<app_package id="' + id + '" name="' + id + '" />'))
+        });
+        fs.writeFileSync(configXml, doc.write({indent: 4}), 'utf-8');
+    })
+    .then(function() {
+        return require('./prepare')();
     });
 }

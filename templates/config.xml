@@ -3,6 +3,11 @@
         xmlns:cdv = "http://cordova.apache.org/ns/1.0"
         id        = "io.xface.hello"
         version   = "0.0.1">
+
+    <pre_install_packages>
+        <app_package id="helloxface" name="helloxface" />
+    </pre_install_packages>
+
     <name>Hello xFace</name>
 
     <description>

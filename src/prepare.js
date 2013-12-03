@@ -27,6 +27,7 @@ var cordova_util      = require('./util'),
     lazy_load         = require('./lazy_load'),
     config            = require('./config'),
     events            = require('./events'),
+    xml_helpers       = require('./xml-helpers'),
     n                 = require('ncallbacks'),
     Q                 = require('q'),
     prompt            = require('prompt'),
@@ -98,6 +99,16 @@ module.exports = function prepare(options) {
                     // 该问题如果以后得到解决，移除该逻辑
                     shell.cp('-f', parser.cordovajs_path(libDir), path.join(platform_www, 'xface.js'));
                 }
+
+                // 提前用<project_dir>/www/config.xml中pre_install_packages配置覆盖平台工程config.xml中对应配置项
+                // 后面的操作用依赖于该配置
+                var platformConfig = parser.config_xml(),
+                    platformConfigDoc = xml_helpers.parseElementtreeSync(platformConfig);
+                var newPackagesTag = et.XML(et.tostring(cfg.doc.find('./pre_install_packages'), {indent:4, xml_declaration:false}));
+                var root = platformConfigDoc.getroot();
+                root.remove(0, platformConfigDoc.find('./pre_install_packages'));
+                root.append(newPackagesTag);
+                fs.writeFileSync(platformConfig, platformConfigDoc.write({indent:4}), 'utf-8');
 
                 // Replace the existing web assets with the app master versions
                 parser.update_www();

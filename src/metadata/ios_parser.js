@@ -146,7 +146,8 @@ module.exports.prototype = {
 
     // Returns the platform-specific www directory.
     www_dir:function() {
-        return path.join(this.path, 'xface3', 'helloxface');
+        var defaultAppId = util.getDefaultAppId(this.path);
+        return path.join(this.path, 'xface3', defaultAppId);
     },
 
     staging_dir: function() {
