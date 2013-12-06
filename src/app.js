@@ -7,8 +7,7 @@ var fs = require('fs'),
     et = require('elementtree'),
     xfaceUtil = require('./util'),
     events = require('./events'),
-    xml_helpers = require('./xml-helpers'),
-    help = require('./help');
+    xml_helpers = require('./xml-helpers');
 
 var TAG_A_EXPRESSION = '<a\\s+.*?href\\s*=\\s*"(.*?)".*?(/>|>.*?</a>)',
     CORDOVA_INCL_JS = "cordova-incl.js";
@@ -34,25 +33,31 @@ var BASE_TEST_FRAMEWORK_FILES = [
  * @param {String} testTemplate 插件测试模板路径，该参数可选，如果未传该参数，则从网上下载
  */
 module.exports = function(command, targets, testTemplate) {
-    if (arguments.length === 0) {
-        return Q(help());
-    }
+    if(!String(command)) command = 'ls';
     return Q.try(function() {
         var xfaceProj = xfaceUtil.isxFace(process.cwd());
         if (!xfaceProj) {
             return Q.reject(new Error('Current working directory is not a xFace-based project.'));
         }
-        var target = (targets.length == 0 ? undefined : targets[0]);
-        if (command !== 'add') {
-            var desc = target ? ' ' + target : '';
-            return Q.reject(new Error('Do not support command `xface app ' + command + desc + '`! \nPlease try command `xface app add' + desc + '`! '));
-        }
-        if (target == 'test' || path.basename(target) == target) {
-            return installPluginTest(xfaceProj, target, testTemplate);
-        } else if (fs.existsSync(target)) {
-            return module.exports.installApp(xfaceProj, [target]);
+        if(command == 'add') {
+            if(targets.length === 1) {
+                var target = targets[0];
+                if (target == 'test' || (path.basename(target) == target && !fs.existsSync(target))) {
+                    return installPluginTest(xfaceProj, target, testTemplate);
+                }
+            }
+            return module.exports.installApp(xfaceProj, targets);
+        } else if(command == 'ls' || command == 'list') {
+            var platforms = xfaceUtil.listPlatforms(xfaceProj);
+            if(platforms.length == 0) {
+                return Q([]);
+            }
+            var platformProj = path.join(xfaceProj, 'platforms', platforms[0]);
+            var appIds = require('xplugin').common.getInstalledApps(platformProj, platforms[0]);
+            events.emit('results', 'Installed apps: ' + JSON.stringify(appIds));
+            return Q(appIds);
         } else {
-            return Q.reject(new Error('App path `' + target + '` not found! '));
+            return Q.reject(new Error('Do not support command `xface app ' + command + '`! Please try other commands.'));
         }
     });
 };
