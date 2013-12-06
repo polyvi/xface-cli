@@ -195,7 +195,12 @@ module.exports.prototype = {
         var projectRoot = util.isxFace(this.path);
         if (fs.existsSync(this.staging_dir())) {
             var staging = path.join(this.staging_dir(), '*');
-            shell.cp('-rf', staging, this.www_dir());
+            var appIds = require('xplugin').common.getInstalledApps(this.path, 'ios');
+            var xface3Dir = path.dirname(this.www_dir());
+            appIds.forEach(function(id) {
+                var appPath = path.join(xface3Dir, id);
+                shell.cp('-rf', staging, appPath);
+            });
         }
     },
 

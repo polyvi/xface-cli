@@ -171,7 +171,12 @@ module.exports.prototype = {
     update_staging:function() {
         if (fs.existsSync(this.staging_dir())) {
             var staging = path.join(this.staging_dir(), '*');
-            shell.cp('-rf', staging, this.www_dir());
+            var appIds = xplugin.common.getInstalledApps(this.path, 'android');
+            var xface3Dir = path.dirname(this.www_dir());
+            appIds.forEach(function(id) {
+                var appPath = path.join(xface3Dir, id);
+                shell.cp('-rf', staging, appPath);
+            });
         }
     },
 

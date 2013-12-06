@@ -277,11 +277,17 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir) {
                 if (!plugins) return Q();
                 var promises = plugins.map(function(plugin) {
                     events.emit('verbose', 'Installing plugin "' + plugin + '" following successful platform add of ' + target);
-                    return require('xplugin').install(target, output, path.basename(plugin), plugins_dir, { www_dir: parser.staging_dir() });
+                    return require('xplugin').raw.install(target, output, path.basename(plugin), plugins_dir, { www_dir: parser.staging_dir() });
                 });
-                return promises.reduce(function(soFar, f) {
-                    return soFar.then(f);
+                return promises.reduce(function(soFar, p) {
+                    return soFar.then(function() {
+                        return p;
+                    });
                 }, Q());
+            }).then(function() {
+                // after plugin installed, we need copy assets of plugins to apps
+                var parser = new platforms[target].parser(output);
+                parser.update_staging();
             });
         });
     }

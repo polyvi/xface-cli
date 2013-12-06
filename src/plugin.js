@@ -24,6 +24,7 @@ module.exports = function plugin(command, targets) {
         hooker        = require('./hooker'),
         Q             = require('q'),
         events        = require('./events'),
+        platforms     = require('../platforms'),
         config        = require('./config');
 
     var projectRoot = xface_util.cdProjectRoot(),
@@ -128,6 +129,12 @@ module.exports = function plugin(command, targets) {
                         }, Q());
                     });
                 }, Q()); // end Q.all
+            }).then(function() {
+                // after plugin installed, we need copy assets of plugins to apps
+                platformList.forEach(function(p) {
+                    var parser = (new platforms[p].parser(path.join(projectRoot, 'platforms', p)));
+                    parser.update_staging();
+                });
             }).then(function() {
                 return hooks.fire('after_plugin_add', opts);
             });
