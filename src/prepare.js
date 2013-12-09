@@ -106,7 +106,9 @@ module.exports = function prepare(options) {
                     platformConfigDoc = xml_helpers.parseElementtreeSync(platformConfig);
                 var newPackagesTag = et.XML(et.tostring(cfg.doc.find('./pre_install_packages'), {indent:4, xml_declaration:false}));
                 var root = platformConfigDoc.getroot();
-                root.remove(0, platformConfigDoc.find('./pre_install_packages'));
+                if(platformConfigDoc.find('./pre_install_packages')) {
+                    root.remove(0, platformConfigDoc.find('./pre_install_packages'));
+                }
                 root.append(newPackagesTag);
                 fs.writeFileSync(platformConfig, platformConfigDoc.write({indent:4}), 'utf-8');
 
