@@ -27,6 +27,8 @@ var xface = require('../xface'),
     hooker = require('../src/hooker'),
     fixtures = path.join(__dirname, 'fixtures'),
     Q = require('q'),
+    xml_helpers = require('../src/xml-helpers'),
+    et = require('elementtree'),
     hooks = path.join(fixtures, 'hooks');
 
 var project_dir = '/some/path';
@@ -52,8 +54,11 @@ describe('prepare command', function() {
         cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
+        spyOn(xml_helpers, 'parseElementtreeSync').andReturn(new et.ElementTree(et.XML('<widget></widget>')));
+        spyOn(fs, 'writeFileSync').andReturn(true);
         mock_config_parser = {
-            merge_with: jasmine.createSpy("config_parser merge_with")
+            merge_with: jasmine.createSpy("config_parser merge_with"),
+            doc: et.XML('<widget><pre_install_packages></pre_install_packages></widget>')
         };
         config_parser = spyOn(util, 'config_parser').andReturn(mock_config_parser);
         supported_platforms.forEach(function(p) {

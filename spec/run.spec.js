@@ -81,13 +81,11 @@ describe('run command', function() {
             }).fin(done);
         });
         it('should not run outside of a xFace-based project', function(done) {
-            var msg = 'Dummy message about not being in a cordova dir.';
-            cd_project_root.andThrow(new Error(msg));
             is_cordova.andReturn(false);
-            cordova.raw.run().then(function() {
+            xface.raw.run().then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
-                expect(err).toEqual(new Error('Current working directory is not a Cordova-based project.'));
+                expect(err).toEqual(new Error('Current working directory is not a xFace-based project.'));
             }).fin(done);
         });
     });

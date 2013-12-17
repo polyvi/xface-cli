@@ -58,7 +58,8 @@ describe('plugin command', function() {
         supported_platforms.forEach(function(p) {
             parsers[p] = jasmine.createSpy(p + ' update_project').andReturn(Q());
             spyOn(platforms[p], 'parser').andReturn({
-                staging_dir:function(){return ''}
+                staging_dir:function(){return ''},
+                update_staging:function() {}
             });
         });
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
@@ -76,6 +77,7 @@ describe('plugin command', function() {
         plugman_search = spyOn(plugman.raw, 'search').andReturn(Q());
         uninstallPlatform = spyOn(plugman.raw.uninstall, 'uninstallPlatform').andReturn(Q());
         uninstallPlugin = spyOn(plugman.raw.uninstall, 'uninstallPlugin').andReturn(Q());
+        spyOn(config, 'internalDev').andReturn(false);
     });
 
     describe('failure', function() {

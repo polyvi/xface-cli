@@ -22,7 +22,11 @@ var et = require('elementtree'),
 
 function config_parser(path) {
     this.path = path;
-    this.doc = xml.parseElementtreeSync(path);
+    try {
+        this.doc = xml.parseElementtreeSync(path);
+    } catch (e) {
+        throw new Error("Parsing "+path+" failed:\n"+e.message);
+    }
     this.access = new access(this);
     this.preference = new preference(this);
 }
@@ -60,6 +64,22 @@ config_parser.prototype = {
                 this.update();
             }
             return content.attrib.src;
+        }
+    },
+    author: function (name) {
+        if (name) {
+            var author = this.doc.find('author');
+            if (!author) {
+                author = new et.Element('author');
+                this.doc.getroot().append(author);
+            }
+
+            author.text = name;
+            this.update();
+        }
+        else {
+            var author = this.doc.find('author');
+            return author ? author.text.trim() : '';
         }
     },
     update:function() {

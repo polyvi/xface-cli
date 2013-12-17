@@ -28,7 +28,8 @@ var platforms = require('../../platforms'),
     child_process = require('child_process'),
     config = require('../../src/config'),
     config_parser = require('../../src/config_parser'),
-    xface = require('../../xface');
+    xface = require('../../xface'),
+    common = require('xplugin').common;
 
 describe('ios project parser', function () {
     var proj = path.join('some', 'path');
@@ -41,6 +42,9 @@ describe('ios project parser', function () {
         custom = spyOn(config, 'has_custom_path').andReturn(false);
         readdir = spyOn(fs, 'readdirSync').andReturn(['test.xcodeproj']);
         cfg_parser = spyOn(util, 'config_parser');
+        spyOn(config, 'internalDev').andReturn(false);
+        spyOn(util, 'getDefaultAppId').andReturn('helloxface');
+        spyOn(common, 'getInstalledApps').andReturn(['helloxface']);
     });
 
     function wrapper(p, done, post) {
@@ -69,35 +73,6 @@ describe('ios project parser', function () {
                 expect(p.pbxproj).toEqual(path.join(proj, 'test.xcodeproj', 'project.pbxproj'));
                 expect(p.xcodeproj).toEqual(path.join(proj, 'test.xcodeproj'));
             }).not.toThrow();
-        });
-    });
-    describe('check_requirements', function() {
-        it('should fire a callback if there is an error during shelling out', function(done) {
-            exec.andCallFake(function(cmd, opts, cb) {
-                if (!cb) cb = opts;
-                cb(50, 'there was an errorz!', '');
-            });
-            errorWrapper(platforms.ios.parser.check_requirements(proj), done, function(err) {
-                expect(err).toContain('there was an errorz!');
-            });
-        });
-        it('should fire a callback if the xcodebuild version is less than 4.5.x', function(done) {
-            exec.andCallFake(function(cmd, opts, cb) {
-                if (!cb) cb = opts;
-                cb(0, 'version 4.4.9', '');
-            });
-            errorWrapper(platforms.ios.parser.check_requirements(proj), done, function(err) {
-                expect(err).toEqual(new Error('Xcode version installed is too old. Minimum: >=4.5.x, yours: 4.4.9'));
-            });
-        });
-        it('should not return an error if the xcodebuild version 2 digits and not proper semver (eg: 5.0), but still satisfies the MIN_XCODE_VERSION', function(done) {
-            exec.andCallFake(function(cmd, opts, cb) {
-                if (!cb) cb = opts;
-                cb(0, 'version 5.0', '');
-            });
-            wrapper(platforms.ios.parser.check_requirements(proj), done, function() {
-                expect(1).toBe(1);
-            });
         });
     });
 

@@ -121,17 +121,13 @@ module.exports = function platform(command, targets) {
                 .then(function() {
                     return internalDev ? Q(cordova_util.getDefaultPlatformLibPath(projectRoot, plat)) : lazy_load.based_on_config(projectRoot, plat);
                 }).then(function(libDir) {
-                    // Check for platforms are in subdirectories into repositories
-                    if (["wp7", "windows8", "windows81", "blackberry10"].indexOf(plat) !== -1)
-                        libDir = path.join(libDir, target);
-
                     var script = path.join(libDir, 'bin', 'update');
                     // now only android platform support '--shared' for update command
                     var shared = (plat == 'android' && internalDev) ? '--shared' : '';
                     var d = Q.defer();
                     child_process.exec(script + ' "' + path.join(projectRoot, 'platforms', plat) + '"' + ' ' + shared, function(err, stdout, stderr) {
                         if (err) {
-                            d.reject(new Error('Error running update script: ' + err + stderr));
+                            d.reject(new Error('Update script failed: ' + err + stderr));
                         } else {
                             events.emit('log', plat + ' updated to ' + platforms[plat].version);
                             d.resolve();
@@ -170,6 +166,8 @@ module.exports = function platform(command, targets) {
                     available.push('wp8');
                     available.push('windows8');
                 }
+                if (os.platform() === 'linux')
+                    available.push('ubuntu');
 
                 available = available.filter(function(p) {
                     return platforms_on_fs.indexOf(p) < 0; // Only those not already installed.
@@ -233,10 +231,6 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir) {
         events.emit('verbose', 'Checking if platform "' + target + '" passes minimum requirements...');
         return module.exports.supports(projectRoot, target)
         .then(function() {
-            // Check for platforms are in subdirectories into repositories
-            if (["wp7", "windows8", "windows81", "blackberry10"].indexOf(target) !== -1)
-                libDir = path.join(libDir, target);
-
             // Create a platform app using the ./bin/create scripts that exist in each repo.
             var bin = path.join(libDir, 'bin', 'create');
             var shared = '';
@@ -255,6 +249,7 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir) {
             if (template_dir) {
                 command += ' "' + template_dir + '"';
             }
+            command = command.trim();
             events.emit('log', 'Creating ' + target + ' project...');
             events.emit('verbose', 'Running bin/create for platform "' + target + '" with command: "' + command + '" (output to follow)');
 

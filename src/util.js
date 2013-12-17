@@ -59,7 +59,7 @@ exports = module.exports = {
     cdProjectRoot: function() {
         var projectRoot = this.isxFace(process.cwd());
         if (!projectRoot) {
-            throw new Error('Current working directory is not a Cordova-based project.');
+            throw new Error('Current working directory is not a xFace-based project.');
         }
         process.chdir(projectRoot);
         return projectRoot;

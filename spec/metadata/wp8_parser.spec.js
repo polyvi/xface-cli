@@ -26,8 +26,8 @@ var platforms = require('../../platforms'),
     Q = require('q'),
     child_process = require('child_process'),
     config = require('../../src/config'),
-    config_parser = require('../../src/config_parser'),
-    xface = require('../../xface');
+    common = require('xplugin').common,
+    config_parser = require('../../src/config_parser');
 
 describe('wp8 project parser', function() {
     var proj = '/some/path';
@@ -40,6 +40,9 @@ describe('wp8 project parser', function() {
         custom = spyOn(config, 'has_custom_path').andReturn(false);
         readdir = spyOn(fs, 'readdirSync').andReturn(['test.csproj']);
         cfg_parser = spyOn(util, 'config_parser');
+        spyOn(config, 'internalDev').andReturn(false);
+        spyOn(util, 'getDefaultAppId').andReturn('helloxface');
+        spyOn(common, 'getInstalledApps').andReturn(['helloxface']);
     });
 
     function wrapper(p, done, post) {
@@ -181,6 +184,11 @@ describe('wp8 project parser', function() {
                 expect(p.staging_dir()).toEqual(path.join(wp8_proj, '.staging', 'www'));
             });
         });
+        describe('config_xml method', function() {
+            it('should return the location of the config.xml', function() {
+                expect(p.config_xml()).toEqual(path.join(wp8_proj, 'config.xml'));
+            });
+        });
         describe('update_www method', function() {
             it('should rm project-level www and cp in platform agnostic www', function() {
                 p.update_www();
@@ -200,13 +208,12 @@ describe('wp8 project parser', function() {
             });
         });
         describe('update_project method', function() {
-            var config, www, overrides, staging, svn;
+            var config, www, overrides, staging, svn, csproj;
             beforeEach(function() {
                 config = spyOn(p, 'update_from_config');
                 www = spyOn(p, 'update_www');
                 staging = spyOn(p, 'update_staging');
                 svn = spyOn(util, 'deleteSvnFolders');
-                csproj = spyOn(p, 'update_csproj');
                 exists.andReturn(false);
             });
             it('should call update_from_config', function(done) {

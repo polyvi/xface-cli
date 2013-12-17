@@ -12,7 +12,7 @@
     "xface": "./bin/xface"
   },
   "scripts": {
-    "test": "jasmine-node --color spec"
+    "test": "jasmine-node --color spec e2e"
   },
   "repository": {
     "type": "git",
@@ -30,7 +30,7 @@
   "dependencies": {
     "colors": ">=0.6.0",
     "elementtree": "0.1.5",
-    "xplugin": "0.15.x",
+    "xplugin": "0.17.x",
     "plist": "0.4.x",
     "xcode": "0.6.2",
     "express": "3.0.0",
@@ -50,7 +50,8 @@
     "jshint": "~1.1.0",
     "mime": "~1.2.11",
     "jsdom-nogyp": "~0.8.3",
-    "archiver": "~0.4.10"
+    "archiver": "~0.4.10",
+    "lodash": "~2.4.0"
   },
   "devDependencies": {
     "jasmine-node": "1.8.x"

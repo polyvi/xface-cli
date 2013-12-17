@@ -32,28 +32,38 @@ Check out the [Getting Started guides](http://polyvi.github.io/openxface/) for m
 - iOS
 - Windows Phone 8
 
+
 # Requirements
 
-* [nodejs](http://nodejs.org/)
-* SDKs for every platform you wish to support
-  - BlackBerry 10: [BlackBerry 10 WebWorks SDK](http://developer.blackberry.com/html5/download/). Make sure you have the `dependencies/tools/bin` folder inside the SDK directory added to your path!
-  - iOS: [iOS SDK](http://developer.apple.com) with the latest Xcode and Xcode Command Line Tools
-  - [Android SDK](http://developer.android.com) - **NOTE** This tool
+* [Node.js](http://nodejs.org/)
+* SDKs for each platform you wish to support:
+  - **Android**: [Android SDK](http://developer.android.com) - **NOTE** This tool
     will not work unless you have the absolute latest updates for all
     Android SDK components. Also you will need the SDK's `tools` and `platform-tools` directories on your __system path__ otherwise Android support will fail.
+  - [Amazon Fire OS SDK](https://developer.amazon.com/sdk/fire/IntegratingAWV.html#installawv) - **NOTE** This tool will not work unless you have Android SDK installed and paths are updated as mentioned above. In addition you need to install AmazonWebView SDK and copy awv_interface.jar to corodva-amazon-fireos/framework/libs folder. If libs folder does not exist then create one.
   - [Windows Phone SDK](http://dev.windowsphone.com/en-us/downloadsdk) - **NOTE** This tool will not work unless you have `msbuild` on your __system path__ otherwise Windows Phone support will fail (`msbuild.exe` is generally located in `C:\Windows\Microsoft.NET\Framework\v4.0.30319`).
+  - **BlackBerry 10**: [BlackBerry 10 WebWorks SDK](http://developer.blackberry.com/html5/download/). Make sure you have the `dependencies/tools/bin` folder inside the SDK directory added to your path!
+  - **iOS**: [iOS SDK](http://developer.apple.com) with the latest `Xcode` and `Xcode Command Line Tools`
+  - **Windows Phone**: [Windows Phone SDK](http://dev.windowsphone.com/en-us/downloadsdk) - **NOTE** This tool will not work unless you have `msbuild` on your __system path__ otherwise Windows Phone support will fail (`msbuild.exe` is generally located in `C:\Windows\Microsoft.NET\Framework\v4.0.30319`).
 
-xface-cli has been tested on Mas OS X, Linux, Windows 7 and Windows 8.
+xFace-cli has been tested on Mas OS X, Linux, Windows 7 and Windows 8.
 
-Note also, that some platforms have OS restrictions.  For example, you cannot build for Windows 8 or Windows Phone 7 & 8 on Mac OS, and you cannot build for iOS in Windows.
+Please note that some platforms have OS restrictions.  For example, you cannot build for Windows 8 or Windows Phone 7 & 8 on Mac OS X, nor can you build for iOS on Windows.
 
 # Install
 
+Ubuntu packages are available in a PPA for Ubuntu 13.10 (Saucy) (the current release) as well as 14.04 (Trusty) (under development).
+
     npm install -g xface
+
+To build an application for the Ubuntu platform, the following extra packages are required:
+
+    sudo apt-get install cmake debhelper libx11-dev libicu-dev pkg-config qtbase5-dev qtchooser qtdeclarative5-dev qtfeedback5-dev qtlocation5-dev qtmultimedia5-dev qtpim5-dev qtsensors5-dev qtsystems5-dev
+
 
 ## Installing from master
 
-You'll need to install both CLI and Plugman from git. Running the npm version of one and master version of the other is likely to end in suffering.
+You'll need to install both [CLI](https://git-wip-us.apache.org/repos/asf/cordova-cli.git) and [Plugman](https://git-wip-us.apache.org/repos/asf/cordova-plugman.git) from `git`. Running the *npm version* of one and *(git) master version* of the other is likely to end with you suffering.
 
 To avoid using sudo, see [Get away from sudo: npm without root](http://justjs.com/posts/npm-link-developing-your-own-npm-modules-without-tears).
 
@@ -72,28 +82,33 @@ Run the following commands:
 
 Now the `cordova` and `plugman` in your path are the local git versions. Don't forget to keep them up to date!
 
+
+
 # Getting Started
 
-xface-cli has a single global `create` command that creates new xface projects into a specified directory. Once you create a project, `cd` into it and you can execute a variety of project-level commands. Completely inspired by git's interface.
+xface-cli has a single global `create` command that creates new cordova projects into a specified directory. Once you create a project, `cd` into it and you can execute a variety of project-level commands. Completely inspired by git's interface.
 
-## Global Command
+## Global Commands
 
+- `help` display a help page with all available commands
 - `create <directory> [<id> [<name>]]` create a new xface project with optional name and id (package name, reverse-domain style)
 
 <a name="project_commands" />
 ## Project Commands
 
-- `platform [ls | list]` list all platforms the project will build to
+- `platform [ls | list]` list all platforms for which the project will build
 - `platform add <platform> [<platform> ...]` add one (or more) platforms as a build target for the project
-- `platform [rm | remove] <platform> [<platform> ...]` removes one (or more) platforms as a build target for the project
-- `plugin [ls | list]` list all plugins added to the project
+- `platform [rm | remove] <platform> [<platform> ...]` removes one (or more) platform build targets from the project
+- `platform [up | update] <platform> ` - updates the Cordova version used for the given platform
+- `plugin [ls | list]` list all plugins included in the project
 - `plugin add <path-to-plugin> [<path-to-plugin> ...]` add one (or more) plugins to the project
-- `plugin [rm | remove] <plugin-name> [<plugin-name> ...]` remove one (or more) added plugins
-- `prepare [platform...]` copies files into the specified platforms, or all platforms. it is then ready for building by Eclipse/Xcode/etc.
-- `compile [platform...]` compiles the app into a binary for each added platform. With no parameters, builds for all platforms, otherwise builds for the specified platforms.
+- `plugin [rm | remove] <plugin-name> [<plugin-name> ...]` remove one (or more) plugins from the project.
+- `plugin search [<keyword1> <keyword2> ...]` search the plugin registry for plugins matching the list of keywords
+- `prepare [platform...]` copies files into the specified platforms, or all platforms. It is then ready for building by `Eclipse`, `Xcode`, etc.
+- `compile [platform...]` compiles the app into a binary for each targetted platform. With no parameters, builds for all platforms, otherwise builds for the specified platforms.
 - `build [<platform> [<platform> [...]]]` an alias for `xface prepare` followed by `xface compile`
 - `emulate [<platform> [<platform> [...]]]` launch emulators and deploy app to them. With no parameters emulates for all platforms added to the project, otherwise emulates for the specified platforms
-- `serve <platform> [port]` launch a local web server for that platform's www directory on the given port (default 8000).
+- `serve [port]` launch a local web server allowing you to access each  platform's www directory on the given port (default 8000).
 
 ### Optional Flags
 
@@ -101,7 +116,7 @@ xface-cli has a single global `create` command that creates new xface projects i
 - `-v` or `--version` will print out the version of your xface-cli install.
 
 # Project Directory Structure
-A xFace application built with xface-cli will have the following directory structure:
+A Cordova application built with cordova-cli will have the following directory structure:
 
     myApp/
     |--.xface/
@@ -120,7 +135,7 @@ A xFace application built with xface-cli will have the following directory struc
 ## .xface/
 This directory identifies a tree as a xface project. Simple configuration information is stored in here (such as BlackBerry environment variables).
 
-Commands other than `create` operate against the project directory itself, rather than the current directory - a search up the current directory's parents is made to find the project directory. Thus, any command (other than `create`) can be used from any subdirectory whose parent is a xface project directory (same as git).
+Commands other than `create` operate against the project directory itself, rather than the current directory - a search up the current directory's parents is made to find the project directory. Thus, any command (other than `create`) can be used from any subdirectory whose parent is a cordova project directory (same as git).
 
 ## merges/
 Platform-specific web assets (HTML, CSS and JavaScript files) are contained within appropriate subfolders in this directory. These are deployed during a `prepare` to the appropriate native directory.  Files placed under `merges/` will override matching files in the `www/` folder for the relevant platform. A quick example, assuming a project structure of:
@@ -216,7 +231,7 @@ Please check [xFace issues with the CLI Component]. If you find issues with this
 
 - Your operating system and version
 - The application name, directory location, and identifier used with `create`
-- Which mobile SDKs you have installed, and which version. Related to this: which Xcode version if you are submitting issues related to iOS
+- Which mobile SDKs you have installed, and their versions. Related to this: which `Xcode` version if you are submitting issues related to iOS
 - Any error stack traces you received
 
 ## Contributors
@@ -230,7 +245,7 @@ Thanks to everyone for contributing! For a list of people involved, please see t
 
 ### Proxy Settings
 
-cordova-cli will use `npm`'s proxy settings. If you downloaded cordova-cli via `npm` and are behind a proxy, chances are cordova-cli should work for you as it will use those settings in the first place. Make sure that the `https-proxy` and `proxy` npm config variables are set properly. See [npm's configuration documentation](https://npmjs.org/doc/config.html) for more information.
+`xface-cli` will use `npm`'s proxy settings. If you downloaded xface-cli via `npm` and are behind a proxy, chances are xface-cli should work for you as it will use those settings in the first place. Make sure that the `https-proxy` and `proxy` npm config variables are set properly. See [npm's configuration documentation](https://npmjs.org/doc/config.html) for more information.
 
 ## Windows
 
@@ -252,15 +267,16 @@ When trying to add a platform on a Windows machine if you run into the following
     at ChildProcess.EventEmitter.emit (events.js:95:17)
     at Process.ChildProcess._handle.onexit (child_process.js:787:12)
 
-run the command "android list target".  If you see:
+run the command `android list target`.  If you see:
+
     'xcopy' is not recognized as an internal or external command,
     operable program or batch file.
 
-at the beginning of the command output, it means you will need to update your Windows Path variable to include xcopy. This location is typically under C:\Windows\System32.
+at the beginning of the command output, it means you will need to fix your Windows Path variable to include xcopy. This location is typically under C:\Windows\System32.
 
 ## Windows 8
 
-Windows 8 support does not include the ability to launch/run/emulate, so you will need to open visual studio to see your app live.  You are still able to use the following commands with windows8
+Windows 8 support does not include the ability to launch/run/emulate, so you will need to open **Visual Studio** to see your app live.  You are still able to use the following commands with windows8:
 
 - `platform add windows8`
 - `platform remove windows8`
@@ -268,6 +284,22 @@ Windows 8 support does not include the ability to launch/run/emulate, so you wil
 - `compile windows8`
 - `build windows8`
 
-To run your app, you will need to open the .sln in the platforms/windows8 folder using Visual Studio 2012.
-Note also that Visual Studio will inform you to reload the project if you run any of the above commands while the project is loaded.
+To run your app, you will need to open the `.sln` in the `platforms/windows8` folder using **Visual Studio 2012**.
 
+**Visual Studio** will tell you to reload the project if you run any of the above commands while the project is loaded.
+
+## Amazon Fire OS
+
+Amazon Fire OS does not include the ability to emulate. You are still able to use the following commands with Amazon Fire OS
+
+- `platform add amazon-fireos`
+- `platform remove amazon-fireos`
+- `prepare amazon-fireos`
+- `compile amazon-fireos`
+- `build amazon-fireos`
+
+## Ubuntu
+
+The initial release of cordova-ubuntu does not support building applications for armhf devices automatically. It is possible to produce applications and click packages in a few steps though.
+
+This bug report documents the issue and solutions for it: https://bugs.launchpad.net/ubuntu/+source/cordova-ubuntu/+bug/1260500 A future release will let developers cross-compile armhf click packages directly from an x86 desktop.

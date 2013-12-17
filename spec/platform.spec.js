@@ -57,10 +57,11 @@ describe('platform command', function() {
     beforeEach(function() {
         supported_platforms.forEach(function(p) {
             parsers[p] = spyOn(platforms[p], 'parser').andReturn({
-                staging_dir:function(){}
+                staging_dir:function(){},
+                update_staging:function(){}
             });
         });
-        is_xface = spyOn(util, 'isCordova').andReturn(project_dir);
+        is_xface = spyOn(util, 'isxFace').andReturn(project_dir);
         cd_project_root = spyOn(util, 'cdProjectRoot').andReturn(project_dir);
         fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
         name = jasmine.createSpy('config name').andReturn('magical mystery tour');
@@ -73,6 +74,7 @@ describe('platform command', function() {
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         util.libDirectory = path.join('HOMEDIR', '.xface', 'lib');
         config_read = spyOn(config, 'read').andReturn({});
+        spyOn(config, 'internalDev').andReturn(false);
 
         fakeLazyLoad = function(id, platform, version) {
             return Q(path.join('lib', platform, id, version));
@@ -94,7 +96,7 @@ describe('platform command', function() {
             cb(null, '', '');
         });
         prep_spy = spyOn(xface.raw, 'prepare').andReturn(Q());
-        plugman_install = spyOn(plugman, 'install').andReturn(Q());
+        plugman_install = spyOn(plugman.raw, 'install').andReturn(Q());
     });
 
     describe('failure', function() {
@@ -147,7 +149,7 @@ describe('platform command', function() {
 
             it('should list out added platforms in a project', function(done) {
                 xface.on('results', function(res) {
-                    expect(res).toMatch(/^Installed platforms: ios, android, wp7, wp8, blackberry10, firefoxos, windows8\s*Available platforms:\s*$/);
+                    expect(res).toMatch(/^Installed platforms: ios, android, ubuntu, amazon-fireos, wp7, wp8, blackberry10, firefoxos, windows8\s*Available platforms:\s*$/);
                     done();
                 });
                 xface.raw.platform('list');
@@ -164,14 +166,14 @@ describe('platform command', function() {
                     expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp7.cordova.\d.\d.\d[\d\w\-]*.bin.create/gi);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
                 }).then(function() {
-                    return cordova.raw.platform('add', 'wp8');
+                    return xface.raw.platform('add', 'wp8');
                 }).then(function() {
                     expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp8.cordova.\d.\d.\d[\d\w\-]*.bin.create/gi);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
                 }).then(function(){
                     return xface.raw.platform('add', 'windows8');
                 }).then(function(){
-                    expect(exec.mostRecentCall.args[0]).toMatch(/lib.windows8.cordova.\d.\d.\d[\d\w\-]*.windows8.*.bin.create/gi);
+                    expect(exec.mostRecentCall.args[0]).toMatch(/lib.windows8.cordova.\d.\d.\d[\d\w\-]*.*.bin.create/gi);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
                     done();
                 });
@@ -189,7 +191,7 @@ describe('platform command', function() {
                 });
                 xface.raw.platform('add', 'wp8').then(function() {
                     expect(load_custom).toHaveBeenCalledWith('haha', 'phonegap', 'wp8', 'bleeding edge');
-                    expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp.phonegap.bleeding edge.wp8.bin.create/gi);
+                    expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp8.phonegap.bleeding edge.bin.create/gi);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
                     done();
                 });

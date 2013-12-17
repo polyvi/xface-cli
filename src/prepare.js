@@ -68,10 +68,10 @@ module.exports = function prepare(options) {
         // Iterate over each added platform
         return Q.all(options.platforms.map(function(platform) {
             var q;
-    	    if(internalDev) q = Q(cordova_util.getDefaultPlatformLibPath(projectRoot, platform));
-    	    else q = lazy_load.based_on_config(projectRoot, platform);
+            if(internalDev) q = Q(cordova_util.getDefaultPlatformLibPath(projectRoot, platform));
+            else q = lazy_load.based_on_config(projectRoot, platform);
 
-    	    var platformPath = path.join(projectRoot, 'platforms', platform);
+            var platformPath = path.join(projectRoot, 'platforms', platform);
             return q.then(function(libDir) {
                 var parser = new platforms[platform].parser(platformPath),
                     defaults_xml_path = path.join(platformPath, "cordova", "defaults.xml");
@@ -141,6 +141,8 @@ module.exports = function prepare(options) {
                 platform_cfg.merge_with(cfg, platform, true);
 
                 return parser.update_project(cfg);
+            }).fail(function(e) {
+                console.error(e);
             });
         })).then(function() {
             return hooks.fire('after_prepare', options);
