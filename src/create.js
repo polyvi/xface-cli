@@ -63,20 +63,20 @@ module.exports = function create (dir, id, name, cfg) {
 
     // dir must be either empty or not exist at all.
 
-    // dir must be either empty except for .cordova config file or not exist at all..
+    // dir must be either empty except for .xface config file or not exist at all..
     var sanedircontents = function (d) {
         var contents = fs.readdirSync(d);
         if (contents.length == 0) {
             return true;
         } else if (contents.length == 1) {
-            if (contents[0] == '.cordova') {
+            if (contents[0] == '.xface') {
                 return true;
             }
         }
         return false;
     }
     
-    if (fs.existsSync(dir) && !sanedircontents) {
+    if (fs.existsSync(dir) && !sanedircontents(dir)) {
         return Q.reject(new Error('Path already exists and is not empty: ' + dir));
     }
 
