@@ -194,7 +194,7 @@ module.exports.prototype = {
         var projectRoot = util.isxFace(this.wp8_proj_dir);
         if (fs.existsSync(this.staging_dir())) {
             var staging = path.join(this.staging_dir(), '*');
-            var appIds = require('xplugin').common.getInstalledApps(this.path, 'wp8');
+            var appIds = require('xplugin').common.getInstalledApps(this.wp8_proj_dir, 'wp8');
             var xface3Dir = path.dirname(this.www_dir());
             appIds.forEach(function(id) {
                 var appPath = path.join(xface3Dir, id);
