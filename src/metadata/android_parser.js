@@ -121,7 +121,12 @@ module.exports.prototype = {
         // Copy over all app www assets
         shell.cp('-rf', path.join(app_www, '*'), xface3_dir);
         // Copy over stock platform www assets (xface.js)
-        shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
+        var appIds = xplugin.common.getInstalledApps(this.path, 'android');
+        var xface3Dir = path.dirname(this.www_dir());
+        appIds.forEach(function(id) {
+            var appPath = path.join(xface3Dir, id);
+            shell.cp('-rf', path.join(platform_www, '*'), appPath);
+        });
     },
 
     // update the overrides folder into the www folder
@@ -130,7 +135,12 @@ module.exports.prototype = {
         var merges_path = path.join(util.appDir(projectRoot), 'merges', 'android');
         if (fs.existsSync(merges_path)) {
             var overrides = path.join(merges_path, '*');
-            shell.cp('-rf', overrides, this.www_dir());
+            var appIds = xplugin.common.getInstalledApps(this.path, 'android');
+            var xface3Dir = path.dirname(this.www_dir());
+            appIds.forEach(function(id) {
+                var appPath = path.join(xface3Dir, id);
+                shell.cp('-rf', overrides, appPath);
+            });
         }
     },
 

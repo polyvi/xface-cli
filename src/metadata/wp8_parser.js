@@ -183,7 +183,12 @@ module.exports.prototype = {
         this.copy_merges('wp8');
 
         // Copy over stock platform www assets (xface.js)
-        shell.cp('-rf', path.join(platform_www, '*'), this.www_dir());
+        var appIds = require('xplugin').common.getInstalledApps(this.wp8_proj_dir, 'wp8');
+        var xface3Dir = path.dirname(this.www_dir());
+        appIds.forEach(function(id) {
+            var appPath = path.join(xface3Dir, id);
+            shell.cp('-rf', path.join(platform_www, '*'), appPath);
+        });
     },
 
     staging_dir: function() {
