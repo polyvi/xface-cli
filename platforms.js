@@ -56,7 +56,7 @@ module.exports = {
     },
     'www':{
         url    : 'http://git.polyvi.com/gitweb/?p=xface-default-app.git',
-        version: '0.0.2'
+        version: '0.0.3'
     },
     'firefoxos':{
         parser: './src/metadata/firefoxos_parser',
