@@ -26,9 +26,9 @@ var BASE_TEST_FRAMEWORK_FILES = [
 ];
 
 /**
- * 设置平台工程下的应用
- * @param {String} command 支持的命令:`add`
- * @param {Array} targets 如果值为`test`，则将已安装插件测试页面合并，然后将合并后页面安装到平台工程下，
+ * add命令：安装应用到平台工程下；list命令：列出平台工程下安装的所有应用
+ * @param {String} command 支持的命令:add, list
+ * @param {Array} add命令: targets如果值为`test`，则将已安装插件测试页面合并，然后将合并后页面安装到平台工程下，
  *      如果为路径，则安装该路径下对应的应用页面
  * @param {String} testTemplate 插件测试模板路径，该参数可选，如果未传该参数，则从网上下载
  */
@@ -42,8 +42,12 @@ module.exports = function(command, targets, testTemplate) {
         if(command == 'add') {
             if(targets.length === 1) {
                 var target = targets[0];
+                // add plugin testcases
                 if (target == 'test' || (path.basename(target) == target && !fs.existsSync(target))) {
-                    return installPluginTest(xfaceProj, target, testTemplate);
+                    return module.exports.generatePluginTest(xfaceProj, target, testTemplate)
+                    .then(function(testPath) {
+                        return module.exports.installApp(xfaceProj, [testPath]);
+                    });
                 }
             }
             return module.exports.installApp(xfaceProj, targets);
@@ -98,7 +102,7 @@ function matchPart(plugins, part) {
     }
 }
 
-function installPluginTest(xfaceProj, target, testTemplate) {
+module.exports.generatePluginTest = function(xfaceProj, target, testTemplate) {
     var plugins = xfaceUtil.findPlugins(path.join(xfaceProj, 'plugins'));
     if(target == 'test') {
         if (plugins.length === 0) {
@@ -110,12 +114,9 @@ function installPluginTest(xfaceProj, target, testTemplate) {
         if(!plugin) return Q.reject(new Error('Can not find plugin id that matches `' + target + '`, try command `xface plugin ls` to show installed plugins! '));
         plugins = [plugin];
     }
-    var q = testTemplate ? Q(testTemplate) : fetchTestTemplate();
+    var q = (testTemplate && fs.existsSync(testTemplate)) ? Q(testTemplate) : fetchTestTemplate();
     return q.then(function(template) {
         return mergePluginTests(xfaceProj, plugins, template);
-    })
-    .then(function(testPath) {
-        return module.exports.installApp(xfaceProj, [testPath]);
     });
 }
 

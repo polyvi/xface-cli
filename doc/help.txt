@@ -38,7 +38,8 @@ Project-Level Commands
     app add {test|PLUGIN-ID|<PATH>...} ........ add app to platform projects, if `test`, install all test cases of
                                                 installed plugins, if PLUGIN-ID, install test case of that installed plugin,
                                                 if <PATH>..., install all apps directly. OR
-            [{list|ls}] ....................... list all currently installed apps
+        [{list|ls}] ........................... list all currently installed apps
+
 
 Command-line Flags/Options
 
