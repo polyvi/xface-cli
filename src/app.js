@@ -7,6 +7,7 @@ var fs = require('fs'),
     et = require('elementtree'),
     xfaceUtil = require('./util'),
     events = require('./events'),
+    lazy_load = require('./lazy_load'),
     xml_helpers = require('./xml-helpers');
 
 var TAG_A_EXPRESSION = '<a\\s+.*?href\\s*=\\s*"(.*?)".*?(/>|>.*?</a>)',
@@ -66,26 +67,6 @@ module.exports = function(command, targets, testTemplate) {
     });
 };
 
-function fetchTestTemplate() {
-    var templateCachePath = path.join(xfaceUtil.globalConfig, 'xface-test-template');
-    if(fs.existsSync(templateCachePath)) {
-        events.emit('verbose', 'Plugin test template existed, no need to clone it.');
-        return Q(templateCachePath);
-    }
-    var d = Q.defer(),
-        cmd = 'git clone https://github.com/polyvi/xface-test-template.git ' + templateCachePath;
-    child_process.exec(cmd, function(err, stdout, stderr) {
-        if(err) {
-            d.reject(err);
-        } else {
-            d.resolve();
-        }
-    });
-    return d.promise.then(function() {
-        return Q(templateCachePath);
-    });
-}
-
 function matchPart(plugins, part) {
     var index = plugins.indexOf(part);
     if (-1 !== index) {
@@ -114,7 +95,7 @@ module.exports.generatePluginTest = function(xfaceProj, target, testTemplate) {
         if(!plugin) return Q.reject(new Error('Can not find plugin id that matches `' + target + '`, try command `xface plugin ls` to show installed plugins! '));
         plugins = [plugin];
     }
-    var q = (testTemplate && fs.existsSync(testTemplate)) ? Q(testTemplate) : fetchTestTemplate();
+    var q = (testTemplate && fs.existsSync(testTemplate)) ? Q(testTemplate) : lazy_load.cordova('test-template');
     return q.then(function(template) {
         return mergePluginTests(xfaceProj, plugins, template);
     });

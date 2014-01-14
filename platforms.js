@@ -68,6 +68,10 @@ module.exports = {
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
         version: '3.3.0',
         subdirectory: 'windows8'
+    },
+    'test-template':{
+        url    : 'http://git.polyvi.com/gitweb/?p=xface-test-template.git',
+        version: '3.2.0-rc1'
     }
 };
 
