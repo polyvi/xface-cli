@@ -147,16 +147,11 @@ exports = module.exports = {
         return result;
     },
     getRepoSetPath: function() {
-        var settingPath = path.join(global_config_path, 'global_setting.json');
-        var json = {};
-        if(!fs.existsSync(settingPath)) {
-            throw new Error('Global setting file: ' + settingPath + " is not existed! ");
-        }
-        json = JSON.parse(fs.readFileSync(settingPath, 'utf-8'));
+        var json = config.read(this.cdProjectRoot());
         if(json.repoSet) {
             return json.repoSet;
         } else {
-            throw new Error('Can\'t find repo set path in file: ' + settingPath);
+            throw new Error('The reposet is not set, maybe you should execute command `xmen set reposet <path>` to set reposet dir.');
         }
     },
     /**
