@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<widget id="TEMPLATE-APP-ID" version="1.0" xmlns="http://www.w3.org/ns/widgets">
+<widget id="TEMPLATE-APP-ID" version="2.0" xmlns="http://www.w3.org/ns/widgets">
 
   <name short="TEMPLATE-APP-ID">TEMPLATE-APP-ID</name>
   <icon src="icon.png" />
