@@ -1,6 +1,6 @@
 {
   "name": "xface",
-  "version": "1.0.2",
+  "version": "3.2.0-0.0.2",
   "preferGlobal": "true",
   "description": "xFace command line interface tool",
   "main": "xface",

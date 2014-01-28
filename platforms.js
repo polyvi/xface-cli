@@ -22,17 +22,17 @@ module.exports = {
         parser : './src/metadata/ios_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git',
         version: '3.2.0'
-    }, 
+    },
     'android' : {
         parser : './src/metadata/android_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-android.git',
         version: '3.2.0'
-    }, 
+    },
     'ubuntu' : {
         parser : './src/metadata/ubuntu_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git',
         version: '3.3.0'
-    }, 
+    },
      'amazon-fireos' : {
         parser : './src/metadata/amazon_fireos_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-amazon-fireos.git',
@@ -55,8 +55,8 @@ module.exports = {
         subdirectory: 'blackberry10'
     },
     'www':{
-        url    : 'http://git.polyvi.com/gitweb/?p=xface-default-app.git',
-        version: '0.0.3'
+        url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-default-app.git',
+        version: '3.2.0-rc2'
     },
     'firefoxos':{
         parser: './src/metadata/firefoxos_parser',
@@ -70,8 +70,8 @@ module.exports = {
         subdirectory: 'windows8'
     },
     'test-template':{
-        url    : 'http://git.polyvi.com/gitweb/?p=xface-test-template.git',
-        version: '3.2.0-rc1'
+        url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-test-template.git',
+        version: '3.2.0-rc2'
     }
 };
 
