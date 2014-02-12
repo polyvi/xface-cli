@@ -32,7 +32,7 @@ var xface = require('../xface'),
     hooks = path.join(fixtures, 'hooks');
 
 var project_dir = '/some/path';
-var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
+var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www' && p != 'test-template'; });
 var supported_platforms_paths = supported_platforms.map(function(p) { return path.join(project_dir, 'platforms', p, 'www'); });
 
 describe('prepare command', function() {

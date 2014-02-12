@@ -31,7 +31,7 @@ var xface = require('../xface'),
     platforms = require('../platforms');
 
 var cwd = process.cwd();
-var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; });
+var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www' && p != 'test-template'; });
 var project_dir = path.join('some', 'path');
 
 describe('platform command', function() {

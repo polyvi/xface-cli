@@ -29,7 +29,7 @@ var xface = require('../xface'),
     platforms = require('../platforms');
 
 var cwd = process.cwd();
-var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www'; }).sort();
+var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www' && p != 'test-template'; }).sort();
 var sample_plugins = ['one','two'];
 var project_dir = path.join('some','path');
 var plugins_dir = path.join(project_dir, 'plugins');
