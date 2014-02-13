@@ -18,6 +18,7 @@
 # under the License.
 #
 -->
+
 # xface-cli
 
 > The command line tool to build, deploy and manage [xFace](http://polyvi.github.io/openxface/)-based applications.
@@ -119,23 +120,27 @@ xface-cli has a single global `create` command that creates new cordova projects
 A Cordova application built with cordova-cli will have the following directory structure:
 
     myApp/
-    |--.xface/
+    |-- config.xml
+    |-- hooks/
     |-- merges/
     | | |-- android/
     | | |-- blackberry10/
     | | `-- ios/
     |-- www/
-    | `-- config.xml
     |-- platforms/
     | |-- android/
     | |-- blackberry10/
     | `-- ios/
     `-- plugins/
 
-## .xface/
-This directory identifies a tree as a xface project. Simple configuration information is stored in here (such as BlackBerry environment variables).
+## hooks/
+This directory may contains scripts used to customize cordova commands. This
+directory used to exist at `.xface/hooks`, but has now been moved to the
+project root. Any scripts you add to these directories will be executed before
+and after the commands corresponding to the directory name. Useful for
+integrating your own build systems or integrating with version control systems.
 
-Commands other than `create` operate against the project directory itself, rather than the current directory - a search up the current directory's parents is made to find the project directory. Thus, any command (other than `create`) can be used from any subdirectory whose parent is a cordova project directory (same as git).
+Refer to [templates/hooks-README.md](templates/hooks-README.md) for more information.
 
 ## merges/
 Platform-specific web assets (HTML, CSS and JavaScript files) are contained within appropriate subfolders in this directory. These are deployed during a `prepare` to the appropriate native directory.  Files placed under `merges/` will override matching files in the `www/` folder for the relevant platform. A quick example, assuming a project structure of:
@@ -179,7 +184,7 @@ There are two types of hooks: project-specific ones and module-level ones. Both 
 
 ## Project-specific Hooks
 
-These are located under the `.xface/hooks` directory in the root of your xface project. Any scripts you add to these directories will be executed before and after the appropriate commands. Useful for integrating your own build systems or integrating with version control systems. __Remember__: make your scripts executable.
+These are located under the `hooks` directory in the root of your xface project. Any scripts you add to these directories will be executed before and after the appropriate commands. Useful for integrating your own build systems or integrating with version control systems. __Remember__: make your scripts executable.
 
 ### Examples
 
@@ -205,7 +210,7 @@ This example shows how to create a project from scratch named KewlApp with iOS a
 The directory structure of KewlApp now looks like this:
 
     KewlApp/
-    |-- .xface/
+    |-- hooks/
     |-- merges/
     | |-- android/
     | `-- ios/
@@ -303,3 +308,7 @@ Amazon Fire OS does not include the ability to emulate. You are still able to us
 The initial release of cordova-ubuntu does not support building applications for armhf devices automatically. It is possible to produce applications and click packages in a few steps though.
 
 This bug report documents the issue and solutions for it: https://bugs.launchpad.net/ubuntu/+source/cordova-ubuntu/+bug/1260500 A future release will let developers cross-compile armhf click packages directly from an x86 desktop.
+
+## Firefox OS
+
+Firefox OS does not include the ability to emulate, run and serve. After building, you will have to open the firefoxos platform directory of your app in the App Manager that comes with every firefox browser. 

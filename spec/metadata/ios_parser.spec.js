@@ -20,7 +20,7 @@ var platforms = require('../../platforms'),
     util = require('../../src/util'),
     path = require('path'),
     shell = require('shelljs'),
-    plist = require('plist'),
+    plist = require('plist-with-patches'),
     xcode = require('xcode'),
     ET = require('elementtree'),
     fs = require('fs'),
@@ -30,6 +30,9 @@ var platforms = require('../../platforms'),
     config_parser = require('../../src/config_parser'),
     xface = require('../../xface'),
     common = require('xplugin').common;
+
+// Create a real config object before mocking out everything.
+var cfg = new config_parser(path.join(__dirname, '..', 'test-config.xml'));
 
 describe('ios project parser', function () {
     var proj = path.join('some', 'path');
@@ -91,7 +94,7 @@ describe('ios project parser', function () {
 
         describe('update_from_config method', function() {
             var et, xml, find, write_xml, root, mv;
-            var cfg, find_obj, root_obj, cfg_access_add, cfg_access_rm, cfg_pref_add, cfg_pref_rm, cfg_content;
+            var find_obj, root_obj, cfg_access_add, cfg_access_rm, cfg_pref_add, cfg_pref_rm, cfg_content;
             var plist_parse, plist_build, xc;
             var update_name, xc_write;
             beforeEach(function() {
@@ -123,7 +126,6 @@ describe('ios project parser', function () {
                     updateProductName:update_name,
                     writeSync:xc_write
                 });
-                cfg = new config_parser();
                 cfg.name = function() { return 'testname' };
                 cfg.packageName = function() { return 'testpkg' };
                 cfg.version = function() { return 'one point oh' };
@@ -169,7 +171,7 @@ describe('ios project parser', function () {
             });
             it('should write out the app version to info plist as CFBundleVersion', function(done) {
                 wrapper(p.update_from_config(cfg), done, function() {
-                    expect(plist_build.mostRecentCall.args[0].CFBundleVersion).toEqual('one point oh');
+                    expect(plist_build.mostRecentCall.args[0].CFBundleShortVersionString).toEqual('one point oh');
                 });
             });
         });

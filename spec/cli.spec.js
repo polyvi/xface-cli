@@ -30,17 +30,17 @@ describe("xface cli", function () {
             });
 
             it("will spit out the version with -v", function () {
-                new CLI(["-v"]);
+                new CLI(["node", "xface", "-v"]);
                 expect(console.log).toHaveBeenCalledWith(version);
             });
 
             it("will spit out the version with --version", function () {
-                new CLI(["--version"]);
+                new CLI(["node", "xface", "--version"]);
                 expect(console.log).toHaveBeenCalledWith(version);
             });
 
             it("will spit out the version with -v anywher", function () {
-                new CLI(["one", "-v", "three"]);
+                new CLI(["node", "xface", "one", "-v", "three"]);
                 expect(console.log).toHaveBeenCalledWith(version);
             });
         });
@@ -56,32 +56,32 @@ describe("xface cli", function () {
         });
 
         it("will call command with all arguments passed through", function () {
-            new CLI(["node", "cordova", "build", "blackberry10", "-k", "abcd1234"]);
+            new CLI(["node", "xface", "build", "blackberry10", "-k", "abcd1234"]);
             expect(xface.raw.build).toHaveBeenCalledWith({verbose: false, silent: false, platforms: ["blackberry10"], options: ["-k", "abcd1234"]});
         });
 
         it("will consume the first instance of -d", function () {
-            new CLI(["node", "cordova", "-d", "build", "blackberry10", "-k", "abcd1234", "-d"]);
+            new CLI(["node", "xface", "-d", "build", "blackberry10", "-k", "abcd1234", "-d"]);
             expect(xface.raw.build).toHaveBeenCalledWith({verbose: true, silent: false, platforms: ["blackberry10"], options: ["-k", "abcd1234", "-d"]});
         });
 
         it("will consume the first instance of --verbose", function () {
-            new CLI(["node", "cordova", "--verbose", "build", "blackberry10", "-k", "abcd1234", "--verbose"]);
+            new CLI(["node", "xface", "--verbose", "build", "blackberry10", "-k", "abcd1234", "--verbose"]);
             expect(xface.raw.build).toHaveBeenCalledWith({verbose: true, silent: false, platforms: ["blackberry10"], options: ["-k", "abcd1234", "--verbose"]});
         });
 
         it("will consume the first instance of either --verbose of -d", function () {
-            new CLI(["node", "cordova", "--verbose", "build", "blackberry10", "-k", "abcd1234", "-d"]);
+            new CLI(["node", "xface", "--verbose", "build", "blackberry10", "-k", "abcd1234", "-d"]);
             expect(xface.raw.build).toHaveBeenCalledWith({verbose: true, silent: false, platforms: ["blackberry10"], options: ["-k", "abcd1234", "-d"]});
         });
 
         it("will consume the first instance of either --verbose of -d", function () {
-            new CLI(["node", "cordova", "-d", "build", "blackberry10", "-k", "abcd1234", "--verbose"]);
+            new CLI(["node", "xface", "-d", "build", "blackberry10", "-k", "abcd1234", "--verbose"]);
             expect(xface.raw.build).toHaveBeenCalledWith({verbose: true, silent: false, platforms: ["blackberry10"], options: ["-k", "abcd1234", "--verbose"]});
         });
 
         it("will consume the first instance of --silent", function () {
-            new CLI(["node", "cordova", "--silent", "build", "blackberry10", "-k", "abcd1234", "--silent"]);
+            new CLI(["node", "xface", "--silent", "build", "blackberry10", "-k", "abcd1234", "--silent"]);
             expect(xface.raw.build).toHaveBeenCalledWith({verbose: false, silent: true, platforms: ["blackberry10"], options: ["-k", "abcd1234", "--silent"]});
         });
     });
@@ -96,8 +96,8 @@ describe("xface cli", function () {
         });
 
         it("will call command with all arguments passed through", function () {
-            new CLI(["node", "cordova", "plugin", "add", "facebook", "--variable", "FOO=foo"]);
-            expect(xface.raw.plugin).toHaveBeenCalledWith("add", ["facebook", "--variable", "FOO=foo"]);
+            new CLI(["node", "xface", "plugin", "add", "facebook", "--variable", "FOO=foo"]);
+            expect(xface.raw.plugin).toHaveBeenCalledWith("add", ["facebook", "--variable", "FOO=foo"], {searchpath: undefined});
         });
     });
 });

@@ -16,6 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
+
 var path          = require('path'),
     fs            = require('fs'),
     shell         = require('shelljs'),
@@ -25,6 +26,7 @@ var path          = require('path'),
     config        = require('./config'),
     lazy_load     = require('./lazy_load'),
     Q             = require('q'),
+    CordovaError  = require('./CordovaError'),
     util          = require('./util');
 
 var DEFAULT_NAME = "HelloxFace",
@@ -32,10 +34,10 @@ var DEFAULT_NAME = "HelloxFace",
 
 /**
  * Usage:
- * @dir - required, directory where the poroject will be created.
- * @id - app id.
- * @name - app name.
- * @cfg - extra config to be saved in .cordova/config.json
+ * @dir - directory where the project will be created. Required.
+ * @id - app id. Optional, default is DEFAULT_ID.
+ * @name - app name. Optional, default is DEFAULT_NAME.
+ * @cfg - extra config to be saved in .xface/config.json
  **/
 // Returns a promise.
 module.exports = function create (dir, id, name, cfg) {
@@ -50,15 +52,12 @@ module.exports = function create (dir, id, name, cfg) {
     cfg = cfg || {};
     id = id || cfg.id || DEFAULT_ID;
     name = name || cfg.name || DEFAULT_NAME;
-    cfg.id = id;
-    cfg.name = name;
 
     // Make absolute.
     dir = path.resolve(dir);
 
     events.emit('log', 'Creating a new xface project with name "' + name + '" and id "' + id + '" at location "' + dir + '"');
 
-    var dotCordova = path.join(dir, '.xface');
     var www_dir = path.join(dir, 'www');
 
     // dir must be either empty or not exist at all.
@@ -75,64 +74,39 @@ module.exports = function create (dir, id, name, cfg) {
         }
         return false;
     }
-    
+
     if (fs.existsSync(dir) && !sanedircontents(dir)) {
-        return Q.reject(new Error('Path already exists and is not empty: ' + dir));
+        return Q.reject(new CordovaError('Path already exists and is not empty: ' + dir));
     }
 
-    // Create basic project structure.
-    shell.mkdir('-p', dotCordova);
-    shell.mkdir('-p', path.join(dir, 'platforms'));
-    shell.mkdir('-p', path.join(dir, 'merges'));
-    shell.mkdir('-p', path.join(dir, 'plugins'));
-    shell.mkdir('-p', www_dir);
-    var hooks = path.join(dotCordova, 'hooks');
-    shell.mkdir('-p', hooks);
-
-    // Add directories for hooks
-    shell.mkdir(path.join(hooks, 'after_build'));
-    shell.mkdir(path.join(hooks, 'after_compile'));
-    shell.mkdir(path.join(hooks, 'after_docs'));
-    shell.mkdir(path.join(hooks, 'after_emulate'));
-    shell.mkdir(path.join(hooks, 'after_platform_add'));
-    shell.mkdir(path.join(hooks, 'after_platform_rm'));
-    shell.mkdir(path.join(hooks, 'after_platform_ls'));
-    shell.mkdir(path.join(hooks, 'after_plugin_add'));
-    shell.mkdir(path.join(hooks, 'after_plugin_ls'));
-    shell.mkdir(path.join(hooks, 'after_plugin_rm'));
-    shell.mkdir(path.join(hooks, 'after_prepare'));
-    shell.mkdir(path.join(hooks, 'after_run'));
-    shell.mkdir(path.join(hooks, 'before_build'));
-    shell.mkdir(path.join(hooks, 'before_compile'));
-    shell.mkdir(path.join(hooks, 'before_docs'));
-    shell.mkdir(path.join(hooks, 'before_emulate'));
-    shell.mkdir(path.join(hooks, 'before_platform_add'));
-    shell.mkdir(path.join(hooks, 'before_platform_rm'));
-    shell.mkdir(path.join(hooks, 'before_platform_ls'));
-    shell.mkdir(path.join(hooks, 'before_plugin_add'));
-    shell.mkdir(path.join(hooks, 'before_plugin_ls'));
-    shell.mkdir(path.join(hooks, 'before_plugin_rm'));
-    shell.mkdir(path.join(hooks, 'before_prepare'));
-    shell.mkdir(path.join(hooks, 'before_run'));
-
-    // Write out .xface/config.json file.
+    // Read / Write .xface/config.json file if necessary.
     var config_json = config(dir, cfg);
 
     var p;
+    var symlink = false; // Whether to symlink the www dir instead of copying.
     if (config_json.lib && config_json.lib.www) {
-        events.emit('log', 'Using custom www assets ('+config_json.lib.www.id+').');
-        p = lazy_load.custom(config_json.lib.www.uri, config_json.lib.www.id, 'www', config_json.lib.www.version)
-        .then(function(dir) {
-            events.emit('verbose', 'Copying custom www assets into "' + www_dir + '"');
-            return dir;
-        });
+        events.emit('log', 'Using custom www assets from '+config_json.lib.www.uri);
+        // TODO (kamrik): extend lazy_load for retrieval without caching to allow net urls for --src.
+        var www_version = config_json.lib.www.version || 'not_versioned';
+        var www_id = config_json.lib.www.id || 'dummy_id';
+        symlink  = !!config_json.lib.www.link;
+        if(symlink) {
+            p = Q(config_json.lib.www.uri);
+            events.emit('verbose', 'Symlinking custom www assets into "' + www_dir + '"');
+        } else {
+            p = lazy_load.custom(config_json.lib.www.uri, www_id, 'www', www_version)
+            .then(function(d) {
+                events.emit('verbose', 'Copying custom www assets into "' + www_dir + '"');
+                return d;
+            });
+        }
     } else {
         // Nope, so use stock xface-hello-world-app one.
         events.emit('verbose', 'Using stock xface hello-world application.');
         p = lazy_load.cordova('www')
-        .then(function(dir) {
+        .then(function(d) {
             events.emit('verbose', 'Copying stock xFace www assets into "' + www_dir + '"');
-            return dir;
+            return d;
         });
     }
 
@@ -142,17 +116,45 @@ module.exports = function create (dir, id, name, cfg) {
             www_lib = path.join(www_lib, 'www');
         }
 
-        shell.cp('-rf', path.join(www_lib, '*'), www_dir);
+        var dirAlreadyExisted = fs.existsSync(dir);
+        if (!dirAlreadyExisted) {
+            shell.mkdir(dir);
+        }
+        if (symlink) {
+            try {
+                fs.symlinkSync(www_lib, www_dir, 'dir');
+            } catch (e) {
+                if (!dirAlreadyExisted) {
+                    fs.rmdirSync(dir);
+                }
+                if (process.platform.slice(0, 3) == 'win' && e.code == 'EPERM')  {
+                    throw new CordovaError('Symlinks on Windows require Administrator privileges');
+                }
+                throw e;
+            }
+        } else {
+            shell.mkdir(www_dir);
+            shell.cp('-rf', path.join(www_lib, '*'), www_dir);
+        }
+
+        // Create basic project structure.
+        shell.mkdir(path.join(dir, 'platforms'));
+        shell.mkdir(path.join(dir, 'merges'));
+        shell.mkdir(path.join(dir, 'plugins'));
+        shell.mkdir(path.join(dir, 'hooks'));
+
+        // Add hooks README.md
+        shell.cp(path.join(__dirname, '..', 'templates', 'hooks-README.md'), path.join(dir, 'hooks', 'README.md'));
+
         var configPath = util.projectConfig(dir);
         // Add template config.xml for apps that are missing it
         if (!fs.existsSync(configPath)) {
             var template_config_xml = path.join(__dirname, '..', 'templates', 'config.xml');
-            shell.cp(template_config_xml, www_dir);
+            shell.cp(template_config_xml, configPath);
+            // Write out id and name to config.xml
+            var config = new util.config_parser(configPath);
+            config.packageName(id);
+            config.name(name);
         }
-        // Write out id and name to config.xml
-        var config = new util.config_parser(configPath);
-        config.packageName(id);
-        config.name(name);
-        return Q();
     });
 };

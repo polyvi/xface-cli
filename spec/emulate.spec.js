@@ -65,7 +65,7 @@ describe('emulate command', function() {
 
     function wrapper(f, post) {
         runs(function() {
-            f.then(function() { result = true; }, function(err) { result = err; });
+            Q().then(f).then(function() { result = true; }, function(err) { result = err; });
         });
         waitsFor(function() { return result; }, 'promise never resolved', 500);
         runs(post);
@@ -82,13 +82,13 @@ describe('emulate command', function() {
     describe('failure', function() {
         it('should not run inside a xFace-based project with no added platforms by calling util.listPlatforms', function() {
             list_platforms.andReturn([]);
-            wrapper(xface.raw.emulate(), function() {
+            wrapper(xface.raw.emulate, function() {
                 expect(result).toEqual(new Error('No platforms added to this project. Please use `xface platform add <platform>`.'));
             });
         });
         it('should not run outside of a xFace-based project', function() {
             is_cordova.andReturn(false);
-            wrapper(xface.raw.emulate(), function() {
+            wrapper(xface.raw.emulate, function() {
                 expect(result).toEqual(new Error('Current working directory is not a xFace-based project.'));
             });
         });
@@ -138,12 +138,16 @@ describe('emulate command', function() {
         });
 
         describe('with no platforms added', function() {
-            it('should not fire the hooker', function() {
+            it('should not fire the hooker', function(done) {
                 list_platforms.andReturn([]);
-                wrapper(xface.raw.emulate(), function() {
-                    expect(result).toEqual(new Error('No platforms added to this project. Please use `xface platform add <platform>`.'));
-                });
-                expect(fire).not.toHaveBeenCalled();
+                Q().then(xface.raw.emulate).then(function() {
+                    expect('this call').toBe('fail');
+                }, function(err) {
+                    expect(fire).not.toHaveBeenCalled();
+                    expect(err.message).toEqual(
+                        'No platforms added to this project. Please use `xface platform add <platform>`.'
+                    )
+                }).fin(done);
             });
         });
     });

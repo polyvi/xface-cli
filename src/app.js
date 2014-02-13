@@ -377,7 +377,7 @@ module.exports.installApp = function(projRoot, apps, dirAsId) {
     }, Q());
 
     return q.then(function() {
-        var configXml = path.join(projectWww, 'config.xml');
+        var configXml = path.join(projRoot, 'config.xml');
         var doc = xml_helpers.parseElementtreeSync(configXml),
             packagesTag = doc.find('./pre_install_packages');
         if(!packagesTag) {

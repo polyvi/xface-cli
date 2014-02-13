@@ -53,30 +53,37 @@ describe('build command', function() {
         prepare_spy = spyOn(xface.raw, 'prepare').andReturn(Q());
         compile_spy = spyOn(xface.raw, 'compile').andReturn(Q());
     });
-    describe('failure', function(done) {
-        it('should not run inside a xFace-based project with no added platforms by calling util.listPlatforms', function() {
+    describe('failure', function() {
+        it('should not run inside a xFace-based project with no added platforms by calling util.listPlatforms', function(done) {
             list_platforms.andReturn([]);
-            runs(function() {
-                buildPromise(xface.raw.build());
-            });
-            waitsFor(function() { return result; }, 'promise never resolved', 500);
-            runs(function() {
-                expect(result).toEqual(new Error('No platforms added to this project. Please use `xface platform add <platform>`.'));
-            });
+            Q().then(xface.raw.build).then(function() {
+                expect('this call').toBe('fail');
+            }, function(err) {
+                expect(err.message).toEqual(
+                    'No platforms added to this project. Please use `xface platform add <platform>`.'
+                )
+            }).fin(done);
         });
-        it('should not run outside of a xFace-based project', function() {
+
+        it('should not run outside of a xFace-based project', function(done) {
             is_cordova.andReturn(false);
-            wrapper(xface.raw.build(), function() {
-                expect(result).toEqual(new Error('Current working directory is not a xFace-based project.'));
-            });
+
+            Q().then(xface.raw.build).then(function() {
+                expect('this call').toBe('fail');
+            }, function(err) {
+                expect(err.message).toEqual(
+                    'Current working directory is not a xFace-based project.'
+                )
+            }).fin(done);
         });
     });
 
     describe('success', function() {
         it('should run inside a xFace-based project with at least one added platform and call both prepare and compile', function(done) {
             xface.raw.build(['android','ios']).then(function() {
-                expect(prepare_spy).toHaveBeenCalledWith({verbose: false, platforms: ['android', 'ios'], options: []});
-                expect(compile_spy).toHaveBeenCalledWith({verbose: false, platforms: ['android', 'ios'], options: []});
+                var opts = {verbose: false, platforms: ['android', 'ios'], options: []};
+                expect(prepare_spy).toHaveBeenCalledWith(opts);
+                expect(compile_spy).toHaveBeenCalledWith(opts);
                 done();
             });
         });
@@ -106,12 +113,15 @@ describe('build command', function() {
         });
 
         describe('with no platforms added', function() {
-            it('should not fire the hooker', function() {
+            it('should not fire the hooker', function(done) {
                 list_platforms.andReturn([]);
-                wrapper(xface.raw.build(), function() {
-                    expect(result).toEqual(new Error('No platforms added to this project. Please use `xface platform add <platform>`.'));
-                    expect(fire).not.toHaveBeenCalled();
-                });
+                Q().then(xface.raw.build).then(function() {
+                    expect('this call').toBe('fail');
+                }, function(err) {
+                    expect(err.message).toEqual(
+                        'No platforms added to this project. Please use `xface platform add <platform>`.'
+                    )
+                }).fin(done);
             });
         });
     });

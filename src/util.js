@@ -18,6 +18,7 @@
 */
 var fs            = require('fs'),
     path          = require('path'),
+    CordovaError  = require('./CordovaError'),
     shell         = require('shelljs'),
     archiver      = require('archiver'),
     Q             = require('q'),
@@ -26,40 +27,69 @@ var fs            = require('fs'),
     config        = require('./config');
 
 // Global configuration paths
-var HOME = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+var HOME = process.env[(process.platform.slice(0, 3) == 'win') ? 'USERPROFILE' : 'HOME'];
 var global_config_path = path.join(HOME, '.xface');
 var lib_path = path.join(global_config_path, 'lib');
 shell.mkdir('-p', lib_path);
+
+function isRootDir(dir) {
+    if (fs.existsSync(path.join(dir, 'www'))) {
+        if (fs.existsSync(path.join(dir, 'config.xml'))) {
+            // For sure is.
+            if (fs.existsSync(path.join(dir, 'platforms'))) {
+                return 2;
+            } else {
+                return 1;
+            }
+        }
+        // Might be (or may be under platforms/).
+        if (fs.existsSync(path.join(dir, 'www', 'config.xml'))) {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 exports = module.exports = {
     globalConfig:global_config_path,
     libDirectory:lib_path,
     // Runs up the directory chain looking for a .xface directory.
     // IF it is found we are in a xFace project.
-    // If not.. we're not. HOME directory doesnt count.
-    // HOMEDRIVE is used to catch when we've backed up to the root drive in windows (i.e C:\)
+    // Omit argument to use CWD.
     isxFace: function isxFace(dir) {
-        if (dir && dir != process.env['HOMEDRIVE'] + path.sep) {
-            if (dir == HOME) {
-                return false;
-            } else {
-                var contents = fs.readdirSync(dir);
-                if (contents && contents.length && (contents.indexOf('.xface') > -1)) {
-                    return dir;
-                } else {
-                    var parent = path.join(dir, '..');
-                    if (parent && parent != dir && parent.length > 1) {
-                        return isxFace(parent);
-                    } else return false;
-                }
+        if (!dir) {
+            // Prefer PWD over cwd so that symlinked dirs within your PWD work correctly (CB-5687).
+            var pwd = process.env.PWD;
+            var cwd = process.cwd();
+            if (pwd && pwd != cwd) {
+                return this.isxFace(pwd) || this.isxFace(cwd);
             }
-        } else return false;
+            return this.isxFace(cwd);
+        }
+        var bestReturnValueSoFar = false;
+        for (var i = 0; i < 1000; ++i) {
+            var result = isRootDir(dir);
+            if (result === 2) {
+                return dir;
+            }
+            if (result === 1) {
+                bestReturnValueSoFar = dir;
+            }
+            var parentDir = path.normalize(path.join(dir, '..'));
+            // Detect fs root.
+            if (parentDir == dir) {
+                return bestReturnValueSoFar;
+            }
+            dir = parentDir;
+        }
+        console.error('Hit an unhandled case in util.isxFace');
+        return false;
     },
-    // Cd to project root dir and return its path. Throw if not in a Corodva project.
+    // Cd to project root dir and return its path. Throw CordovaError if not in a Corodva project.
     cdProjectRoot: function() {
-        var projectRoot = this.isxFace(process.cwd());
+        var projectRoot = this.isxFace();
         if (!projectRoot) {
-            throw new Error('Current working directory is not a xFace-based project.');
+            throw new CordovaError('Current working directory is not a xFace-based project.');
         }
         process.chdir(projectRoot);
         return projectRoot;
@@ -103,7 +133,14 @@ exports = module.exports = {
         return path.join(projectDir, 'www');
     },
     projectConfig: function(projectDir) {
-        return path.join(projectDir, 'www', 'config.xml');
+        var rootPath = path.join(projectDir, 'config.xml');
+        var wwwPath = path.join(projectDir, 'www', 'config.xml');
+        if (fs.existsSync(rootPath)) {
+            return rootPath;
+        } else if (fs.existsSync(wwwPath)) {
+            return wwwPath;
+        }
+        return rootPath;
     },
     preProcessOptions: function (inputOptions) {
         var DEFAULT_OPTIONS = {
@@ -112,14 +149,14 @@ exports = module.exports = {
                 options: []
             },
             result = inputOptions || DEFAULT_OPTIONS,
-            projectRoot = this.isxFace(process.cwd());
+            projectRoot = this.isxFace();
 
         if (!projectRoot) {
-            return new Error('Current working directory is not a xFace-based project.');
+            throw new CordovaError('Current working directory is not a xFace-based project.');
         }
         var projectPlatforms = this.listPlatforms(projectRoot);
         if (projectPlatforms.length === 0) {
-            return new Error('No platforms added to this project. Please use `cordova platform add <platform>`.');
+            throw new CordovaError('No platforms added to this project. Please use `xface platform add <platform>`.');
         }
         /**
          * Current Desired Arguments

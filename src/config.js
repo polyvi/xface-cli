@@ -20,8 +20,11 @@
 var path          = require('path'),
     fs            = require('fs'),
     url           = require('url'),
-    shell         = require('shelljs'),
-    JSHINT        = require("jshint").JSHINT;
+    shell         = require('shelljs');
+
+// Map of project_root -> JSON
+var configCache = {};
+var autoPersist = true;
 
 /**
  * 将opts中的属性值以json格式添加到<proj_root>/.xface/config.json中
@@ -30,48 +33,51 @@ var path          = require('path'),
  * @param {String} project_root
  * @param {Object} opts
  */
-module.exports = function config(project_root, opts) {
-    var json = module.exports.read(project_root);
-    Object.keys(opts).forEach(function(p) {
+function config(project_root, opts) {
+    var json = config.read(project_root);
+    for (var p in opts) {
         json[p] = opts[p];
-    });
-    return module.exports.write(project_root, json);
-};
-
-module.exports.read = function get_config(project_root) {
-    var dotCordova = path.join(project_root, '.xface');
-
-    if (!fs.existsSync(dotCordova)) {
-        shell.mkdir('-p', dotCordova);
     }
-
-    var config_json = path.join(dotCordova, 'config.json');
-    if (!fs.existsSync(config_json)) {
-        return module.exports.write(project_root, {});
+    if (autoPersist) {
+        config.write(project_root, json);
     } else {
-        var data = fs.readFileSync(config_json, 'utf-8');
-        try {
-            return JSON.parse(data);
-        } catch (e) {
-            JSHINT(data);
-            var err = JSHINT.errors[0];
-            if (err) {
-                throw new Error('Parsing "'+config_json+'" at line '+err.line+" col "+err.character+"; "+err.reason);
-            }
-            throw e;
-        }
+        configCache[project_root] = JSON.stringify(json);
     }
-};
-
-module.exports.write = function set_config(project_root, json) {
-    var dotCordova = path.join(project_root, '.xface');
-    var config_json = path.join(dotCordova, 'config.json');
-    fs.writeFileSync(config_json, JSON.stringify(json), 'utf-8');
     return json;
 };
 
-module.exports.has_custom_path = function(project_root, platform) {
-    var json = module.exports.read(project_root);
+config.setAutoPersist = function(value) {
+    autoPersist = value;
+};
+
+config.read = function get_config(project_root) {
+    var data = configCache[project_root];
+    if (data === undefined) {
+        var configPath = path.join(project_root, '.xface', 'config.json');
+        if (!fs.existsSync(configPath)) {
+            data = '{}';
+        } else {
+            data = fs.readFileSync(configPath, 'utf-8');
+        }
+    }
+    configCache[project_root] = data;
+    return JSON.parse(data);
+};
+
+config.write = function set_config(project_root, json) {
+    var configPath = path.join(project_root, '.xface', 'config.json');
+    var contents = JSON.stringify(json, null, 4);
+    configCache[project_root] = contents;
+    // Don't write the file for an empty config.
+    if (contents != '{}' || !fs.existsSync(configPath)) {
+        shell.mkdir('-p', path.join(project_root, '.xface'));
+        fs.writeFileSync(configPath, contents, 'utf-8');
+    }
+    return json;
+};
+
+config.has_custom_path = function(project_root, platform) {
+    var json = config.read(project_root);
     if (json.lib && json.lib[platform]) {
         var uri = url.parse(json.lib[platform].uri);
         if (!(uri.protocol)) return uri.path;
@@ -84,7 +90,9 @@ module.exports.has_custom_path = function(project_root, platform) {
  * 判断指定工程是否为内部开发使用的工程
  * @param {String} project_root 工程根路径
  */
-module.exports.internalDev = function(project_root) {
-    var json = module.exports.read(project_root);
+config.internalDev = function(project_root) {
+    var json = config.read(project_root);
     return json.dev_type === 'internal';
-}
+};
+
+module.exports = config;

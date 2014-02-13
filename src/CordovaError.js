@@ -16,37 +16,16 @@
     specific language governing permissions and limitations
     under the License.
 */
-var serve = require('./serve'),
-    ripple = require('ripple-emulator'),
-    open = require('open');
 
-module.exports = function (platform, port) {
-    port = port || 8000;
 
-    serve.config(platform, port, function (cfg) {
-        ripple.emulate.start({
-            path: cfg.paths,
-            port: port
-        });
+// A derived exception class. See usage example in cli.js
+// Based on:
+// stackoverflow.com/questions/1382107/whats-a-good-way-to-extend-error-in-javascript/8460753#8460753
+function CordovaError(message) {
+    Error.captureStackTrace(this, this.constructor);
+    this.name = this.constructor.name;
+    this.message = message;
+}
+CordovaError.prototype.__proto__ = Error.prototype;
 
-        var device;
-
-        switch (platform) {
-        case "blackberry10":
-            device = "Z10";
-            break;
-        case "ios":
-            device = "IPhone5";
-            break;
-        case "android":
-            device = "NexusS";
-            break;
-        default:
-            device = "XVGA";
-            break;
-        }
-
-        var uri = "http://localhost:" + port + "?enableripple=cordova-2.0.0-" + device;
-        open(uri);
-    });
-};
+module.exports = CordovaError;

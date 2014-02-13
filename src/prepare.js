@@ -27,11 +27,9 @@ var cordova_util      = require('./util'),
     lazy_load         = require('./lazy_load'),
     config            = require('./config'),
     events            = require('./events'),
-    xml_helpers       = require('./xml-helpers'),
-    n                 = require('ncallbacks'),
     Q                 = require('q'),
-    prompt            = require('prompt'),
     xplugin           = require('xplugin'),
+    xml_helpers       = require('./xml-helpers'),
     util              = require('util');
 
 // Returns a promise.
@@ -47,9 +45,6 @@ module.exports = function prepare(options) {
     }
 
     options = cordova_util.preProcessOptions(options);
-    if (options.constructor.name === "Error") {
-        return Q.reject(options);
-    }
 
     var xml = cordova_util.projectConfig(projectRoot);
     var paths = options.platforms.map(function(p) {
@@ -124,13 +119,26 @@ module.exports = function prepare(options) {
                 var plugins = cordova_util.findPlugins(plugins_dir),
                     platform_json = xplugin.config_changes.get_platform_json(plugins_dir, platform);
                 if (plugins && Array.isArray(plugins)) {
+                    var plugman_cache = {};
                     plugins.forEach(function(plugin_id) {
                         if (platform_json.installed_plugins[plugin_id]) {
                             events.emit('verbose', 'Ensuring plugin "' + plugin_id + '" is installed correctly...');
-                            xplugin.config_changes.add_plugin_changes(platform, platformPath, plugins_dir, plugin_id, /* variables for plugin */ platform_json.installed_plugins[plugin_id], /* top level plugin? */ true, /* should increment config munge? xface-cli never should, only xplugin */ false);
+                            xplugin.config_changes.add_plugin_changes(
+                                platform, platformPath, plugins_dir, plugin_id,
+                                /* variables for plugin */ platform_json.installed_plugins[plugin_id],
+                                /* top level plugin? */ true,
+                                /* should increment config munge? cordova-cli never should, only plugman */ false,
+                                plugman_cache
+                            );
                         } else if (platform_json.dependent_plugins[plugin_id]) {
                             events.emit('verbose', 'Ensuring plugin "' + plugin_id + '" is installed correctly...');
-                            xplugin.config_changes.add_plugin_changes(platform, platformPath, plugins_dir, plugin_id, /* variables for plugin */ platform_json.dependent_plugins[plugin_id], /* top level plugin? */ false, /* should increment config munge? xface-cli never should, only xplugin */ false);
+                            xplugin.config_changes.add_plugin_changes(
+                                platform, platformPath, plugins_dir, plugin_id,
+                                /* variables for plugin */ platform_json.dependent_plugins[plugin_id],
+                                /* top level plugin? */ false,
+                                /* should increment config munge? cordova-cli never should, only plugman */ false,
+                                plugman_cache
+                            );
                         }
                         events.emit('verbose', 'Plugin "' + plugin_id + '" is good to go.');
                     });

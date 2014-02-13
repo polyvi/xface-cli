@@ -67,6 +67,7 @@ describe('plugin command', function() {
         rm = spyOn(shell, 'rm');
         mkdir = spyOn(shell, 'mkdir');
         existsSync = spyOn(fs, 'existsSync').andReturn(false);
+        spyOn(fs, 'writeFileSync');
         exec = spyOn(child_process, 'exec').andCallFake(function(cmd, opts, cb) {
             if (!cb) cb = opts;
             cb(0, '', '');

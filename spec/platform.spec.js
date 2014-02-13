@@ -34,9 +34,14 @@ var cwd = process.cwd();
 var supported_platforms = Object.keys(platforms).filter(function(p) { return p != 'www' && p != 'test-template'; });
 var project_dir = path.join('some', 'path');
 
+function fail(e) {
+  expect('Got Error: ' + e).toBe('');
+}
+
 describe('platform command', function() {
     var is_xface,
         cd_project_root,
+        cp,
         list_platforms,
         fire,
         config_parser,
@@ -58,7 +63,8 @@ describe('platform command', function() {
         supported_platforms.forEach(function(p) {
             parsers[p] = spyOn(platforms[p], 'parser').andReturn({
                 staging_dir:function(){},
-                update_staging:function(){}
+		update_staging:function(){},
+                www_dir:function(){return 'pwww'}
             });
         });
         is_xface = spyOn(util, 'isxFace').andReturn(project_dir);
@@ -88,8 +94,16 @@ describe('platform command', function() {
         });
 
         rm = spyOn(shell, 'rm');
+        cp = spyOn(shell, 'cp');
         mkdir = spyOn(shell, 'mkdir');
         existsSync = spyOn(fs, 'existsSync').andReturn(false);
+        var origReadFile = fs.readFileSync;
+        spyOn(fs, 'readFileSync').andCallFake(function(path) {
+            if (/VERSION$/.test(path)) {
+                return '3.3.0';
+            }
+            return origReadFile.apply(this, arguments);
+        });
         supports = spyOn(platform, 'supports').andReturn(Q());
         exec = spyOn(child_process, 'exec').andCallFake(function(cmd, opts, cb) {
             if (!cb) cb = opts;
@@ -130,8 +144,7 @@ describe('platform command', function() {
         it('should run inside a xFace-based project by calling util.isxFace', function(done) {
             xface.raw.platform().then(function() {
                 expect(is_xface).toHaveBeenCalled();
-                done();
-            });
+            }, fail).fin(done);
         });
 
         describe('`ls`', function() {
@@ -145,8 +158,8 @@ describe('platform command', function() {
                     done();
                 });
                 xface.raw.platform('list');
-            });
 
+            });
             it('should list out added platforms in a project', function(done) {
                 xface.on('results', function(res) {
                     expect(res).toMatch(/^Installed platforms: ios, android, ubuntu, amazon-fireos, wp7, wp8, blackberry10, firefoxos, windows8\s*Available platforms:\s*$/);
@@ -175,8 +188,7 @@ describe('platform command', function() {
                 }).then(function(){
                     expect(exec.mostRecentCall.args[0]).toMatch(/lib.windows8.cordova.\d.\d.\d[\d\w\-]*.*.bin.create/gi);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
-                    done();
-                });
+                }, fail).fin(done);
             });
             it('should call into lazy_load.custom if there is a user-specified configruation for consuming custom libraries', function(done) {
                 load.andCallThrough();
@@ -193,8 +205,7 @@ describe('platform command', function() {
                     expect(load_custom).toHaveBeenCalledWith('haha', 'phonegap', 'wp8', 'bleeding edge');
                     expect(exec.mostRecentCall.args[0]).toMatch(/lib.wp8.phonegap.bleeding edge.bin.create/gi);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
-                    done();
-                });
+                }, fail).fin(done);
             });
             it('should use a custom template directory if there is one specified in the configuration', function(done) {
                 var template_dir = "/tmp/custom-template"
@@ -213,8 +224,7 @@ describe('platform command', function() {
                     expect(exec.mostRecentCall.args[0]).toMatch(/^"[^ ]*" +"[^"]*" +"[^"]*" +"[^"]*" +"[^"]*"$/g);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
                     expect(exec.mostRecentCall.args[0]).toContain(template_dir);
-                    done();
-                });
+                }, fail).fin(done);
             });
             it('should not use a custom template directory if there is not one specified in the configuration', function(done) {
                 load.andCallThrough();
@@ -230,34 +240,27 @@ describe('platform command', function() {
                 xface.raw.platform('add', 'android').then(function() {
                     expect(exec.mostRecentCall.args[0]).toMatch(/^"[^ ]*" +"[^"]*" +"[^"]*" +"[^"]*"$/g);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
-                    done();
-                });
+                }, fail).fin(done);
             });
             it('should not use a custom template directory if there is no user-defined configuration', function(done) {
                 xface.raw.platform('add', 'android').then(function() {
                     expect(exec.mostRecentCall.args[0]).toMatch(/^"[^ ]*" +"[^"]*" +"[^"]*" +"[^"]*"$/g);
                     expect(exec.mostRecentCall.args[0]).toContain(project_dir);
-                    done();
-                });
+                }, fail).fin(done);
             });
         });
         describe('`remove`',function() {
             it('should remove a supported and added platform', function(done) {
                 xface.raw.platform('remove', 'android').then(function() {
                     expect(rm).toHaveBeenCalledWith('-rf', path.join(project_dir, 'platforms', 'android'));
-                    expect(rm).toHaveBeenCalledWith('-rf', path.join(project_dir, 'merges', 'android'));
-                    done();
-                });
+                }, fail).fin(done);
             });
 
             it('should be able to remove multiple platforms', function(done) {
                 xface.raw.platform('remove', ['android', 'blackberry10']).then(function() {
                     expect(rm).toHaveBeenCalledWith('-rf', path.join(project_dir, 'platforms', 'android'));
-                    expect(rm).toHaveBeenCalledWith('-rf', path.join(project_dir, 'merges', 'android'));
                     expect(rm).toHaveBeenCalledWith('-rf', path.join(project_dir, 'platforms', 'blackberry10'));
-                    expect(rm).toHaveBeenCalledWith('-rf', path.join(project_dir, 'merges', 'blackberry10'));
-                    done();
-                });
+                }, fail).fin(done);
             });
         });
         describe('`update`', function() {
@@ -285,10 +288,8 @@ describe('platform command', function() {
                         var oldVersion = lazyLoadVersion;
                         lazyLoadVersion = '1.0.0';
                         xface.raw.platform('update', ['ios']).then(function() {
-                            expect(exec).toHaveBeenCalledWith('lib/ios/cordova/1.0.0/bin/update "some/path/platforms/ios"', jasmine.any(Function));
-                        }, function(err) {
-                            expect(err).toBeUndefined();
-                        }).fin(function() {
+                            expect(exec).toHaveBeenCalledWith('"lib/ios/cordova/1.0.0/bin/update" "some/path/platforms/ios"', jasmine.any(Function));
+                        }, fail).fin(function() {
                             lazyLoadVersion = oldVersion;
                             done();
                         });
@@ -302,28 +303,24 @@ describe('platform command', function() {
             it('should fire before hooks through the hooker module', function(done) {
                 xface.raw.platform().then(function() {
                     expect(fire).toHaveBeenCalledWith('before_platform_ls');
-                    done();
-                });
+                }, fail).fin(done);
             });
             it('should fire after hooks through the hooker module', function(done) {
                 xface.raw.platform().then(function() {
                     expect(fire).toHaveBeenCalledWith('after_platform_ls');
-                    done();
-                });
+                }, fail).fin(done);
             });
         });
         describe('remove (rm) hooks', function() {
             it('should fire before hooks through the hooker module', function(done) {
                 xface.raw.platform('rm', 'android').then(function() {
                     expect(fire).toHaveBeenCalledWith('before_platform_rm', {platforms:['android']});
-                    done();
-                });
+                }, fail).fin(done);
             });
             it('should fire after hooks through the hooker module', function(done) {
                 xface.raw.platform('rm', 'android').then(function() {
                     expect(fire).toHaveBeenCalledWith('after_platform_rm', {platforms:['android']});
-                    done();
-                });
+                }, fail).fin(done);
             });
         });
         describe('add hooks', function() {
@@ -331,8 +328,7 @@ describe('platform command', function() {
                 xface.raw.platform('add', 'android').then(function() {
                     expect(fire).toHaveBeenCalledWith('before_platform_add', {platforms:['android']});
                     expect(fire).toHaveBeenCalledWith('after_platform_add', {platforms:['android']});
-                    done();
-                });
+                }, fail).fin(done);
             });
         });
     });
@@ -371,9 +367,7 @@ describe('platform.supports(name)', function() {
         it('should resolve', function(done) {
             xface.raw.platform.supports(project_dir, 'android', function() {
                 expect(1).toBe(1);
-            }, function(err) {
-                expect(err).toBeUndefined();
-            }).fin(done);
+            }, fail).fin(done);
         });
     });
 

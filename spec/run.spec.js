@@ -82,7 +82,7 @@ describe('run command', function() {
         });
         it('should not run outside of a xFace-based project', function(done) {
             is_cordova.andReturn(false);
-            xface.raw.run().then(function() {
+            Q().then(xface.raw.run).then(function() {
                 expect('this call').toBe('fail');
             }, function(err) {
                 expect(err).toEqual(new Error('Current working directory is not a xFace-based project.'));
@@ -95,10 +95,10 @@ describe('run command', function() {
             xface.raw.run(['android','ios']).then(function() {
                 expect(prepare_spy).toHaveBeenCalledWith(['android', 'ios']);
 
-                spawn_call = spawn_wrap(path.join(project_dir, 'platforms', 'android', 'cordova', 'run'), ['--device']);
+                spawn_call = spawn_wrap(path.join(project_dir, 'platforms', 'android', 'cordova', 'run'), []);
                 expect(child_process.spawn).toHaveBeenCalledWith(spawn_call.cmd, spawn_call.args);
 
-                spawn_call = spawn_wrap(path.join(project_dir, 'platforms', 'ios', 'cordova', 'run'), ['--device']);
+                spawn_call = spawn_wrap(path.join(project_dir, 'platforms', 'ios', 'cordova', 'run'), []);
                 expect(child_process.spawn).toHaveBeenCalledWith(spawn_call.cmd, spawn_call.args);
 
             }, function(err) {
@@ -109,7 +109,7 @@ describe('run command', function() {
             xface.raw.run({platforms: ['blackberry10'], options:['--password', '1q1q']}).then(function() {
                 expect(prepare_spy).toHaveBeenCalledWith(['blackberry10']);
 
-                spawn_call = spawn_wrap(path.join(project_dir, 'platforms', 'blackberry10', 'cordova', 'run'), ['--device', '--password', '1q1q']);
+                spawn_call = spawn_wrap(path.join(project_dir, 'platforms', 'blackberry10', 'cordova', 'run'), ['--password', '1q1q']);
                 expect(child_process.spawn).toHaveBeenCalledWith(spawn_call.cmd, spawn_call.args);
             }, function(err) {
                 expect(err).toBeUndefined();
@@ -138,11 +138,11 @@ describe('run command', function() {
         describe('with no platforms added', function() {
             it('should not fire the hooker', function(done) {
                 list_platforms.andReturn([]);
-                xface.raw.run().then(function() {
+                Q().then(xface.raw.run).then(function() {
                     expect('this call').toBe('fail');
                 }, function(err) {
                     expect(fire).not.toHaveBeenCalled();
-                    expect(err).toEqual(new Error('No platforms added to this project. Please use `xface platform add <platform>`.'));
+                    expect(err.message).toEqual('No platforms added to this project. Please use `xface platform add <platform>`.');
                 }).fin(done);
             });
         });

@@ -19,11 +19,11 @@ describe('platform end-to-end', function() {
     var results;
 
     beforeEach(function() {
-        shell.rm('-rf', project);
+        shell.rm('-rf', tmpDir);
     });
     afterEach(function() {
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
-        shell.rm('-rf', project);
+        shell.rm('-rf', tmpDir);
     });
 
     // Factoring out some repeated checks.
@@ -108,7 +108,6 @@ describe('platform end-to-end', function() {
         }).then(function() {
             // It should be gone.
             expect(path.join(project, 'platforms', helpers.testPlatform)).not.toExist();
-            expect(path.join(project, 'merges', helpers.testPlatform)).not.toExist();
         }).then(emptyPlatformList) // platform ls should be empty too.
         .fail(function(err) {
             expect(err).toBeUndefined();
