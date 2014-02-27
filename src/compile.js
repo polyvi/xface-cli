@@ -36,6 +36,11 @@ function shell_out_to_build(projectRoot, platform, options) {
         errors = "",
         child;
 
+    // default just build device package
+    if(args.indexOf('--device') < 0 && args.indexOf('--emulator') < 0) {
+        args.push('--device');
+    }
+
     if (os.platform() === 'win32') {
         args = ['/c',cmd].concat(args);
         cmd = 'cmd';
