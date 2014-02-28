@@ -689,3 +689,105 @@
 * 重命名cordova.js->xface.js
 * 将cli命令名由cordova改为xface，修改package.json配置文件
 * 导入cordova cli 3.0的源码
+
+
+## 3.2.0-0.0.3 (Fri Feb 28 2014)
+
+
+ *  在ios平台build时，默认情况下传入--device参数，用于生成设备对应的ipa安装包
+ *  2015 -> 2014 in RELEASENOTES
+ *  CB-5962 Change platforms.js to point back to 3.3.1
+ *  CB-5962 Incremented plugin version to -dev branch.
+ *  CB-5962 Set version to 3.3.1-0.3.1
+ *  Curate up release notes & add 3.3.1-0.3.1
+ *  CB-4153 Change to --copy-from and --link-to instead of --src and --link.
+ *  updated version file
+ *  updated release notes
+ *  updated to 3.4.0-rc.1
+ *  added firefoxos to readme
+ *  updated release notes
+ *  Setting version to 3.3.1-0.3.0; updated plugman reference to 0.19.0
+ *  CB-5913 Fail more gracefully on Windows when symlinks fail.
+ *  Fix isWindows check in util.js to support win64
+ *  CB-5907 Make `cordova update` get version from platform's version script
+ *  Fix tests (sorry)
+ *  Fix serve command when config.xml is in the root (not within www/)
+ *  CB-3612 Don't pass --device to "run" command by default. Update help text
+ *  CB-5493 lazy_load now downloads to a temp dir and then moves.
+ *  CB-5782 Use CordovaError wherever relevant.
+ *  CB-5590 Have config.xml version map to CFBundleShortVersionString instead of CFBundleVersion
+ *  CB-5782 Add a derived exception class for better error reporting in CLI
+ *  added firefoxos to readme
+ *  updated release notes
+ *  Setting version to 3.3.1-0.3.0; updated plugman reference to 0.19.0
+ *  CB-5913 Fail more gracefully on Windows when symlinks fail.
+ *  Fix isWindows check in util.js to support win64
+ *  CB-5907 Make `cordova update` get version from platform's version script
+ *  Fix tests (sorry)
+ *  Fix serve command when config.xml is in the root (not within www/)
+ *  CB-3612 Don't pass --device to "run" command by default. Update help text
+ *  CB-5493 lazy_load now downloads to a temp dir and then moves.
+ *  CB-5782 Use CordovaError wherever relevant.
+ *  CB-5590 Have config.xml version map to CFBundleShortVersionString instead of CFBundleVersion
+ *  CB-5782 Add a derived exception class for better error reporting in CLI
+ *  util.isRootDir check for platforms/
+ *  CB-5299 Cache pbxproj to avoid re-parsing it for each plugin.
+ *  CB-5813 Fix missing quotes on update and ls commands
+ *  Bump node-xcode version
+ *  Add a verbose log when running update command
+ *  CB-5808 Fix lazy_load stripping off windows drive letters
+ *  Expose util.isCordova as cordova.findProjectRoot()
+ *  Allow lazy_load libs to work without an id and version for local paths.
+ *  Add an option to config.js to not write config.json during create.
+ *  CB-5802 Updated version and RELEASENOTES.md for release 3.3.1-0.2.0
+ *  CB-5006 Fix searchpath not being passed to dependent plugins.
+ *  Fix move from lodash->underscore where underscore doesn't have "merge"
+ *  CB-5777 Fix "platform update" not updating cordova.js
+ *  CB-5006 Plumb --searchpath into cordova plugin add
+ *  Forgot to remove hard-coded debug path in previous commit.
+ *  CB-5764 Move hooks/ to top-level instead of under .cordova
+ *  CB-5765 Identify root project folder using www and config.xml instead of .cordova
+ *  Update xcode npm dependency version now that pull request is merged.
+ *  CB-5763 Don't write out empty config.json files.
+ *  CB-4910 Don't save id and name in config.json.
+ *  CB-4871 Make some dependencies have same versions as those in plugman
+ *  Remove unused require
+ *  CB-4871 Add spec, e2e to .npmignore
+ *  CB-4871 lodash->underscore since underscore is smaller in node_modules
+ *  CB-4871 Use npmconf instead of npm as a dependency in CLI
+ *  CB-4871 Switch to plist-with-patches to save ~10meg of test files in node_dependencies.
+ *  CB-4871 Delete ripple command.
+ *  CB-4871 Remove unused dependencies in CLI (take 2)
+ *  Revert "CB-4871 Remove unused dependencies in CLI"
+ *  CB-4871 Remove jshint dependency.
+ *  CB-4871 Remove unused dependencies in CLI
+ *  Update node-xcode dependency to 0.6.6
+ *  CB-5735 Don't write out id & name if config file already exists
+ *  CB-4910 Default config.xml to the root instead of within www/
+ *  CB-4976 Don't fire download hooks for local paths in lazy_load
+ *  CB-4976 fix tests to handle local dir case
+ *  CB-4976 dont use cache for local directory
+ *  Revert "CB-4976 - dont use cache for local custom lib"
+ *  Files in merges must remain intact when removing platform
+ *  CB-4976 - dont use cache for local custom lib
+ *  Fix broken tests (whoops)
+ *  CB-5715 Pass --cli flag to android create script
+ *  CB-5397 Add --cli flag for iOS's bin/create
+ *  Revert "CB-5397 Make iOS project file's www/ and config.xml point at the non-platforms versions."
+ *  CB-5397 Make iOS project file's www/ and config.xml point at the non-platforms versions.
+ *  Remove dead code
+ *  Add a check to config_parser that root tag is <widget>.
+ *  CB-4153 Add --src & --link to cordova create.
+ *  CB-5648: clarify comments for the parms
+ *  CB-5688: found same problem with "cordova plugin"
+ *  CB-5688: check for required args
+ *  CB-5687 Teach util.isCordova about PWD.
+ *  updated to 3.3.1
+ *  CB-5674 Don't install plugins in parallel when adding a platform.
+ *  CB-5667 Skip over non-executable hooks in non-windows environments.
+ *  CB-4748 Fix typo causing create command to not check for existing directory.
+ *  Add RELEASENOTES for 3.3.0-0.1.0
+ *  CB-5640 Bump version for republishing
+ *  CB-5223 Tweak log messages for "Downloading" vs "Installing".
+ *  CB-5347 Handle dangling platform symlink in cordova platform add
+ *  解决在platforms.js中添加test-template配置项之后单元测试不过的问题
