@@ -20,12 +20,12 @@
 module.exports = {
     'ios' : {
         parser : './src/metadata/ios_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ios.git',
+        url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-ios.git',
         version: '3.2.0-rc3'
     },
     'android' : {
         parser : './src/metadata/android_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-android.git',
+        url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-android.git',
         version: '3.2.0-rc3'
     },
     'ubuntu' : {
@@ -45,7 +45,7 @@ module.exports = {
     },
     'wp8' : {
         parser : './src/metadata/wp8_parser',
-        url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git',
+        url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-wp8.git',
         version: '3.2.0-rc3'
     },
     'blackberry10' : {
