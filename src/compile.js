@@ -36,8 +36,8 @@ function shell_out_to_build(projectRoot, platform, options) {
         errors = "",
         child;
 
-    // default just build device package
-    if(args.indexOf('--device') < 0 && args.indexOf('--emulator') < 0) {
+    // default just build device package for ios
+    if (platform == 'ios' && args.indexOf('--device') < 0 && args.indexOf('--emulator') < 0) {
         args.push('--device');
     }
 
