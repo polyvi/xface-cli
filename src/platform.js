@@ -149,7 +149,7 @@ module.exports = function platform(command, targets) {
                         } else {
                             // Copy the new xface.js from www -> platform_www.
                             copyCordovaJs();
-                            var script = path.join(projectRoot, 'platforms', plat, 'cordova', 'version');
+                            var script = path.join(projectRoot, 'platforms', plat, 'cordova', 'versionx');
                             child_process.exec(script, function(err, stdout, stderr) {
                                 var version = platforms[plat].version;
                                 if (!err) {
@@ -271,7 +271,8 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir) {
                     args = '--cli';
                 }
             } else if (target == 'ios') {
-                var platformVersion = fs.readFileSync(path.join(libDir, 'xFaceLib', 'xFaceLib', 'VERSION'), 'UTF-8').trim();
+                // todo: cordova version or xface version?
+                var platformVersion = fs.readFileSync(path.join(libDir, 'cordova-ios', 'CordovaLib', 'VERSION'), 'UTF-8').trim();
                 args = '--arc';
                 if (semver.gt(platformVersion, '3.3.0')) {
                     args += ' --cli';
