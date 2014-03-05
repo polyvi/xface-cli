@@ -172,7 +172,7 @@ module.exports = function platform(command, targets) {
             .then(function() {
                 // Acquire the version number of each platform we have installed, and output that too.
                 return Q.all(platforms_on_fs.map(function(p) {
-                    var script = path.join(projectRoot, 'platforms', p, 'cordova', 'version');
+                    var script = path.join(projectRoot, 'platforms', p, 'cordova', 'versionx');
                     var d = Q.defer();
                     child_process.exec('"' + script + '"', function(err, stdout, stderr) {
                         if (err) d.resolve(p);
