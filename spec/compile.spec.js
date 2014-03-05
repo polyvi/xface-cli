@@ -101,7 +101,7 @@ describe('compile command', function() {
                 expect(child_process.spawn).toHaveBeenCalledWith(spawn_call.cmd, spawn_call.args);
 
                 spawn_call = spawn_wrap(path.join(project_dir, 'platforms', 'ios', 'cordova', 'build'),[]);
-                expect(child_process.spawn).toHaveBeenCalledWith(spawn_call.cmd, spawn_call.args);
+                expect(child_process.spawn).toHaveBeenCalledWith(spawn_call.cmd, spawn_call.args.concat('--device'));
 
                 done();
             });
