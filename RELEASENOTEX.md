@@ -791,3 +791,14 @@
  *  CB-5223 Tweak log messages for "Downloading" vs "Installing".
  *  CB-5347 Handle dangling platform symlink in cordova platform add
  *  解决在platforms.js中添加test-template配置项之后单元测试不过的问题
+
+
+## 3.2.0-0.0.4 (Wed Mar 19 2014)
+
+
+ *  updated licesens to 2014
+ *  解决ios平台构建默认添加--device参数造成单元测试不过的问题
+ *  fixed platform 'ls' command, should display xface version
+ *  fixed version usage by cordova or xface, when update project, should look at xface version, in other cases, should keep cordova version
+ *  仅在ios平台构建时默认添加--device参数，用于生成真机安装包
+ *  修改android, ios, wp8引擎下载链接，使xface-cli在内网下能正常添加平台工程
