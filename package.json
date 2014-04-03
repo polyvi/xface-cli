@@ -1,6 +1,6 @@
 {
   "name": "xface",
-  "version": "3.2.0-0.0.4",
+  "version": "3.2.0",
   "preferGlobal": "true",
   "description": "xFace command line interface tool",
   "main": "xface",
@@ -29,7 +29,7 @@
   ],
   "dependencies": {
     "elementtree": "0.1.5",
-    "xplugin": "3.2.0-0.0.4",
+    "xplugin": "3.2.0",
     "plist-with-patches": "0.5.x",
     "xcode": "0.6.6",
     "express": "3.0.0",
