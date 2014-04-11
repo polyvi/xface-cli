@@ -26,7 +26,7 @@ var platforms = require('../../platforms'),
     Q = require('q'),
     config = require('../../src/config'),
     ConfigParser = require('../../src/ConfigParser'),
-    common = require('xplugin').common,
+    mapp_helpers = require('xplugin').multiapp_helpers,
     xface = require('../../xface');
 
 // Create a real config object before mocking out everything.
@@ -52,7 +52,7 @@ describe('android project parser', function() {
         spyOn(config, 'internalDev').andReturn(false);
         spyOn(config, 'has_custom_path').andReturn(false);
         spyOn(util, 'getDefaultAppId').andReturn('helloxface');
-        spyOn(common, 'getInstalledApps').andReturn(['helloxface']);
+        spyOn(mapp_helpers, 'getInstalledApps').andReturn(['helloxface']);
         spyOn(require('xplugin').platforms['android'], 'activity_name').andReturn('com.polyvi.Activity');
     });
 

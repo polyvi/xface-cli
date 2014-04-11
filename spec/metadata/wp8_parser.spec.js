@@ -27,7 +27,7 @@ var platforms = require('../../platforms'),
     Q = require('q'),
     child_process = require('child_process'),
     config = require('../../src/config'),
-    common = require('xplugin').common,
+    mapp_helpers = require('xplugin').multiapp_helpers,
     ConfigParser = require('../../src/ConfigParser');
 
 // Create a real config object before mocking out everything.
@@ -47,7 +47,7 @@ describe('wp8 project parser', function() {
         projXml = manifestXml = null;
         spyOn(config, 'internalDev').andReturn(false);
         spyOn(util, 'getDefaultAppId').andReturn('helloxface');
-	spyOn(common, 'getInstalledApps').andReturn(['helloxface']);
+	spyOn(mapp_helpers, 'getInstalledApps').andReturn(['helloxface']);
 	spyOn(xmlHelpers, 'parseElementtreeSync').andCallFake(function(path) {
             if (/WMAppManifest.xml$/.exec(path)) {
                 return manifestXml = new et.ElementTree(et.XML('<foo><App Title="s"><PrimaryToken /><RootNamespace/><SilverlightAppEntry/><XapFilename/><AssemblyName/></App></foo>'));

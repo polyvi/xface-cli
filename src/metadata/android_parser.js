@@ -142,7 +142,7 @@ module.exports.prototype = {
         // Copy over all app www assets
         shell.cp('-rf', path.join(app_www, '*'), xface3_dir);
         // Copy over stock platform www assets (xface.js)
-        var appIds = xplugin.common.getInstalledApps(this.path, 'android');
+        var appIds = xplugin.multiapp_helpers.getInstalledApps(this.path, 'android');
         var xface3Dir = path.dirname(this.www_dir());
         appIds.forEach(function(id) {
             var appPath = path.join(xface3Dir, id);
@@ -156,7 +156,7 @@ module.exports.prototype = {
         var merges_path = path.join(util.appDir(projectRoot), 'merges', 'android');
         if (fs.existsSync(merges_path)) {
             var overrides = path.join(merges_path, '*');
-            var appIds = xplugin.common.getInstalledApps(this.path, 'android');
+            var appIds = xplugin.multiapp_helpers.getInstalledApps(this.path, 'android');
             var xface3Dir = path.dirname(this.www_dir());
             appIds.forEach(function(id) {
                 var appPath = path.join(xface3Dir, id);

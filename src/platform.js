@@ -313,6 +313,8 @@ function call_into_create(target, projectRoot, cfg, libDir, template_dir) {
             }
             return superspawn.spawn(bin, args, { stdio: 'inherit' })
             .then(function() {
+                var stagingDir = path.join(output, '.xstaging');
+                !fs.existsSync(stagingDir) && shell.mkdir('-p', stagingDir);
                 return require('../xface').raw.prepare(target);
             })
             .then(function() {

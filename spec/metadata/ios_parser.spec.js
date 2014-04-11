@@ -28,7 +28,7 @@ var platforms = require('../../platforms'),
     config = require('../../src/config'),
     ConfigParser = require('../../src/ConfigParser'),
     xface = require('../../xface'),
-    common = require('xplugin').common;
+    mapp_helpers = require('xplugin').multiapp_helpers;
 
 // Create a real config object before mocking out everything.
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
@@ -41,7 +41,7 @@ describe('ios project parser', function () {
         readdir = spyOn(fs, 'readdirSync').andReturn(['test.xcodeproj']);
         spyOn(config, 'internalDev').andReturn(false);
         spyOn(util, 'getDefaultAppId').andReturn('helloxface');
-        spyOn(common, 'getInstalledApps').andReturn(['helloxface']);
+        spyOn(mapp_helpers, 'getInstalledApps').andReturn(['helloxface']);
     });
 
     function wrapper(p, done, post) {

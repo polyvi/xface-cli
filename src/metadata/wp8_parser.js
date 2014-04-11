@@ -181,7 +181,7 @@ module.exports.prototype = {
         this.copy_merges('wp8');
 
         // Copy over stock platform www assets (xface.js)
-        var appIds = require('xplugin').common.getInstalledApps(this.wp8_proj_dir, 'wp8');
+        var appIds = require('xplugin').multiapp_helpers.getInstalledApps(this.wp8_proj_dir, 'wp8');
         var xface3Dir = path.dirname(this.www_dir());
         appIds.forEach(function(id) {
             var appPath = path.join(xface3Dir, id);

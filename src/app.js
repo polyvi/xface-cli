@@ -58,7 +58,7 @@ module.exports = function(command, targets, testTemplate) {
                 return Q([]);
             }
             var platformProj = path.join(xfaceProj, 'platforms', platforms[0]);
-            var appIds = require('xplugin').common.getInstalledApps(platformProj, platforms[0]);
+            var appIds = require('xplugin').multiapp_helpers.getInstalledApps(platformProj, platforms[0]);
             events.emit('results', 'Installed apps: ' + JSON.stringify(appIds));
             return Q(appIds);
         } else {
