@@ -24,7 +24,7 @@ var fs            = require('fs'),
     shell         = require('shelljs'),
     plist         = require('plist-with-patches'),
     Q             = require('q'),
-    config_parser = require('../config_parser'),
+    ConfigParser = require('../ConfigParser'),
     config        = require('../config');
 
 module.exports = function ios_parser(project) {
@@ -40,7 +40,6 @@ module.exports = function ios_parser(project) {
     this.path = project;
     this.pbxproj = path.join(this.xcodeproj, 'project.pbxproj');
     this.config_path = path.join(this.cordovaproj, 'config.xml');
-    this.config = new util.config_parser(this.config_path);
 };
 
 // Returns a promise.
@@ -52,9 +51,9 @@ module.exports.check_requirements = function(project_root) {
 module.exports.prototype = {
     // Returns a promise.
     update_from_config:function(config) {
-        if (config instanceof config_parser) {
+        if (config instanceof ConfigParser) {
         } else {
-            return Q.reject(new Error('update_from_config requires a config_parser object'));
+            return Q.reject(new Error('update_from_config requires a ConfigParser object'));
         }
         var name = config.name();
         var pkg = config.packageName();
@@ -115,10 +114,6 @@ module.exports.prototype = {
         return path.join(this.path, 'xface3', defaultAppId);
     },
 
-    staging_dir: function() {
-        return path.join(this.path, '.staging', 'www');
-    },
-
     config_xml:function(){
         return this.config_path;
     },
@@ -165,27 +160,12 @@ module.exports.prototype = {
         }
     },
 
-    // update the overrides folder into the www folder
-    update_staging:function() {
-        var projectRoot = util.isxFace(this.path);
-        if (fs.existsSync(this.staging_dir())) {
-            var staging = path.join(this.staging_dir(), '*');
-            var appIds = require('xplugin').common.getInstalledApps(this.path, 'ios');
-            var xface3Dir = path.dirname(this.www_dir());
-            appIds.forEach(function(id) {
-                var appPath = path.join(xface3Dir, id);
-                shell.cp('-rf', staging, appPath);
-            });
-        }
-    },
-
     // Returns a promise.
     update_project:function(cfg) {
         var self = this;
         return this.update_from_config(cfg)
         .then(function() {
             self.update_overrides();
-            self.update_staging();
             util.deleteSvnFolders(self.www_dir());
         });
     }

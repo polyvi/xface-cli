@@ -31,17 +31,18 @@ module.exports = {
     'ubuntu' : {
         parser : './src/metadata/ubuntu_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git',
-        version: '3.3.0'
+        version: '3.4.0'
     },
      'amazon-fireos' : {
         parser : './src/metadata/amazon_fireos_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-amazon-fireos.git',
-        version: '3.3.0'
+        version: '3.4.0'
     },
     'wp7' : {
         parser : './src/metadata/wp7_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-wp8.git',
-        version: '3.2.0'
+        version: '3.4.0',
+        subdirectory: 'wp7'
     },
     'wp8' : {
         parser : './src/metadata/wp8_parser',
@@ -51,7 +52,7 @@ module.exports = {
     'blackberry10' : {
         parser : './src/metadata/blackberry10_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-blackberry.git',
-        version: '3.3.1',
+        version: '3.4.0',
         subdirectory: 'blackberry10'
     },
     'www':{
@@ -61,12 +62,12 @@ module.exports = {
     'firefoxos':{
         parser: './src/metadata/firefoxos_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-firefoxos.git',
-        version: '3.3.0'
+        version: '3.4.0'
     },
     'windows8':{
         parser: './src/metadata/windows8_parser',
         url    : 'https://git-wip-us.apache.org/repos/asf?p=cordova-windows.git',
-        version: '3.3.0',
+        version: '3.4.0',
         subdirectory: 'windows8'
     },
     'test-template':{

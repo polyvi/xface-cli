@@ -41,6 +41,7 @@ module.exports = function CLI(inputArgs) {
         tokens = process.argv.slice(2);
     }
 
+    // When changing command line arguments, update doc/help.txt accordingly.
     var args = optimist(tokens)
         .boolean('d')
         .boolean('verbose')
@@ -111,10 +112,6 @@ module.exports = function CLI(inputArgs) {
 
     if (!xface.hasOwnProperty(cmd)) {
         throw new CordovaError('xFace does not know ' + cmd + '; try help for a list of all the available commands.');
-    }
-
-    if (cmd === "info") {
-        return xface.info();
     }
 
     if (cmd == 'emulate' || cmd == 'build' || cmd == 'prepare' || cmd == 'compile' || cmd == 'run') {

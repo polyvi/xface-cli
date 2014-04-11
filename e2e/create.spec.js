@@ -25,6 +25,7 @@ var helpers = require('./helpers'),
     config = require('../src/config'),
     events = require('../src/events'),
     util = require('../src/util'),
+    ConfigParser = require('../src/ConfigParser'),
     cordova = require('../xface');
 
 // A utility function to generate all combinations of elements from 2 arrays.
@@ -82,14 +83,13 @@ describe('create end-to-end', function() {
             expect(path.join(project, d)).toExist();
         });
 
-
         expect(path.join(project, 'hooks', 'README.md')).toExist();
 
         // Check if config files exist.
         expect(path.join(project, 'www', 'index.html')).toExist();
 
         // Check that www/config.xml was updated.
-        var configXml = new util.config_parser(path.join(project, 'www', 'config.xml'));
+        var configXml = new ConfigParser(path.join(project, 'www', 'config.xml'));
         expect(configXml.packageName()).toEqual(appId);
 
         // TODO (kamrik): check somehow that we got the right config.xml from the fixture and not some place else.

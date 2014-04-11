@@ -89,8 +89,8 @@ module.exports = function plugin(command, targets, opts) {
             var searchPath = opts.searchpath || config_json.plugin_search_path;
             if(config.internalDev(projectRoot)) {
                 if(searchPath) {
-                    if(typeof searchPath == 'string') searchPath = [ searchPath, xface_util.getRepoSetPath()];
-                    else searchPath.push(xface_util.getRepoSetPath());
+                    if(typeof searchPath == 'string') searchPath = [ searchPath ];
+                    searchPath.push(xface_util.getRepoSetPath());
                 } else {
                     searchPath = xface_util.getRepoSetPath();
                 }
@@ -111,9 +111,6 @@ module.exports = function plugin(command, targets, opts) {
                             options = { searchpath: searchPath };
                         return plugman.raw.fetch(target, pluginsDir, options);
                     })
-                    .fail(function(err) {
-                        return Q.reject(new Error('Fetching plugin failed: ' + err));
-                    })
                     .then(function(dir) {
                         // Iterate (in serial!) over all platforms in the project and install the plugin.
                         return platformList.reduce(function(soFar, platform) {
@@ -122,8 +119,8 @@ module.exports = function plugin(command, targets, opts) {
                                 var platformRoot = path.join(projectRoot, 'platforms', platform),
                                     parser = new platforms[platform].parser(platformRoot),
                                     options = {
-                                        www_dir: parser.staging_dir(),
                                         cli_variables: {},
+                                        www_dir: path.join(platformRoot, '.xstaging'),
                                         searchpath: searchPath
                                     },
                                     tokens,
@@ -146,12 +143,6 @@ module.exports = function plugin(command, targets, opts) {
                         }, Q());
                     });
                 }, Q()); // end Q.all
-            }).then(function() {
-                // after plugin installed, we need copy assets of plugins to apps
-                platformList.forEach(function(p) {
-                    var parser = (new platforms[p].parser(path.join(projectRoot, 'platforms', p)));
-                    parser.update_staging();
-                });
             }).then(function() {
                 return hooks.fire('after_plugin_add', opts);
             });
@@ -181,7 +172,8 @@ module.exports = function plugin(command, targets, opts) {
                             var platforms = require('../platforms');
                             var parser = new platforms[platform].parser(platformRoot);
                             events.emit('verbose', 'Calling xplugin.uninstall on plugin "' + target + '" for platform "' + platform + '"');
-                            return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target, path.join(projectRoot, 'plugins'), { www_dir: parser.staging_dir() });
+                            return plugman.raw.uninstall.uninstallPlatform(platform, platformRoot, target,
+                                path.join(projectRoot, 'plugins'), {'www_dir' : path.join(platformRoot, '.xstaging')});
                         });
                     }, Q())
                     .then(function() {

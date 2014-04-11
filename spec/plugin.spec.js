@@ -57,10 +57,7 @@ describe('plugin command', function() {
         fire = spyOn(hooker.prototype, 'fire').andReturn(Q());
         supported_platforms.forEach(function(p) {
             parsers[p] = jasmine.createSpy(p + ' update_project').andReturn(Q());
-            spyOn(platforms[p], 'parser').andReturn({
-                staging_dir:function(){return ''},
-                update_staging:function() {}
-            });
+            spyOn(platforms[p], 'parser').andReturn({});
         });
         list_platforms = spyOn(util, 'listPlatforms').andReturn(supported_platforms);
         find_plugins = spyOn(util, 'findPlugins').andReturn(sample_plugins);
@@ -167,7 +164,13 @@ describe('plugin command', function() {
             it('should pass down variables into plugman', function(done) {
                 xface.raw.plugin('add', "one", "--variable", "foo=bar").then(function() {
                     supported_platforms.forEach(function(plat) {
-                        expect(plugman_install).toHaveBeenCalledWith((plat=='blackberry'?'blackberry10':plat), path.join(project_dir, 'platforms', plat), "one", plugins_dir, {www_dir: jasmine.any(String), cli_variables: { FOO: "bar"}});
+                        expect(plugman_install).toHaveBeenCalledWith(
+                            (plat=='blackberry'?'blackberry10':plat),
+                            path.join(project_dir, 'platforms', plat),
+                            "one",
+                            plugins_dir,
+                            {cli_variables: { FOO: "bar"}, www_dir: path.join(project_dir, 'platforms', plat, '.xstaging')}
+                        );
                     });
                 }, function(err) {
                     expect(err).toBeUndefined();

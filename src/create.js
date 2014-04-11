@@ -27,6 +27,7 @@ var path          = require('path'),
     lazy_load     = require('./lazy_load'),
     Q             = require('q'),
     CordovaError  = require('./CordovaError'),
+    ConfigParser = require('./ConfigParser'),
     util          = require('./util');
 
 var DEFAULT_NAME = "HelloxFace",
@@ -90,6 +91,13 @@ module.exports = function create (dir, id, name, cfg) {
         var www_version = config_json.lib.www.version || 'not_versioned';
         var www_id = config_json.lib.www.id || 'dummy_id';
         symlink  = !!config_json.lib.www.link;
+        if ( www_dir.indexOf(path.resolve(config_json.lib.www.uri)) === 0 ) {
+            throw new CordovaError(
+                'Project must not be created inside the www assets dir.' +
+                '\n    project dir:\t' + dir +
+                '\n    www assets dir:\t' + config_json.lib.www.uri
+            );
+        }
         if(symlink) {
             p = Q(config_json.lib.www.uri);
             events.emit('verbose', 'Symlinking custom www assets into "' + www_dir + '"');
@@ -152,9 +160,10 @@ module.exports = function create (dir, id, name, cfg) {
             var template_config_xml = path.join(__dirname, '..', 'templates', 'config.xml');
             shell.cp(template_config_xml, configPath);
             // Write out id and name to config.xml
-            var config = new util.config_parser(configPath);
-            config.packageName(id);
-            config.name(name);
+            var config = new ConfigParser(configPath);
+            config.setPackageName(id);
+            config.setName(name);
+            config.write();
         }
     });
 };
