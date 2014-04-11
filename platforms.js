@@ -21,12 +21,12 @@ module.exports = {
     'ios' : {
         parser : './src/metadata/ios_parser',
         url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-ios.git',
-        version: '3.2.0-rc4'
+        version: '3.2.0'
     },
     'android' : {
         parser : './src/metadata/android_parser',
         url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-android.git',
-        version: '3.2.0-rc4'
+        version: '3.2.0'
     },
     'ubuntu' : {
         parser : './src/metadata/ubuntu_parser',
@@ -47,7 +47,7 @@ module.exports = {
     'wp8' : {
         parser : './src/metadata/wp8_parser',
         url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-wp8.git',
-        version: '3.2.0-rc4'
+        version: '3.2.0'
     },
     'blackberry10' : {
         parser : './src/metadata/blackberry10_parser',
@@ -57,7 +57,7 @@ module.exports = {
     },
     'www':{
         url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-default-app.git',
-        version: '3.2.0-rc4'
+        version: '3.2.0'
     },
     'firefoxos':{
         parser: './src/metadata/firefoxos_parser',
@@ -72,7 +72,7 @@ module.exports = {
     },
     'test-template':{
         url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-test-template.git',
-        version: '3.2.0-rc4'
+        version: '3.2.0'
     }
 };
 

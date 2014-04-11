@@ -802,3 +802,6 @@
  *  fixed version usage by cordova or xface, when update project, should look at xface version, in other cases, should keep cordova version
  *  仅在ios平台构建时默认添加--device参数，用于生成真机安装包
  *  修改android, ios, wp8引擎下载链接，使xface-cli在内网下能正常添加平台工程
+
+
+## 3.2.0 (Thu Apr 03 2014)
