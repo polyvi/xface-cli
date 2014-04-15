@@ -20,12 +20,12 @@
 module.exports = {
     'ios' : {
         parser : './src/metadata/ios_parser',
-        url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-ios.git',
+        url    : 'http://www.polyvi.net:8542/gitweb/gitweb.cgi?p=xface/xface-ios.git',
         version: '3.2.0'
     },
     'android' : {
         parser : './src/metadata/android_parser',
-        url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-android.git',
+        url    : 'http://www.polyvi.net:8542/gitweb/gitweb.cgi?p=xface/xface-android.git',
         version: '3.2.0'
     },
     'ubuntu' : {
@@ -46,7 +46,7 @@ module.exports = {
     },
     'wp8' : {
         parser : './src/metadata/wp8_parser',
-        url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-wp8.git',
+        url    : 'http://www.polyvi.net:8542/gitweb/gitweb.cgi?p=xface/xface-wp8.git',
         version: '3.2.0'
     },
     'blackberry10' : {
@@ -56,7 +56,7 @@ module.exports = {
         subdirectory: 'blackberry10'
     },
     'www':{
-        url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-default-app.git',
+        url    : 'http://www.polyvi.net:8542/gitweb/gitweb.cgi?p=xface/xface-default-app.git',
         version: '3.2.0'
     },
     'firefoxos':{
@@ -71,7 +71,7 @@ module.exports = {
         subdirectory: 'windows8'
     },
     'test-template':{
-        url    : 'http://gitlab.polyvi.com/gitweb/gitweb.cgi?p=xface/xface-test-template.git',
+        url    : 'http://www.polyvi.net:8542/gitweb/gitweb.cgi?p=xface/xface-test-template.git',
         version: '3.2.0'
     }
 };
