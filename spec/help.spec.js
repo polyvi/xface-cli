@@ -16,7 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
-var xface = require('../xface');
+var xface_lib = require('xface-lib'),
+    xface = xface_lib.cordova,
+    help = require('../src/help');
 
 describe('help command', function() {
     it('should emit a results event with help contents', function(done) {
@@ -27,6 +29,6 @@ describe('help command', function() {
             expect(h).toMatch(/synopsis/gi);
             done();
         });
-        xface.help();
+        help();
     });
 });

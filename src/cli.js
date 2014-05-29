@@ -18,8 +18,8 @@
 */
 
 var path = require('path'),
-    CordovaError = require('./CordovaError'),
     optimist, // required in try-catch below to print a nice error message if it's not installed.
+    help = require('./help'),
     _;
 
 module.exports = function CLI(inputArgs) {
@@ -31,7 +31,10 @@ module.exports = function CLI(inputArgs) {
                       path.dirname(__dirname));
         process.exit(2);
     }
-    var xface   = require('../xface');
+    var xface_lib = require('xface-lib'),
+        CordovaError = xface_lib.CordovaError,
+        xface = xface_lib.xface,
+        xplugin = xface_lib.xplugin;
 
     // If no inputArgs given, use process.argv.
     var tokens;
@@ -48,6 +51,9 @@ module.exports = function CLI(inputArgs) {
         .boolean('v')
         .boolean('version')
         .boolean('silent')
+        .boolean('experimental')
+        .boolean('noregistry')
+        .boolean('shrinkwrap')
         .string('copy-from')
         .alias('copy-from', 'src')
         .string('link-to')
@@ -62,7 +68,7 @@ module.exports = function CLI(inputArgs) {
             platforms: [],
             options: [],
             verbose: (args.d || args.verbose),
-            silent: args.silent
+            silent: args.silent,
         };
 
     // For CrodovaError print only the message without stack trace.
@@ -80,7 +86,6 @@ module.exports = function CLI(inputArgs) {
     if (!opts.silent) {
         xface.on('log', console.log);
         xface.on('warn', console.warn);
-        var plugman = require('xplugin');
         plugman.on('log', console.log);
         plugman.on('results', console.log);
         plugman.on('warn', console.warn);
@@ -93,7 +98,7 @@ module.exports = function CLI(inputArgs) {
     if (opts.verbose) {
         // Add handlers for verbose logging.
         xface.on('verbose', console.log);
-        require('xplugin').on('verbose', console.log);
+        xplugin.on('verbose', console.log);
 
         //Remove the corresponding token
         if(args.d && args.verbose) {
@@ -105,9 +110,17 @@ module.exports = function CLI(inputArgs) {
         }
     }
 
+    if (args.experimental) {
+        tokens.splice(tokens.indexOf("--experimental"), 1);
+    }
+
+    if (args.noregistry) {
+        tokens.splice(tokens.indexOf("--noregistry"), 1);
+    }
+
     var cmd = tokens && tokens.length ? tokens.splice(0,1) : undefined;
     if (cmd === undefined) {
-        return xface.help();
+        return help();
     }
 
     if (!xface.hasOwnProperty(cmd)) {
@@ -116,7 +129,7 @@ module.exports = function CLI(inputArgs) {
 
     if (cmd == 'emulate' || cmd == 'build' || cmd == 'prepare' || cmd == 'compile' || cmd == 'run') {
         // Filter all non-platforms into options
-        var platforms = require("../platforms");
+        var platforms = xface_lib.cordova_platforms;
         tokens.forEach(function(option, index) {
             if (platforms.hasOwnProperty(option)) {
                 opts.platforms.push(option);
@@ -151,10 +164,22 @@ module.exports = function CLI(inputArgs) {
         }
         // create(dir, id, name, cfg)
         xface.raw[cmd].call(this, args._[1], args._[2], args._[3], cfg).done();
+    } else if( cmd == 'save' || cmd == 'restore'){
+        if(!opts.experimental && !args.experimental ){
+          throw new CordovaError('save and restore commands are experimental, please add "--experimental" to indicate that you understand that it may change in the future'); 
+        }
+        var subcommand = tokens[0]
+        if(subcommand == 'plugins'){
+          cordova.raw[cmd].call(this,'plugins',{ shrinkwrap:args.shrinkwrap });
+        }else{
+          throw new CordovaError('Let cordova know what you want to '+ cmd + ', try "xface '+ cmd +' plugins"');
+        }        
+    } else if (cmd == 'help') {
+        return help();
     } else {
         // platform/plugins add/rm [target(s)]
         var subcommand = tokens[0]; // this has the sub-command, like "add", "ls", "rm" etc.
         var targets = tokens.slice(1); // this should be an array of targets, be it platforms or plugins
-        xface.raw[cmd].call(this, subcommand, targets, { searchpath: args.searchpath }).done();
+        xface.raw[cmd].call(this, subcommand, targets, { searchpath: args.searchpath, noregistry: args.noregistry }).done();
     }
 };

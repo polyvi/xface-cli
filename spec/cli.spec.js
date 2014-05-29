@@ -16,11 +16,22 @@
     specific language governing permissions and limitations
     under the License.
 */
+
 var CLI = require("../src/cli"),
     Q = require('q'),
-    xface = require("../xface");
+    cordova_lib = require('xface-lib'),
+    xplugin = cordova_lib.plugman,
+    xface = cordova_lib.cordova;
 
 describe("xface cli", function () {
+    beforeEach(function () {
+        // Event registration is currently process-global. Since all jasmine
+        // tests in a directory run in a single process (and in parallel),
+        // logging events registered as a result of the "--verbose" flag in
+        // CLI testing below would cause lots of logging messages printed out by other specs.
+        spyOn(xface, "on");
+        spyOn(xplugin, "on");
+    });
 
     describe("options", function () {
         describe("version", function () {
@@ -48,11 +59,7 @@ describe("xface cli", function () {
 
     describe("project commands other than plugin and platform", function () {
         beforeEach(function () {
-            spyOn(xface.raw, "build").andReturn(Q());
-        });
-
-        afterEach(function () {
-            xface.removeAllListeners();
+            spyOn(cordova.raw, "build").andReturn(Q());
         });
 
         it("will call command with all arguments passed through", function () {
@@ -91,13 +98,13 @@ describe("xface cli", function () {
             spyOn(xface.raw, "plugin").andReturn(Q());
         });
 
-        afterEach(function () {
-            xface.removeAllListeners();
-        });
-
         it("will call command with all arguments passed through", function () {
-            new CLI(["node", "xface", "plugin", "add", "facebook", "--variable", "FOO=foo"]);
-            expect(xface.raw.plugin).toHaveBeenCalledWith("add", ["facebook", "--variable", "FOO=foo"], {searchpath: undefined});
+            new CLI(["node", "cordova", "plugin", "add", "facebook", "--variable", "FOO=foo"]);
+            expect(cordova.raw.plugin).toHaveBeenCalledWith(
+                "add",
+                ["facebook", "--variable", "FOO=foo"],
+                jasmine.any(Object)
+            );
         });
     });
 });
