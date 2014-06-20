@@ -954,3 +954,6 @@
  *  CB-5947 Throw when trying to create project inside custom www.
  *  CB-4153 Update help.txt about --source -> --copy-from
  *  Revert "CB-5962 Change platforms.js to point back to 3.3.1"
+
+
+## 3.3.0 (Fri Jun 20 2014)

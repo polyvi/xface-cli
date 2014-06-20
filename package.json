@@ -1,6 +1,6 @@
 {
   "name": "xface",
-  "version": "3.3.0-0.0.1",
+  "version": "3.3.0",
   "preferGlobal": "true",
   "description": "xFace command line interface tool",
   "main": "xface",
@@ -28,7 +28,7 @@
     "cli"
   ],
   "dependencies": {
-    "xface-lib": "3.3.0-0.0.1",
+    "xface-lib": "3.3.0",
     "q": "~0.9",
     "optimist": "0.6.0",
     "underscore": "1.4.4"
